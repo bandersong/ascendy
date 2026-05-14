@@ -2,7 +2,7 @@ package com.ascendy.app.ui.components
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -32,7 +32,7 @@ import kotlin.math.sin
 @Composable
 fun Mascot(locked: Boolean, modifier: Modifier = Modifier.fillMaxWidth()) {
     val transition = rememberInfiniteTransition(label = "mascot")
-    val bob by transition.animateFloatAsState(
+    val bob by transition.animateFloat(
         initialValue = -4f,
         targetValue = 4f,
         animationSpec = infiniteRepeatable(

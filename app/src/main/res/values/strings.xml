@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ascendy</string>
+    <string name="accessibility_service_label">ascendy app blocking</string>
+    <string name="accessibility_service_description">watches the foreground app and bounces back to home when a blocked app opens during a focus session. tap your nfc tag to start or end the session.</string>
+    <string name="notif_channel_name">focus session</string>
+    <string name="notif_channel_desc">shown while you\'re in a focus session</string>
+    <string name="notif_title">focusing ♡</string>
+    <string name="notif_text">tap your tag to unlock</string>
+</resources>

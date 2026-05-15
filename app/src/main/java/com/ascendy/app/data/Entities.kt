@@ -12,6 +12,8 @@ data class BoundTag(
     val createdAt: Long,
     /** Optional override: when set, this tag triggers this list instead of the default. */
     val listId: Long? = null,
+    /** "nfc" or "qr" — determines the input modality. */
+    val kind: String = "nfc",
 )
 
 @Entity(tableName = "blocklist")

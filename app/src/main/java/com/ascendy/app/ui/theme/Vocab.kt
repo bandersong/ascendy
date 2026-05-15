@@ -184,6 +184,19 @@ data class Vocab(
     // per-tag list picker in PairTagScreen
     val tagListPickerLabel: String,
     val tagListPickerDefault: String,
+
+    // QR
+    val qrGenerateButton: String,
+    val qrGeneratedTitle: String,
+    val qrInstructions: String,
+    val qrSaveToGallery: String,
+    val qrShare: String,
+    val qrSaveAnchor: String,
+    val qrNicknameHint: String,
+    val qrSavedToGallery: String,
+    val qrSaveFailed: String,
+    val homeScanLabel: String,           // a11y description
+    val toastScanInvalid: String,
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -343,6 +356,18 @@ val KawaiiVocab = Vocab(
 
     tagListPickerLabel = "this tag locks…",
     tagListPickerDefault = "default list",
+
+    qrGenerateButton = "generate qr code ✨",
+    qrGeneratedTitle = "your qr anchor ♡",
+    qrInstructions = "save & print this. stick it somewhere annoying — fridge, drawer, gym bag. scan it to lock or unlock.",
+    qrSaveToGallery = "save to gallery",
+    qrShare = "share",
+    qrSaveAnchor = "save anchor",
+    qrNicknameHint = "give it a name (e.g. fridge)",
+    qrSavedToGallery = "saved to gallery 🌸",
+    qrSaveFailed = "couldn't save — try sharing instead ♡",
+    homeScanLabel = "scan qr",
+    toastScanInvalid = "that's not an ascendy qr ♡",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -502,6 +527,18 @@ val ToughVocab = Vocab(
 
     tagListPickerLabel = "THIS ANCHOR LOCKS…",
     tagListPickerDefault = "DEFAULT LIST",
+
+    qrGenerateButton = "GENERATE QR ANCHOR",
+    qrGeneratedTitle = "YOUR QR ANCHOR",
+    qrInstructions = "save and print this. stick it somewhere inconvenient — drawer, glove box, gym bag. scan it to lock in or break out.",
+    qrSaveToGallery = "SAVE TO GALLERY",
+    qrShare = "SHARE",
+    qrSaveAnchor = "SAVE ANCHOR",
+    qrNicknameHint = "name it (e.g. desk drawer)",
+    qrSavedToGallery = "SAVED.",
+    qrSaveFailed = "save failed. share instead.",
+    homeScanLabel = "SCAN QR",
+    toastScanInvalid = "not an ascendy code.",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -661,6 +698,18 @@ val NeutralVocab = Vocab(
 
     tagListPickerLabel = "This tag locks…",
     tagListPickerDefault = "Default list",
+
+    qrGenerateButton = "Generate QR code",
+    qrGeneratedTitle = "QR anchor",
+    qrInstructions = "Save and print this QR code. Place it somewhere inconvenient (fridge, drawer, vehicle). Scan it to begin or end a focus session.",
+    qrSaveToGallery = "Save to gallery",
+    qrShare = "Share",
+    qrSaveAnchor = "Save anchor",
+    qrNicknameHint = "Name (e.g. Desk)",
+    qrSavedToGallery = "Saved to gallery.",
+    qrSaveFailed = "Save failed. Try sharing instead.",
+    homeScanLabel = "Scan QR",
+    toastScanInvalid = "Not an Ascendy QR code.",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

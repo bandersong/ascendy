@@ -65,6 +65,36 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* ignored, UI re-checks on resume */ }
 
+    private val qrScanLauncher = registerForActivityResult(
+        com.journeyapps.barcodescanner.ScanContract()
+    ) { result ->
+        val raw = result?.contents ?: return@registerForActivityResult
+        val anchorId = com.ascendy.app.qr.QrTools.parseScannedPayload(raw)
+        if (anchorId == null) {
+            toast(currentVocab.toastScanInvalid)
+            return@registerForActivityResult
+        }
+        lifecycleScope.launch {
+            val v = currentVocab
+            when (val r = controller.handleTagTap(anchorId)) {
+                is TapResult.Locked -> toast(v.toastLockedFmt.format(r.listName))
+                is TapResult.Unlocked -> toast(v.toastUnlocked)
+                is TapResult.UnknownTag -> toast(v.toastUnknownTag)
+                is TapResult.WrongTag -> toast(v.toastWrongTag)
+            }
+        }
+    }
+
+    fun launchQrScan() {
+        val options = com.journeyapps.barcodescanner.ScanOptions().apply {
+            setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
+            setBeepEnabled(false)
+            setOrientationLocked(false)
+            setPrompt("")
+        }
+        qrScanLauncher.launch(options)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
@@ -236,6 +266,7 @@ private fun AppNav(
                 onOpenSettings = { nav.navigate("settings") },
                 onOpenStats = { nav.navigate("stats") },
                 onOpenPomodoro = { nav.navigate("pomodoro") },
+                onScanQr = { (context as? MainActivity)?.launchQrScan() },
                 onManualToggle = {
                     scope.launch {
                         val wasActive = com.ascendy.app.blocking.BlockState.isActive()
@@ -286,6 +317,45 @@ private fun AppNav(
                 onDeleteTag = { tag -> scope.launch { repo.deleteTag(tag) } },
                 onAssignList = { tag, listId ->
                     scope.launch { repo.saveTag(tag.copy(listId = listId)) }
+                },
+                onSaveQrAnchor = { anchorId, nick ->
+                    scope.launch {
+                        repo.saveTag(
+                            com.ascendy.app.data.BoundTag(
+                                tagId = anchorId,
+                                nickname = nick,
+                                createdAt = System.currentTimeMillis(),
+                                kind = "qr",
+                            )
+                        )
+                    }
+                },
+                onSaveQrToGallery = { anchorId ->
+                    val payload = com.ascendy.app.qr.QrTools.PAYLOAD_PREFIX + anchorId
+                    val bmp = com.ascendy.app.qr.QrTools.render(payload, sizePx = 1024)
+                    val uri = com.ascendy.app.qr.QrTools.saveToGallery(
+                        context = context,
+                        bitmap = bmp,
+                        displayName = "ascendy-${anchorId.take(8)}"
+                    )
+                    val msg = if (uri != null)
+                        com.ascendy.app.ui.theme.vocabFor(currentVariant).qrSavedToGallery
+                    else
+                        com.ascendy.app.ui.theme.vocabFor(currentVariant).qrSaveFailed
+                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                },
+                onShareQr = { anchorId ->
+                    val payload = com.ascendy.app.qr.QrTools.PAYLOAD_PREFIX + anchorId
+                    val bmp = com.ascendy.app.qr.QrTools.render(payload, sizePx = 1024)
+                    val uri = com.ascendy.app.qr.QrTools.saveToGallery(
+                        context = context,
+                        bitmap = bmp,
+                        displayName = "ascendy-${anchorId.take(8)}"
+                    )
+                    if (uri != null) {
+                        val share = com.ascendy.app.qr.QrTools.buildShareIntent(uri)
+                        context.startActivity(Intent.createChooser(share, null))
+                    }
                 },
                 onBack = { nav.popBackStack() }
             )

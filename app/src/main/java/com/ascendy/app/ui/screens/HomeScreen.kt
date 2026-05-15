@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.QrCodeScanner
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -60,6 +61,7 @@ fun HomeScreen(
     onOpenSettings: () -> Unit,
     onOpenStats: () -> Unit,
     onOpenPomodoro: () -> Unit,
+    onScanQr: () -> Unit,
     onManualToggle: () -> Unit,
     onEmergencyUnlock: () -> Unit,
 ) {
@@ -101,6 +103,9 @@ fun HomeScreen(
                 color = if (active) palette.Lilac else palette.Sage
             )
             Spacer(Modifier.size(8.dp))
+            IconButton(onClick = onScanQr) {
+                Icon(Icons.Rounded.QrCodeScanner, contentDescription = vocab.homeScanLabel, tint = palette.Ink)
+            }
             IconButton(onClick = onOpenSettings) {
                 Icon(Icons.Rounded.Settings, contentDescription = "settings", tint = palette.Ink)
             }

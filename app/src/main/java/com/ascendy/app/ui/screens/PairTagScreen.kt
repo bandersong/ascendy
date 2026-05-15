@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.graphics.asImageBitmap
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
 import com.ascendy.app.ui.components.Mascot
@@ -48,9 +49,14 @@ fun PairTagScreen(
     onSavePairing: (nickname: String) -> Unit,
     onDeleteTag: (BoundTag) -> Unit,
     onAssignList: (BoundTag, Long?) -> Unit,
+    onSaveQrAnchor: (anchorId: String, nickname: String) -> Unit,
+    onSaveQrToGallery: (anchorId: String) -> Unit,
+    onShareQr: (anchorId: String) -> Unit,
     onBack: () -> Unit,
 ) {
     var nickname by remember { mutableStateOf("") }
+    var qrAnchorId by remember { mutableStateOf<String?>(null) }
+    var qrNickname by remember { mutableStateOf("") }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
     Column(
@@ -83,7 +89,13 @@ fun PairTagScreen(
                             color = palette.Smoke
                         )
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
+                            TextButton(onClick = {
+                                qrAnchorId = java.util.UUID.randomUUID().toString()
+                                qrNickname = ""
+                            }) { Text(vocab.qrGenerateButton) }
+                        }
                     }
                     waiting && detectedTagId == null -> {
                         Text(
@@ -178,6 +190,57 @@ fun PairTagScreen(
                 Spacer(Modifier.height(8.dp))
             }
         }
+    }
+
+    val qrIdSnapshot = qrAnchorId
+    if (qrIdSnapshot != null) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { qrAnchorId = null },
+            title = { Text(vocab.qrGeneratedTitle) },
+            text = {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    val bmp = remember(qrIdSnapshot) {
+                        com.ascendy.app.qr.QrTools.render(
+                            com.ascendy.app.qr.QrTools.PAYLOAD_PREFIX + qrIdSnapshot,
+                            sizePx = 600
+                        )
+                    }
+                    androidx.compose.foundation.Image(
+                        bitmap = bmp.asImageBitmap(),
+                        contentDescription = vocab.qrGeneratedTitle,
+                        modifier = Modifier.size(220.dp)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(vocab.qrInstructions,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.Smoke)
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = qrNickname,
+                        onValueChange = { qrNickname = it },
+                        label = { Text(vocab.qrNicknameHint) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = { onSaveQrToGallery(qrIdSnapshot) }) { Text(vocab.qrSaveToGallery) }
+                        TextButton(onClick = { onShareQr(qrIdSnapshot) }) { Text(vocab.qrShare) }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (qrNickname.isNotBlank()) {
+                        onSaveQrAnchor(qrIdSnapshot, qrNickname.trim())
+                        qrAnchorId = null
+                    }
+                }) { Text(vocab.qrSaveAnchor) }
+            },
+            dismissButton = {
+                TextButton(onClick = { qrAnchorId = null }) { Text(vocab.tagsCancel) }
+            }
+        )
     }
 }
 

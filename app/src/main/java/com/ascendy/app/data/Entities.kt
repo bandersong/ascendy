@@ -40,6 +40,24 @@ data class BlockedPackage(
     val packageName: String
 )
 
+@Entity(
+    tableName = "blocked_domain",
+    primaryKeys = ["listId", "domain"],
+    foreignKeys = [
+        ForeignKey(
+            entity = Blocklist::class,
+            parentColumns = ["id"],
+            childColumns = ["listId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+    indices = [Index("listId")]
+)
+data class BlockedDomain(
+    val listId: Long,
+    val domain: String,           // normalized: lowercase, no scheme, no path, no leading "www."
+)
+
 @Entity(tableName = "block_session")
 data class BlockSession(
     @PrimaryKey val id: Long = 1L,

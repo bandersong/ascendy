@@ -53,6 +53,19 @@ interface BlocklistDao {
 
     @Query("DELETE FROM blocked_package WHERE listId = :listId AND packageName = :pkg")
     suspend fun removePackage(listId: Long, pkg: String)
+
+    // ── domains ──
+    @Query("SELECT domain FROM blocked_domain WHERE listId = :listId ORDER BY domain ASC")
+    fun observeDomains(listId: Long): Flow<List<String>>
+
+    @Query("SELECT domain FROM blocked_domain WHERE listId = :listId")
+    suspend fun domains(listId: Long): List<String>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun addDomain(d: BlockedDomain)
+
+    @Query("DELETE FROM blocked_domain WHERE listId = :listId AND domain = :d")
+    suspend fun removeDomain(listId: Long, d: String)
 }
 
 @Dao

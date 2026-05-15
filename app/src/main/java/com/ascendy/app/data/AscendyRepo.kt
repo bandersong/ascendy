@@ -28,6 +28,21 @@ class AscendyRepo(context: Context) {
     suspend fun addPackage(listId: Long, pkg: String) = lists.addPackage(BlockedPackage(listId, pkg))
     suspend fun removePackage(listId: Long, pkg: String) = lists.removePackage(listId, pkg)
 
+    fun observeDomains(listId: Long): Flow<List<String>> = lists.observeDomains(listId)
+    suspend fun domains(listId: Long): List<String> = lists.domains(listId)
+    suspend fun addDomain(listId: Long, domain: String) =
+        lists.addDomain(BlockedDomain(listId, normalizeDomain(domain)))
+    suspend fun removeDomain(listId: Long, domain: String) = lists.removeDomain(listId, domain)
+
+    private fun normalizeDomain(raw: String): String {
+        var d = raw.trim().lowercase()
+        d = d.removePrefix("https://").removePrefix("http://")
+        d = d.substringBefore('/')
+        d = d.substringBefore(':')
+        d = d.removePrefix("www.")
+        return d
+    }
+
     fun observeSession(): Flow<BlockSession?> = sessions.observe()
     suspend fun currentSession(): BlockSession? = sessions.current()
     suspend fun saveSession(s: BlockSession) = sessions.upsert(s)

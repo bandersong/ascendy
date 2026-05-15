@@ -7,10 +7,10 @@ import androidx.room.RoomDatabase
 
 @Database(
     entities = [
-        BoundTag::class, Blocklist::class, BlockedPackage::class,
+        BoundTag::class, Blocklist::class, BlockedPackage::class, BlockedDomain::class,
         BlockSession::class, SessionLog::class, Schedule::class,
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class AscendyDb : RoomDatabase() {

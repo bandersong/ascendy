@@ -60,6 +60,12 @@ data class Vocab(
 
     // app picker
     val pickerSearch: String,
+    val pickerTabApps: String,
+    val pickerTabSites: String,
+    val pickerSitesAddHint: String,
+    val pickerSitesAdd: String,
+    val pickerSitesEmpty: String,
+    val pickerSitesNote: String,
 
     // permissions screen
     val permsTitle: String,
@@ -226,6 +232,12 @@ val KawaiiVocab = Vocab(
     listsAppCountFmt = "%d apps",
 
     pickerSearch = "search apps",
+    pickerTabApps = "apps",
+    pickerTabSites = "sites",
+    pickerSitesAddHint = "domain (e.g. reddit.com)",
+    pickerSitesAdd = "add",
+    pickerSitesEmpty = "no sites blocked yet ♡",
+    pickerSitesNote = "blocks the url bar in chrome, firefox, brave, samsung, edge, ddg, opera. doh-only browsers may slip through.",
 
     permsTitle = "permissions",
     permsIntro = "ascendy needs these to block apps. nothing leaves your device.",
@@ -379,6 +391,12 @@ val ToughVocab = Vocab(
     listsAppCountFmt = "%d apps",
 
     pickerSearch = "search apps",
+    pickerTabApps = "APPS",
+    pickerTabSites = "SITES",
+    pickerSitesAddHint = "domain (e.g. reddit.com)",
+    pickerSitesAdd = "ADD",
+    pickerSitesEmpty = "no sites blocked.",
+    pickerSitesNote = "kills the url bar in chrome, firefox, brave, samsung, edge, ddg, opera. doh-only browsers slip through.",
 
     permsTitle = "PERMISSIONS",
     permsIntro = "ascendy needs these to enforce the lockdown. nothing leaves your device.",
@@ -532,6 +550,12 @@ val NeutralVocab = Vocab(
     listsAppCountFmt = "%d apps",
 
     pickerSearch = "Search apps",
+    pickerTabApps = "Apps",
+    pickerTabSites = "Sites",
+    pickerSitesAddHint = "Domain (e.g. reddit.com)",
+    pickerSitesAdd = "Add",
+    pickerSitesEmpty = "No sites blocked.",
+    pickerSitesNote = "Blocks URL navigation in Chrome, Firefox, Brave, Samsung Internet, Edge, DuckDuckGo, and Opera. DNS-over-HTTPS-only browsers may not be detected.",
 
     permsTitle = "Permissions",
     permsIntro = "Ascendy uses these to block apps. No data leaves the device.",

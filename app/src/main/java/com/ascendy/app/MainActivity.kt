@@ -76,7 +76,8 @@ class MainActivity : ComponentActivity() {
             val sess = app.repo.currentSession()
             if (sess?.active == true) {
                 val pkgs = app.repo.packages(sess.listId).toSet()
-                com.ascendy.app.blocking.BlockState.set(true, pkgs, sess.startedAt)
+                val doms = app.repo.domains(sess.listId).toSet()
+                com.ascendy.app.blocking.BlockState.set(true, pkgs, doms, sess.startedAt)
             }
         }
 
@@ -318,14 +319,18 @@ private fun AppNav(
             val listId = backStack.arguments?.getString("listId")?.toLongOrNull() ?: return@composable
             val listName = backStack.arguments?.getString("listName") ?: "list"
             val packages by repo.observePackages(listId).collectAsState(initial = emptyList())
+            val domains by repo.observeDomains(listId).collectAsState(initial = emptyList())
             AppPickerScreen(
                 listName = listName,
                 blockedPackages = packages.toSet(),
-                onToggle = { pkg, blocked ->
+                blockedDomains = domains,
+                onTogglePackage = { pkg, blocked ->
                     scope.launch {
                         if (blocked) repo.addPackage(listId, pkg) else repo.removePackage(listId, pkg)
                     }
                 },
+                onAddDomain = { d -> scope.launch { repo.addDomain(listId, d) } },
+                onRemoveDomain = { d -> scope.launch { repo.removeDomain(listId, d) } },
                 onBack = { nav.popBackStack() }
             )
         }

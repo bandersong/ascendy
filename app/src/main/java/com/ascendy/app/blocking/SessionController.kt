@@ -49,6 +49,7 @@ class SessionController(private val context: Context, private val repo: AscendyR
         endsAt: Long? = null,
     ) {
         val packages = repo.packages(listId).toSet()
+        val domains = repo.domains(listId).toSet()
         val now = System.currentTimeMillis()
         val session = BlockSession(
             id = 1L,
@@ -61,7 +62,7 @@ class SessionController(private val context: Context, private val repo: AscendyR
         )
         repo.saveSession(session)
         repo.startLog(listId, now, source.tag)
-        BlockState.set(active = true, blocked = packages, startedAt = now)
+        BlockState.set(active = true, blocked = packages, blockedDomains = domains, startedAt = now)
         startForegroundService()
 
         // Pomodoro / scheduled auto-end alarm
@@ -95,7 +96,8 @@ class SessionController(private val context: Context, private val repo: AscendyR
         val current = repo.currentSession() ?: return
         if (!current.active) return
         val packages = repo.packages(current.listId).toSet()
-        BlockState.set(active = true, blocked = packages, startedAt = current.startedAt)
+        val domains = repo.domains(current.listId).toSet()
+        BlockState.set(active = true, blocked = packages, blockedDomains = domains, startedAt = current.startedAt)
         startForegroundService()
         current.endsAt?.let { AlarmScheduler.scheduleSessionEnd(context, it) }
     }

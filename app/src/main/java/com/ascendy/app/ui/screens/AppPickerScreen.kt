@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -56,14 +57,19 @@ data class AppInfo(
 fun AppPickerScreen(
     listName: String,
     blockedPackages: Set<String>,
-    onToggle: (pkg: String, blocked: Boolean) -> Unit,
+    blockedDomains: List<String>,
+    onTogglePackage: (pkg: String, blocked: Boolean) -> Unit,
+    onAddDomain: (String) -> Unit,
+    onRemoveDomain: (String) -> Unit,
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val insets = WindowInsets.systemBars.asPaddingValues()
 
+    var tab by remember { mutableStateOf(0) }     // 0=apps, 1=sites
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     var query by remember { mutableStateOf("") }
+    var newDomain by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         apps = loadApps(context.packageManager)
@@ -92,28 +98,126 @@ fun AppPickerScreen(
             Text(listName, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text(vocab.pickerSearch) },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface
-            )
-        )
+        // Tabs
+        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+            TabChip(label = vocab.pickerTabApps, selected = tab == 0, onClick = { tab = 0 }, modifier = Modifier.weight(1f))
+            Spacer(Modifier.size(8.dp))
+            TabChip(label = vocab.pickerTabSites, selected = tab == 1, onClick = { tab = 1 }, modifier = Modifier.weight(1f))
+        }
 
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
-            items(filtered, key = { it.packageName }) { app ->
-                AppRow(
-                    app = app,
-                    checked = app.packageName in blockedPackages,
-                    onCheckedChange = { onToggle(app.packageName, it) }
+        if (tab == 0) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text(vocab.pickerSearch) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface
                 )
-                Spacer(Modifier.height(6.dp))
+            )
+
+            LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                items(filtered, key = { it.packageName }) { app ->
+                    AppRow(
+                        app = app,
+                        checked = app.packageName in blockedPackages,
+                        onCheckedChange = { onTogglePackage(app.packageName, it) }
+                    )
+                    Spacer(Modifier.height(6.dp))
+                }
+            }
+        } else {
+            // Sites tab
+            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                OutlinedTextField(
+                    value = newDomain,
+                    onValueChange = { newDomain = it },
+                    label = { Text(vocab.pickerSitesAddHint) },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    )
+                )
+                Spacer(Modifier.size(8.dp))
+                Button(onClick = {
+                    val cleaned = newDomain.trim()
+                    if (cleaned.isNotEmpty() && '.' in cleaned) {
+                        onAddDomain(cleaned)
+                        newDomain = ""
+                    }
+                }) { Text(vocab.pickerSitesAdd) }
+            }
+
+            Spacer(Modifier.size(4.dp))
+            Text(
+                vocab.pickerSitesNote,
+                modifier = Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.bodySmall,
+                color = palette.Smoke
+            )
+            Spacer(Modifier.size(8.dp))
+
+            if (blockedDomains.isEmpty()) {
+                Text(
+                    vocab.pickerSitesEmpty,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.Smoke
+                )
+            } else {
+                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                    items(blockedDomains, key = { it }) { d ->
+                        DomainRow(domain = d, onRemove = { onRemoveDomain(d) })
+                        Spacer(Modifier.height(6.dp))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        color = if (selected) palette.Petal else palette.Mist,
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(vertical = 10.dp),
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.Ink,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DomainRow(domain: String, onRemove: () -> Unit) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+        ) {
+            Text(domain, style = MaterialTheme.typography.titleMedium, color = palette.Ink,
+                modifier = Modifier.weight(1f))
+            androidx.compose.material3.TextButton(onClick = onRemove) {
+                Text(vocab.tagsRemove)
             }
         }
     }

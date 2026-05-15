@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -74,6 +75,7 @@ fun PermissionsScreen(
         Spacer(Modifier.height(16.dp))
 
         PermissionCard(
+            emoji = "♿",
             title = "accessibility",
             body = "the primary blocking path. watches the foreground app and bounces you home.",
             granted = status.accessibility,
@@ -88,6 +90,7 @@ fun PermissionsScreen(
         Spacer(Modifier.height(8.dp))
 
         PermissionCard(
+            emoji = "📊",
             title = "usage access",
             body = "fallback path used if accessibility is unavailable (e.g. android 17 advanced protection).",
             granted = status.usageStats,
@@ -102,6 +105,7 @@ fun PermissionsScreen(
         Spacer(Modifier.height(8.dp))
 
         PermissionCard(
+            emoji = "🪟",
             title = "display over other apps",
             body = "lets the kawaii blocker overlay show on top of blocked apps.",
             granted = status.overlay,
@@ -118,6 +122,7 @@ fun PermissionsScreen(
         Spacer(Modifier.height(8.dp))
 
         PermissionCard(
+            emoji = "🔔",
             title = "notifications",
             body = "the focus session shows a persistent notification while active (android 13+).",
             granted = status.notifications,
@@ -143,6 +148,7 @@ fun PermissionsScreen(
 
 @Composable
 private fun PermissionCard(
+    emoji: String,
     title: String,
     body: String,
     granted: Boolean,
@@ -152,6 +158,8 @@ private fun PermissionCard(
     SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.size(10.dp))
                 Text(title, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
                 Spacer(Modifier.weight(1f))
                 Badge(

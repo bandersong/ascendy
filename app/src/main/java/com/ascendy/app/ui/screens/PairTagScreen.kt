@@ -118,11 +118,18 @@ fun PairTagScreen(
         Spacer(Modifier.height(8.dp))
 
         if (knownTags.isEmpty()) {
-            Text(
-                "no tags yet ♡",
-                style = MaterialTheme.typography.bodyMedium,
-                color = AscendyColors.Smoke
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                com.ascendy.app.ui.components.MiniMascot(
+                    locked = false,
+                    modifier = Modifier.size(36.dp)
+                )
+                Spacer(Modifier.size(10.dp))
+                Text(
+                    "no tags yet — pair one above ♡",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = AscendyColors.Smoke
+                )
+            }
         } else {
             knownTags.forEach { tag ->
                 SoftCard(

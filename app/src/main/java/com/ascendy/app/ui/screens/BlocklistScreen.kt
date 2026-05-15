@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
@@ -69,11 +70,18 @@ fun BlocklistScreen(
 
             if (lists.isEmpty()) {
                 SoftCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        "no lists yet — tap + to create your first focus list",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = AscendyColors.Smoke
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        com.ascendy.app.ui.components.MiniMascot(
+                            locked = false,
+                            modifier = Modifier.size(40.dp)
+                        )
+                        Spacer(Modifier.size(12.dp))
+                        Text(
+                            "no lists yet — tap + to start ✨",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = AscendyColors.Smoke
+                        )
+                    }
                 }
             } else {
                 lists.forEach { list ->

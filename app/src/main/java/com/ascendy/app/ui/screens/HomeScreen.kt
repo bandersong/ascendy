@@ -80,7 +80,7 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    if (active) "you're focusing — tap your tag to come back"
+                    if (active) "you're focusing — tap your tag to come back 🌙"
                     else "tap your tag whenever you're ready ✨",
                     style = MaterialTheme.typography.titleMedium,
                     color = AscendyColors.Ink
@@ -98,6 +98,7 @@ fun HomeScreen(
         Spacer(Modifier.height(8.dp))
 
         SetupRow(
+            emoji = "🌸",
             title = "pair an nfc tag",
             badge = if (tagCount > 0) "$tagCount" else "todo",
             badgeColor = if (tagCount > 0) AscendyColors.Sage else AscendyColors.Petal,
@@ -105,6 +106,7 @@ fun HomeScreen(
         )
         Spacer(Modifier.height(8.dp))
         SetupRow(
+            emoji = "✨",
             title = "build your focus list",
             badge = if (listCount > 0) "$listCount" else "todo",
             badgeColor = if (listCount > 0) AscendyColors.Sage else AscendyColors.Petal,
@@ -112,6 +114,7 @@ fun HomeScreen(
         )
         Spacer(Modifier.height(8.dp))
         SetupRow(
+            emoji = "🔒",
             title = "permissions",
             badge = if (permissionsReady) "ok" else "todo",
             badgeColor = if (permissionsReady) AscendyColors.Sage else AscendyColors.Petal,
@@ -141,7 +144,7 @@ fun HomeScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SetupRow(title: String, badge: String, badgeColor: Color, onClick: () -> Unit) {
+private fun SetupRow(emoji: String, title: String, badge: String, badgeColor: Color, onClick: () -> Unit) {
     Surface(
         onClick = onClick,
         color = MaterialTheme.colorScheme.surface,
@@ -153,6 +156,8 @@ private fun SetupRow(title: String, badge: String, badgeColor: Color, onClick: (
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Text(emoji, style = MaterialTheme.typography.headlineSmall)
+            Spacer(Modifier.size(12.dp))
             Text(title, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
             Spacer(Modifier.weight(1f))
             Badge(label = badge, color = badgeColor)

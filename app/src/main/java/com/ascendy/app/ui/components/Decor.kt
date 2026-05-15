@@ -84,10 +84,11 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStar(
     val body = AscendyColors.Petal
     val face = AscendyColors.Ink
     val cheek = AscendyColors.Lilac
+    val shine = AscendyColors.Cream
 
     val petals = 8
-    val outer = r
-    val inner = r * 0.7f
+    val outer = r * 1.05f
+    val inner = r * 0.72f
     val path = Path()
     for (i in 0 until petals * 2) {
         val angle = (Math.PI * i / petals).toFloat() - (Math.PI / 2).toFloat()
@@ -99,22 +100,39 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawStar(
     path.close()
     drawPath(path, color = body)
 
-    // smile
+    // big round eyes (kawaii style — way bigger than before)
+    val eyeR = r * 0.12f
+    val eyeY = cy - r * 0.05f
+    drawCircle(color = face, radius = eyeR, center = Offset(cx - r * 0.24f, eyeY))
+    drawCircle(color = face, radius = eyeR, center = Offset(cx + r * 0.24f, eyeY))
+    // sparkle highlights
+    drawCircle(color = shine, radius = eyeR * 0.35f, center = Offset(cx - r * 0.21f, eyeY - eyeR * 0.35f))
+    drawCircle(color = shine, radius = eyeR * 0.35f, center = Offset(cx + r * 0.27f, eyeY - eyeR * 0.35f))
+
+    // tiny smile
     drawArc(
         color = face,
-        startAngle = 20f,
-        sweepAngle = 140f,
+        startAngle = 25f,
+        sweepAngle = 130f,
         useCenter = false,
-        topLeft = Offset(cx - r * 0.30f, cy - r * 0.05f),
-        size = Size(r * 0.6f, r * 0.4f),
-        style = Stroke(width = r * 0.08f)
+        topLeft = Offset(cx - r * 0.16f, cy + r * 0.10f),
+        size = Size(r * 0.32f, r * 0.20f),
+        style = Stroke(width = r * 0.07f)
     )
-    // eyes
-    drawCircle(color = face, radius = r * 0.06f, center = Offset(cx - r * 0.22f, cy - r * 0.10f))
-    drawCircle(color = face, radius = r * 0.06f, center = Offset(cx + r * 0.22f, cy - r * 0.10f))
-    // cheeks
-    drawCircle(color = cheek, radius = r * 0.09f, center = Offset(cx - r * 0.40f, cy + r * 0.08f))
-    drawCircle(color = cheek, radius = r * 0.09f, center = Offset(cx + r * 0.40f, cy + r * 0.08f))
+    // blush cheeks
+    drawCircle(color = cheek, radius = r * 0.10f, center = Offset(cx - r * 0.46f, cy + r * 0.18f))
+    drawCircle(color = cheek, radius = r * 0.10f, center = Offset(cx + r * 0.46f, cy + r * 0.18f))
+}
+
+/** A tiny static mascot for inline use (no animation). */
+@Composable
+fun MiniMascot(locked: Boolean, modifier: Modifier = Modifier) {
+    Canvas(modifier = modifier) {
+        val cx = size.width / 2f
+        val cy = size.height / 2f
+        val radius = size.minDimension * 0.38f
+        if (locked) drawMoon(cx, cy, radius) else drawStar(cx, cy, radius)
+    }
 }
 
 @Composable

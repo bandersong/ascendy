@@ -21,9 +21,9 @@ object AscendyColors {
     val Lilac = Color(0xFFCDB4DB)
     val Mint = Color(0xFFBDE0FE)
     val Sage = Color(0xFFC8E6C9)
-    val Ink = Color(0xFF3D3142)
-    val Smoke = Color(0xFF7A6E80)
-    val Mist = Color(0xFFEDE4F0)
+    val Ink = Color(0xFF1A1224)
+    val Smoke = Color(0xFF4F4258)
+    val Mist = Color(0xFFE6DAEC)
 
     val Night = Color(0xFF1F1A24)
     val NightSurface = Color(0xFF2A2330)

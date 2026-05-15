@@ -34,6 +34,7 @@ import com.ascendy.app.data.BoundTag
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.vocab
 
 @Composable
 fun PairTagScreen(
@@ -60,7 +61,7 @@ fun PairTagScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
             }
-            Text("tags", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
+            Text(vocab.tagsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
         Spacer(Modifier.height(8.dp))
@@ -74,38 +75,38 @@ fun PairTagScreen(
                 when {
                     !waiting && detectedTagId == null -> {
                         Text(
-                            "pair a blank ntag21x sticker. you can keep it on the fridge, in a drawer, or in your bag.",
+                            vocab.tagsIntro,
                             style = MaterialTheme.typography.bodyMedium,
                             color = palette.Smoke
                         )
                         Spacer(Modifier.height(12.dp))
-                        Button(onClick = onStartPairing) { Text("start pairing") }
+                        Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
                     }
                     waiting && detectedTagId == null -> {
                         Text(
-                            "hold the back of your phone against the tag ✨",
+                            vocab.tagsWaiting,
                             style = MaterialTheme.typography.titleMedium,
                             color = palette.Ink
                         )
                         Spacer(Modifier.height(8.dp))
-                        TextButton(onClick = onCancelPairing) { Text("cancel") }
+                        TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
                     }
                     detectedTagId != null -> {
-                        Text("tag found 🌸", style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                        Text(vocab.tagsFound, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
                             value = nickname,
                             onValueChange = { nickname = it },
-                            label = { Text("give it a name (e.g. kitchen)") },
+                            label = { Text(vocab.tagsNicknameLabel) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = onCancelPairing) { Text("cancel") }
+                            TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
                             Button(
                                 onClick = { if (nickname.isNotBlank()) onSavePairing(nickname.trim()) }
-                            ) { Text("save") }
+                            ) { Text(vocab.tagsSave) }
                         }
                     }
                 }
@@ -114,7 +115,7 @@ fun PairTagScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Text("your tags", style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
+        Text(vocab.tagsListHeader, style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
         Spacer(Modifier.height(8.dp))
 
         if (knownTags.isEmpty()) {
@@ -125,7 +126,7 @@ fun PairTagScreen(
                 )
                 Spacer(Modifier.size(10.dp))
                 Text(
-                    "no tags yet — pair one above ♡",
+                    vocab.tagsEmpty,
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.Smoke
                 )
@@ -145,7 +146,7 @@ fun PairTagScreen(
                                 color = palette.Smoke
                             )
                         }
-                        TextButton(onClick = { onDeleteTag(tag) }) { Text("remove") }
+                        TextButton(onClick = { onDeleteTag(tag) }) { Text(vocab.tagsRemove) }
                     }
                 }
                 Spacer(Modifier.height(8.dp))

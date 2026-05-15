@@ -35,6 +35,7 @@ import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.vocab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,13 +63,13 @@ fun HomeScreen(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "ascendy ♡",
+                vocab.appTitle,
                 style = MaterialTheme.typography.headlineMedium,
                 color = palette.Ink
             )
             Spacer(Modifier.weight(1f))
             Badge(
-                label = if (active) "focusing" else "ready",
+                label = if (active) vocab.statusFocusing else vocab.statusReady,
                 color = if (active) palette.Lilac else palette.Sage
             )
             Spacer(Modifier.size(8.dp))
@@ -89,8 +90,7 @@ fun HomeScreen(
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    if (active) "you're focusing — tap your tag to come back 🌙"
-                    else "tap your tag whenever you're ready ✨",
+                    if (active) vocab.homeHeroActive else vocab.homeHeroIdle,
                     style = MaterialTheme.typography.titleMedium,
                     color = palette.Ink
                 )
@@ -100,32 +100,32 @@ fun HomeScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "setup",
+            vocab.sectionSetup,
             style = MaterialTheme.typography.titleLarge,
             color = palette.Smoke
         )
         Spacer(Modifier.height(8.dp))
 
         SetupRow(
-            emoji = "🌸",
-            title = "pair an nfc tag",
-            badge = if (tagCount > 0) "$tagCount" else "todo",
+            emoji = vocab.rowPairTagEmoji,
+            title = vocab.rowPairTagLabel,
+            badge = if (tagCount > 0) "$tagCount" else vocab.badgeTodo,
             badgeColor = if (tagCount > 0) palette.Sage else palette.Petal,
             onClick = onPairTag
         )
         Spacer(Modifier.height(8.dp))
         SetupRow(
-            emoji = "✨",
-            title = "build your focus list",
-            badge = if (listCount > 0) "$listCount" else "todo",
+            emoji = vocab.rowFocusListEmoji,
+            title = vocab.rowFocusListLabel,
+            badge = if (listCount > 0) "$listCount" else vocab.badgeTodo,
             badgeColor = if (listCount > 0) palette.Sage else palette.Petal,
             onClick = onOpenLists
         )
         Spacer(Modifier.height(8.dp))
         SetupRow(
-            emoji = "🔒",
-            title = "permissions",
-            badge = if (permissionsReady) "ok" else "todo",
+            emoji = vocab.rowPermissionsEmoji,
+            title = vocab.rowPermissionsLabel,
+            badge = if (permissionsReady) vocab.badgeOk else vocab.badgeTodo,
             badgeColor = if (permissionsReady) palette.Sage else palette.Petal,
             onClick = onOpenPermissions
         )
@@ -134,16 +134,16 @@ fun HomeScreen(
             Spacer(Modifier.height(24.dp))
             SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
                 Column {
-                    Text("emergency unlock", style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                    Text(vocab.emergencyTitle, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        "one-time per session. for true emergencies only.",
+                        vocab.emergencyBody,
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.Smoke
                     )
                     Spacer(Modifier.height(8.dp))
                     TextButton(onClick = onEmergencyUnlock) {
-                        Text("use unlock")
+                        Text(vocab.emergencyButton)
                     }
                 }
             }
@@ -165,8 +165,10 @@ private fun SetupRow(emoji: String, title: String, badge: String, badgeColor: Co
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(emoji, style = MaterialTheme.typography.headlineSmall)
-            Spacer(Modifier.size(12.dp))
+            if (emoji.isNotEmpty()) {
+                Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                Spacer(Modifier.size(12.dp))
+            }
             Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
             Spacer(Modifier.weight(1f))
             Badge(label = badge, color = badgeColor)

@@ -15,6 +15,7 @@ class ThemePrefs(private val context: Context) {
     val variant: Flow<ThemeVariant> = context.themeStore.data.map { prefs ->
         when (prefs[THEME_KEY]) {
             "Tough" -> ThemeVariant.Tough
+            "Neutral" -> ThemeVariant.Neutral
             else -> ThemeVariant.Kawaii
         }
     }

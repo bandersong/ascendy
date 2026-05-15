@@ -39,6 +39,7 @@ import com.ascendy.app.data.Blocklist
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.vocab
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,7 +65,7 @@ fun BlocklistScreen(
                 IconButton(onClick = onBack) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
                 }
-                Text("focus lists", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
+                Text(vocab.listsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
             }
             Spacer(Modifier.height(8.dp))
 
@@ -77,7 +78,7 @@ fun BlocklistScreen(
                         )
                         Spacer(Modifier.size(12.dp))
                         Text(
-                            "no lists yet — tap + to start ✨",
+                            vocab.listsEmpty,
                             style = MaterialTheme.typography.bodyMedium,
                             color = palette.Smoke
                         )
@@ -98,13 +99,13 @@ fun BlocklistScreen(
                             Column(Modifier.weight(1f)) {
                                 Text(list.name, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                                 Text(
-                                    "${appCountFor(list.id)} apps",
+                                    vocab.listsAppCountFmt.format(appCountFor(list.id)),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = palette.Smoke
                                 )
                             }
-                            if (list.isDefault) Badge(label = "default", color = palette.Mint)
-                            else TextButton(onClick = { onDeleteList(list) }) { Text("remove") }
+                            if (list.isDefault) Badge(label = vocab.listsBadgeDefault, color = palette.Mint)
+                            else TextButton(onClick = { onDeleteList(list) }) { Text(vocab.tagsRemove) }
                         }
                     }
                     Spacer(Modifier.height(8.dp))
@@ -140,17 +141,17 @@ private fun CreateListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit)
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("new focus list") },
+        title = { Text(vocab.listsNewDialogTitle) },
         text = {
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("name (e.g. deep work)") },
+                label = { Text(vocab.listsNewNameLabel) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
         },
-        confirmButton = { Button(onClick = { onConfirm(name) }) { Text("create") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("cancel") } }
+        confirmButton = { Button(onClick = { onConfirm(name) }) { Text(vocab.listsCreate) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(vocab.listsCancel) } }
     )
 }

@@ -17,7 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-enum class ThemeVariant { Kawaii, Tough }
+enum class ThemeVariant { Kawaii, Tough, Neutral }
 
 /** Per-theme palette. Same field names so screens are theme-agnostic. */
 data class Palette(
@@ -97,6 +97,37 @@ val ToughDark = Palette(
     Surface = Color(0xFF161618),
 )
 
+// ───── Neutral (corporate, professional, restrained) ─────
+val NeutralLight = Palette(
+    variant = ThemeVariant.Neutral,
+    isDark = false,
+    Cream = Color(0xFFF7F8FA),       // crisp paper
+    Cloud = Color(0xFFEDEFF3),       // panel
+    Petal = Color(0xFF2B5BD7),       // corporate blue accent
+    Lilac = Color(0xFF6B7280),       // slate
+    Mint = Color(0xFFDDE5F1),
+    Sage = Color(0xFFCDE5D0),
+    Ink = Color(0xFF111827),         // neutral near-black
+    Smoke = Color(0xFF6B7280),
+    Mist = Color(0xFFE3E6EB),
+    Surface = Color(0xFFFFFFFF),
+)
+
+val NeutralDark = Palette(
+    variant = ThemeVariant.Neutral,
+    isDark = true,
+    Cream = Color(0xFF0F1115),
+    Cloud = Color(0xFF181B22),
+    Petal = Color(0xFF7B97FF),
+    Lilac = Color(0xFF9AA3B2),
+    Mint = Color(0xFF2D3344),
+    Sage = Color(0xFF2D3D33),
+    Ink = Color(0xFFE6E8EC),
+    Smoke = Color(0xFF9AA3B2),
+    Mist = Color(0xFF272B34),
+    Surface = Color(0xFF1A1D24),
+)
+
 val LocalPalette = staticCompositionLocalOf { KawaiiLight }
 
 /** Top-level composable accessor so screens just write `palette.Ink` etc. */
@@ -159,6 +190,15 @@ private val ToughShapes = Shapes(
     extraLarge = RoundedCornerShape(12.dp),
 )
 
+// Neutral: mid-radius, clean cards
+private val NeutralShapes = Shapes(
+    extraSmall = RoundedCornerShape(6.dp),
+    small = RoundedCornerShape(8.dp),
+    medium = RoundedCornerShape(10.dp),
+    large = RoundedCornerShape(12.dp),
+    extraLarge = RoundedCornerShape(16.dp),
+)
+
 private val KawaiiTypography = Typography(
     displayLarge = TextStyle(fontSize = 56.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-1).sp, lineHeight = 60.sp),
     displayMedium = TextStyle(fontSize = 44.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp, lineHeight = 48.sp),
@@ -172,6 +212,22 @@ private val KawaiiTypography = Typography(
     bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp),
     bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 18.sp),
     labelLarge = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp),
+)
+
+// Neutral typography — clean, modest weights, no character
+private val NeutralTypography = Typography(
+    displayLarge = TextStyle(fontSize = 48.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp, lineHeight = 56.sp),
+    displayMedium = TextStyle(fontSize = 38.sp, fontWeight = FontWeight.SemiBold, lineHeight = 46.sp),
+    displaySmall = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.Medium, lineHeight = 40.sp),
+    headlineLarge = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.Medium, lineHeight = 32.sp),
+    headlineMedium = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Medium, lineHeight = 28.sp),
+    headlineSmall = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp),
+    titleLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, lineHeight = 22.sp),
+    titleMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp),
+    bodyLarge = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Normal, lineHeight = 22.sp),
+    bodyMedium = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Normal, lineHeight = 19.sp),
+    bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 17.sp),
+    labelLarge = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.3.sp, lineHeight = 16.sp),
 )
 
 // Tough typography — heavier, all-caps feel via tracking
@@ -190,20 +246,36 @@ private val ToughTypography = Typography(
     labelLarge = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, lineHeight = 18.sp),
 )
 
-private fun paletteFor(variant: ThemeVariant, dark: Boolean): Palette = when (variant) {
+fun paletteFor(variant: ThemeVariant, dark: Boolean): Palette = when (variant) {
     ThemeVariant.Kawaii -> if (dark) KawaiiDark else KawaiiLight
     ThemeVariant.Tough -> if (dark) ToughDark else ToughLight
+    ThemeVariant.Neutral -> if (dark) NeutralDark else NeutralLight
+}
+
+private fun typographyFor(variant: ThemeVariant): Typography = when (variant) {
+    ThemeVariant.Kawaii -> KawaiiTypography
+    ThemeVariant.Tough -> ToughTypography
+    ThemeVariant.Neutral -> NeutralTypography
+}
+
+private fun shapesFor(variant: ThemeVariant): Shapes = when (variant) {
+    ThemeVariant.Kawaii -> KawaiiShapes
+    ThemeVariant.Tough -> ToughShapes
+    ThemeVariant.Neutral -> NeutralShapes
 }
 
 @Composable
 fun AscendyTheme(variant: ThemeVariant = ThemeVariant.Kawaii, content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val p = paletteFor(variant, dark)
-    CompositionLocalProvider(LocalPalette provides p) {
+    CompositionLocalProvider(
+        LocalPalette provides p,
+        LocalVocab provides vocabFor(variant),
+    ) {
         MaterialTheme(
             colorScheme = colorSchemeFor(p),
-            typography = if (variant == ThemeVariant.Tough) ToughTypography else KawaiiTypography,
-            shapes = if (variant == ThemeVariant.Tough) ToughShapes else KawaiiShapes,
+            typography = typographyFor(variant),
+            shapes = shapesFor(variant),
             content = content
         )
     }

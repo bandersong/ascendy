@@ -14,16 +14,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ascendy.app.AscendyApp
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.theme.AscendyTheme
+import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
-import androidx.compose.material3.MaterialTheme
+import com.ascendy.app.ui.theme.vocab
 
 class BlockerActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,13 +46,16 @@ class BlockerActivity : ComponentActivity() {
             )
         }
 
+        val app = application as AscendyApp
         setContent {
-            AscendyTheme {
+            val variant by app.themePrefs.variant.collectAsState(initial = ThemeVariant.Kawaii)
+            AscendyTheme(variant = variant) {
                 BlockerScreen()
             }
         }
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
         // swallow back
     }
@@ -71,14 +79,14 @@ private fun BlockerScreen() {
             }
             Spacer(Modifier.height(24.dp))
             Text(
-                "shhh… you're focusing ♡",
+                vocab.blockerTitle,
                 style = MaterialTheme.typography.headlineMedium,
                 color = palette.Ink,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(12.dp))
             Text(
-                "tap your tag to come back",
+                vocab.blockerBody,
                 style = MaterialTheme.typography.bodyLarge,
                 color = palette.Smoke,
                 textAlign = TextAlign.Center

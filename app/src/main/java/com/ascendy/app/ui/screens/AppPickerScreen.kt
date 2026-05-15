@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.vocab
 
 data class AppInfo(
     val packageName: String,
@@ -94,7 +95,7 @@ fun AppPickerScreen(
         OutlinedTextField(
             value = query,
             onValueChange = { query = it },
-            label = { Text("search apps") },
+            label = { Text(vocab.pickerSearch) },
             singleLine = true,
             modifier = Modifier
                 .fillMaxWidth()

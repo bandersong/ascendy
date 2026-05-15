@@ -1,5 +1,6 @@
 package com.ascendy.app.ui.screens
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,14 +22,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.MiniMascot
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.LocalPalette
+import com.ascendy.app.ui.theme.LocalVocab
 import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.paletteFor
+import com.ascendy.app.ui.theme.vocab
+import com.ascendy.app.ui.theme.vocabFor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,6 +45,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
+    val dark = isSystemInDarkTheme()
 
     Column(
         modifier = Modifier
@@ -50,41 +58,54 @@ fun SettingsScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
             }
-            Text("settings", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
+            Text(vocab.settingsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
         Spacer(Modifier.height(8.dp))
 
+        val currentLabel = when (current) {
+            ThemeVariant.Kawaii -> vocab.settingsKawaiiLabel
+            ThemeVariant.Tough -> vocab.settingsToughLabel
+            ThemeVariant.Neutral -> vocab.settingsNeutralLabel
+        }
         Text(
-            when (current) {
-                ThemeVariant.Kawaii -> "theme: kawaii ♡"
-                ThemeVariant.Tough -> "theme: tough ⛓"
-            },
+            vocab.settingsCurrentLabelFmt.format(currentLabel),
             style = MaterialTheme.typography.titleLarge,
             color = palette.Smoke
         )
         Spacer(Modifier.height(8.dp))
 
         ThemeCard(
-            label = "kawaii",
-            tagline = "soft pink, blush cheeks, soothing curves ♡",
             variant = ThemeVariant.Kawaii,
+            dark = dark,
+            label = vocab.settingsKawaiiLabel,
+            tagline = vocab.settingsKawaiiTagline,
             selected = current == ThemeVariant.Kawaii,
             onClick = { onPickTheme(ThemeVariant.Kawaii) }
         )
         Spacer(Modifier.height(8.dp))
         ThemeCard(
-            label = "tough",
-            tagline = "iron chains, hard edges, scowling mascot ⛓",
             variant = ThemeVariant.Tough,
+            dark = dark,
+            label = vocab.settingsToughLabel,
+            tagline = vocab.settingsToughTagline,
             selected = current == ThemeVariant.Tough,
             onClick = { onPickTheme(ThemeVariant.Tough) }
+        )
+        Spacer(Modifier.height(8.dp))
+        ThemeCard(
+            variant = ThemeVariant.Neutral,
+            dark = dark,
+            label = vocab.settingsNeutralLabel,
+            tagline = vocab.settingsNeutralTagline,
+            selected = current == ThemeVariant.Neutral,
+            onClick = { onPickTheme(ThemeVariant.Neutral) }
         )
 
         Spacer(Modifier.height(24.dp))
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Text(
-                "more themes coming soon — drop ideas via the github repo.",
+                vocab.settingsFooter,
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.Smoke
             )
@@ -92,15 +113,24 @@ fun SettingsScreen(
     }
 }
 
+/**
+ * Each card renders its mascot under that variant's palette so the user sees three
+ * different mascots. The chrome (background, text colour, badge) stays on the active
+ * theme — only what's inside the per-variant provider swaps.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ThemeCard(
+    variant: ThemeVariant,
+    dark: Boolean,
     label: String,
     tagline: String,
-    variant: ThemeVariant,
     selected: Boolean,
     onClick: () -> Unit,
 ) {
+    val variantPalette = paletteFor(variant, dark)
+    val variantVocab = vocabFor(variant)
+
     Surface(
         onClick = onClick,
         color = MaterialTheme.colorScheme.surface,
@@ -111,17 +141,34 @@ private fun ThemeCard(
             modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                // tiny live preview of the variant's mascot
-                MiniMascot(locked = false, modifier = Modifier.fillMaxSize())
+            // Variant-themed preview tile — palette swapped only for this Box's subtree
+            Box(
+                Modifier
+                    .size(52.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                CompositionLocalProvider(
+                    LocalPalette provides variantPalette,
+                    LocalVocab provides variantVocab,
+                ) {
+                    Surface(
+                        color = variantPalette.Cloud,
+                        shape = MaterialTheme.shapes.medium,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Box(Modifier.padding(4.dp), contentAlignment = Alignment.Center) {
+                            MiniMascot(locked = false, modifier = Modifier.fillMaxSize())
+                        }
+                    }
+                }
             }
             Spacer(Modifier.size(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Text(tagline, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
             }
-            if (selected) Badge(label = "active", color = palette.Sage)
-            else Badge(label = "tap", color = palette.Mint)
+            if (selected) Badge(label = vocab.settingsBadgeActive, color = palette.Sage)
+            else Badge(label = vocab.settingsBadgeSelect, color = palette.Mint)
         }
     }
 }

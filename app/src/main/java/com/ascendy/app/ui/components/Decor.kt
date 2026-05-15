@@ -75,6 +75,7 @@ private fun DrawScope.drawMascot(p: Palette, locked: Boolean, cx: Float, cy: Flo
             if (locked) drawAngryMoon(p, cx, cy, r) else drawAngryStar(p, cx, cy, r)
             if (withChains) drawChains(p, cx, cy, r)
         }
+        ThemeVariant.Neutral -> if (locked) drawNeutralLocked(p, cx, cy, r) else drawNeutralIdle(p, cx, cy, r)
     }
 }
 
@@ -246,6 +247,98 @@ private fun DrawScope.drawAngryMoon(p: Palette, cx: Float, cy: Float, r: Float) 
     // tiny accent (red eye glint)
     drawCircle(color = accent, radius = r * 0.04f, center = Offset(cx - r * 0.26f, cy - r * 0.15f))
     drawCircle(color = accent, radius = r * 0.04f, center = Offset(cx + r * 0.34f, cy - r * 0.15f))
+}
+
+// ───── Neutral drawings — clean rounded "badge" face, no decoration ─────
+
+private fun DrawScope.drawNeutralIdle(p: Palette, cx: Float, cy: Float, r: Float) {
+    val body = p.Cloud
+    val outline = p.Mist
+    val face = p.Ink
+    val accent = p.Petal
+
+    // rounded square card
+    val side = r * 1.7f
+    val corner = r * 0.25f
+    val topLeft = Offset(cx - side / 2, cy - side / 2)
+    drawRoundRect(
+        color = body,
+        topLeft = topLeft,
+        size = Size(side, side),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
+    )
+    drawRoundRect(
+        color = outline,
+        topLeft = topLeft,
+        size = Size(side, side),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner),
+        style = Stroke(width = r * 0.03f)
+    )
+
+    // two clean dot eyes
+    drawCircle(color = face, radius = r * 0.07f, center = Offset(cx - r * 0.22f, cy - r * 0.05f))
+    drawCircle(color = face, radius = r * 0.07f, center = Offset(cx + r * 0.22f, cy - r * 0.05f))
+
+    // neutral straight mouth
+    drawLine(
+        color = face,
+        start = Offset(cx - r * 0.18f, cy + r * 0.28f),
+        end = Offset(cx + r * 0.18f, cy + r * 0.28f),
+        strokeWidth = r * 0.06f
+    )
+
+    // small accent bar at top (corporate badge feel)
+    drawRoundRect(
+        color = accent,
+        topLeft = Offset(cx - r * 0.28f, cy - r * 0.65f),
+        size = Size(r * 0.56f, r * 0.08f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(r * 0.04f, r * 0.04f)
+    )
+}
+
+private fun DrawScope.drawNeutralLocked(p: Palette, cx: Float, cy: Float, r: Float) {
+    val body = p.Cloud
+    val outline = p.Mist
+    val face = p.Ink
+    val accent = p.Petal
+
+    val side = r * 1.7f
+    val corner = r * 0.25f
+    val topLeft = Offset(cx - side / 2, cy - side / 2)
+    drawRoundRect(
+        color = body,
+        topLeft = topLeft,
+        size = Size(side, side),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner)
+    )
+    drawRoundRect(
+        color = outline,
+        topLeft = topLeft,
+        size = Size(side, side),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(corner, corner),
+        style = Stroke(width = r * 0.03f)
+    )
+
+    // closed-eye slits (focused / heads-down)
+    drawLine(face, Offset(cx - r * 0.32f, cy - r * 0.05f), Offset(cx - r * 0.12f, cy - r * 0.05f), strokeWidth = r * 0.06f)
+    drawLine(face, Offset(cx + r * 0.12f, cy - r * 0.05f), Offset(cx + r * 0.32f, cy - r * 0.05f), strokeWidth = r * 0.06f)
+
+    // slight downward focused mouth (concentration, not anger)
+    drawLine(
+        color = face,
+        start = Offset(cx - r * 0.16f, cy + r * 0.30f),
+        end = Offset(cx + r * 0.16f, cy + r * 0.30f),
+        strokeWidth = r * 0.06f
+    )
+
+    // accent bar slightly dimmed (in session)
+    drawRoundRect(
+        color = accent,
+        topLeft = Offset(cx - r * 0.28f, cy - r * 0.65f),
+        size = Size(r * 0.56f, r * 0.08f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(r * 0.04f, r * 0.04f),
+        alpha = 0.45f
+    )
 }
 
 /** Draw a pair of iron chains flanking the mascot. */

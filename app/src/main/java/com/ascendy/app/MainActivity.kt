@@ -58,6 +58,9 @@ class MainActivity : ComponentActivity() {
     private val pairingMode = MutableStateFlow(false)
     private val pendingPairedTag = MutableStateFlow<String?>(null)
 
+    @Volatile
+    private var currentVocab: com.ascendy.app.ui.theme.Vocab = com.ascendy.app.ui.theme.KawaiiVocab
+
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { /* ignored, UI re-checks on resume */ }
@@ -74,6 +77,13 @@ class MainActivity : ComponentActivity() {
             if (sess?.active == true) {
                 val pkgs = app.repo.packages(sess.listId).toSet()
                 com.ascendy.app.blocking.BlockState.set(true, pkgs)
+            }
+        }
+
+        // keep currentVocab in sync with the persisted theme so toasts use the right voice
+        lifecycleScope.launch {
+            app.themePrefs.variant.collect { v ->
+                currentVocab = com.ascendy.app.ui.theme.vocabFor(v)
             }
         }
 
@@ -132,11 +142,12 @@ class MainActivity : ComponentActivity() {
 
         val tagId = NfcManager.readTagId(intent) ?: return
         lifecycleScope.launch {
+            val v = currentVocab
             when (val result = controller.handleTagTap(tagId)) {
-                is TapResult.Locked -> toast("focusing ✨ (${result.listName})")
-                is TapResult.Unlocked -> toast("welcome back 🌸")
-                is TapResult.UnknownTag -> toast("unknown tag — pair it in tags ♡")
-                is TapResult.WrongTag -> toast("use the original tag to unlock")
+                is TapResult.Locked -> toast(v.toastLockedFmt.format(result.listName))
+                is TapResult.Unlocked -> toast(v.toastUnlocked)
+                is TapResult.UnknownTag -> toast(v.toastUnknownTag)
+                is TapResult.WrongTag -> toast(v.toastWrongTag)
             }
         }
     }
@@ -188,6 +199,8 @@ private fun AppNav(
     NavHost(navController = nav, startDestination = "home") {
         composable("home") {
             LaunchedEffect(Unit) { permissions = checkPermissions(context) }
+            val emergencyUsedMsg = com.ascendy.app.ui.theme.vocab.emergencyUsed
+            val emergencyNoneMsg = com.ascendy.app.ui.theme.vocab.emergencyNone
             HomeScreen(
                 tagCount = tags.size,
                 listCount = lists.size,
@@ -199,9 +212,9 @@ private fun AppNav(
                 onEmergencyUnlock = {
                     scope.launch {
                         if (controller.useEmergencyUnlock()) {
-                            Toast.makeText(context, "unlocked — one use spent", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, emergencyUsedMsg, Toast.LENGTH_SHORT).show()
                         } else {
-                            Toast.makeText(context, "no unlocks left", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, emergencyNoneMsg, Toast.LENGTH_SHORT).show()
                         }
                     }
                 }

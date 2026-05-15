@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.vocab
 
 data class PermissionStatus(
     val accessibility: Boolean,
@@ -61,13 +62,13 @@ fun PermissionsScreen(
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
             }
-            Text("permissions", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
+            Text(vocab.permsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
         Spacer(Modifier.height(8.dp))
 
         Text(
-            "ascendy needs these to block apps. nothing leaves your device.",
+            vocab.permsIntro,
             style = MaterialTheme.typography.bodyMedium,
             color = palette.Smoke
         )
@@ -75,11 +76,11 @@ fun PermissionsScreen(
         Spacer(Modifier.height(16.dp))
 
         PermissionCard(
-            emoji = "♿",
-            title = "accessibility",
-            body = "the primary blocking path. watches the foreground app and bounces you home.",
+            emoji = vocab.permsAccessibilityEmoji,
+            title = vocab.permsAccessibilityTitle,
+            body = vocab.permsAccessibilityBody,
             granted = status.accessibility,
-            actionLabel = "open settings",
+            actionLabel = vocab.permsOpenSettings,
             onClick = {
                 context.startActivity(
                     Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
@@ -90,11 +91,11 @@ fun PermissionsScreen(
         Spacer(Modifier.height(8.dp))
 
         PermissionCard(
-            emoji = "📊",
-            title = "usage access",
-            body = "fallback path used if accessibility is unavailable (e.g. android 17 advanced protection).",
+            emoji = vocab.permsUsageEmoji,
+            title = vocab.permsUsageTitle,
+            body = vocab.permsUsageBody,
             granted = status.usageStats,
-            actionLabel = "open settings",
+            actionLabel = vocab.permsOpenSettings,
             onClick = {
                 context.startActivity(
                     Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
@@ -105,11 +106,11 @@ fun PermissionsScreen(
         Spacer(Modifier.height(8.dp))
 
         PermissionCard(
-            emoji = "🪟",
-            title = "display over other apps",
-            body = "lets the kawaii blocker overlay show on top of blocked apps.",
+            emoji = vocab.permsOverlayEmoji,
+            title = vocab.permsOverlayTitle,
+            body = vocab.permsOverlayBody,
             granted = status.overlay,
-            actionLabel = "open settings",
+            actionLabel = vocab.permsOpenSettings,
             onClick = {
                 context.startActivity(
                     Intent(
@@ -122,11 +123,11 @@ fun PermissionsScreen(
         Spacer(Modifier.height(8.dp))
 
         PermissionCard(
-            emoji = "🔔",
-            title = "notifications",
-            body = "the focus session shows a persistent notification while active (android 13+).",
+            emoji = vocab.permsNotificationsEmoji,
+            title = vocab.permsNotificationsTitle,
+            body = vocab.permsNotificationsBody,
             granted = status.notifications,
-            actionLabel = "allow",
+            actionLabel = vocab.permsAllow,
             onClick = onRequestNotifications
         )
 
@@ -134,10 +135,10 @@ fun PermissionsScreen(
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Column {
-                Text("a heads-up about android 17", style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                Text(vocab.permsAapmHeader, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "advanced protection mode disables accessibility services for apps not categorised as accessibility tools. ascendy isn't one — so when aapm is on, only the usage-stats path runs.",
+                    vocab.permsAapmBody,
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.Smoke
                 )
@@ -158,12 +159,14 @@ private fun PermissionCard(
     SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
         Column {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(emoji, style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.size(10.dp))
+                if (emoji.isNotEmpty()) {
+                    Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                    Spacer(Modifier.size(10.dp))
+                }
                 Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Spacer(Modifier.weight(1f))
                 Badge(
-                    label = if (granted) "ok" else "missing",
+                    label = if (granted) vocab.permsBadgeOk else vocab.permsBadgeMissing,
                     color = if (granted) palette.Sage else palette.Petal
                 )
             }

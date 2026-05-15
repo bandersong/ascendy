@@ -35,35 +35,35 @@ data class Palette(
     val Surface: Color,        // card surface
 )
 
-// ───── Kawaii (mint + peach macaron palette — cute, fresh, not girly-pink) ─────
+// ───── Kawaii (Strawberry Milk + Sakura — cool pinks, lavender co-star, plum text) ─────
 val KawaiiLight = Palette(
     variant = ThemeVariant.Kawaii,
     isDark = false,
-    Cream = Color(0xFFF6FBF6),          // fresh near-white with whisper of mint
-    Cloud = Color(0xFFE9F6EC),          // soft mint cream for secondary surfaces
-    Petal = Color(0xFFA8E6CE),          // primary — mint candy
-    Lilac = Color(0xFFFFB7A8),          // secondary — coral peach
-    Mint = Color(0xFFCDEEFE),           // tertiary — sky blue accent
-    Sage = Color(0xFFDFF1C2),           // success-ish — fresh leaf
-    Ink = Color(0xFF1F3A2F),            // deep forest-charcoal text
-    Smoke = Color(0xFF60806E),          // muted sage for secondary text
-    Mist = Color(0xFFE3EFE6),           // dividers
-    Surface = Color(0xFFFFFFFF),
+    Cream = Color(0xFFFFF5F7),          // strawberry-milk background
+    Cloud = Color(0xFFFCEAEF),           // soft pink secondary surface
+    Petal = Color(0xFFFF8FB1),           // primary — sakura mochi pink
+    Lilac = Color(0xFFC7B8EA),           // secondary — Kuromi/wisteria lavender
+    Mint = Color(0xFFFFD6A5),            // tertiary — sun-warmed peach
+    Sage = Color(0xFFA8D8B9),            // success — Cinnamoroll mint
+    Ink = Color(0xFF4A2C3D),             // deep plum-maroon
+    Smoke = Color(0xFF9B7A8A),           // dusty mauve for muted text
+    Mist = Color(0xFFF5E1E8),            // pink fog dividers
+    Surface = Color(0xFFFFFDFE),          // off-white with whisper of pink
 )
 
 val KawaiiDark = Palette(
     variant = ThemeVariant.Kawaii,
     isDark = true,
-    Cream = Color(0xFF142019),
-    Cloud = Color(0xFF1C2C24),
-    Petal = Color(0xFF95D9BD),
-    Lilac = Color(0xFFFFB7A8),
-    Mint = Color(0xFFA4D2EA),
-    Sage = Color(0xFFB8D89F),
-    Ink = Color(0xFFE6F2EA),
-    Smoke = Color(0xFF9BB3A4),
-    Mist = Color(0xFF263a30),
-    Surface = Color(0xFF1A2920),
+    Cream = Color(0xFF2A1A24),            // deep plum bg
+    Cloud = Color(0xFF3A2530),
+    Petal = Color(0xFFFFB7CC),            // softer pink for dark
+    Lilac = Color(0xFFC7B8EA),
+    Mint = Color(0xFFFFD6A5),
+    Sage = Color(0xFFA8D8B9),
+    Ink = Color(0xFFFFF5F7),
+    Smoke = Color(0xFFC9A8B5),
+    Mist = Color(0xFF4A2E3C),
+    Surface = Color(0xFF321F2A),
 )
 
 // ───── Tough (gritty, monochrome with iron accents) ─────
@@ -128,7 +128,7 @@ val NeutralDark = Palette(
     Surface = Color(0xFF1A1D24),
 )
 
-val LocalPalette = staticCompositionLocalOf { KawaiiLight }
+val LocalPalette = staticCompositionLocalOf { NeutralLight }
 
 /** Top-level composable accessor so screens just write `palette.Ink` etc. */
 val palette: Palette
@@ -265,7 +265,7 @@ private fun shapesFor(variant: ThemeVariant): Shapes = when (variant) {
 }
 
 @Composable
-fun AscendyTheme(variant: ThemeVariant = ThemeVariant.Kawaii, content: @Composable () -> Unit) {
+fun AscendyTheme(variant: ThemeVariant = ThemeVariant.Neutral, content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val p = paletteFor(variant, dark)
     CompositionLocalProvider(

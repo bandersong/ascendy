@@ -185,6 +185,12 @@ data class Vocab(
     val tagListPickerLabel: String,
     val tagListPickerDefault: String,
 
+    // themes intro dialog (one-time after onboarding)
+    val themesIntroTitle: String,
+    val themesIntroBody: String,
+    val themesIntroOpen: String,
+    val themesIntroLater: String,
+
     // QR
     val qrGenerateButton: String,
     val qrGeneratedTitle: String,
@@ -357,6 +363,11 @@ val KawaiiVocab = Vocab(
     tagListPickerLabel = "this tag locks…",
     tagListPickerDefault = "default list",
 
+    themesIntroTitle = "psst — there are themes ♡",
+    themesIntroBody = "ascendy comes with three looks: neutral (where you are now), kawaii (this one ♡), and tough. swap anytime in settings — the whole app changes, mascot and all.",
+    themesIntroOpen = "show me",
+    themesIntroLater = "later",
+
     qrGenerateButton = "generate qr code ✨",
     qrGeneratedTitle = "your qr anchor ♡",
     qrInstructions = "save & print this. stick it somewhere annoying — fridge, drawer, gym bag. scan it to lock or unlock.",
@@ -527,6 +538,11 @@ val ToughVocab = Vocab(
 
     tagListPickerLabel = "THIS ANCHOR LOCKS…",
     tagListPickerDefault = "DEFAULT LIST",
+
+    themesIntroTitle = "THEMES — PICK YOUR LOOK.",
+    themesIntroBody = "three modes: neutral, kawaii, tough (this one). swap any time. settings → tough.",
+    themesIntroOpen = "OPEN SETTINGS",
+    themesIntroLater = "LATER",
 
     qrGenerateButton = "GENERATE QR ANCHOR",
     qrGeneratedTitle = "YOUR QR ANCHOR",
@@ -699,6 +715,11 @@ val NeutralVocab = Vocab(
     tagListPickerLabel = "This tag locks…",
     tagListPickerDefault = "Default list",
 
+    themesIntroTitle = "Pick your look",
+    themesIntroBody = "Ascendy ships with three themes: Neutral (current), Kawaii, and Tough. Each restyles the whole app — colors, typography, mascot, copy. Switch in Settings whenever you want.",
+    themesIntroOpen = "Open settings",
+    themesIntroLater = "Later",
+
     qrGenerateButton = "Generate QR code",
     qrGeneratedTitle = "QR anchor",
     qrInstructions = "Save and print this QR code. Place it somewhere inconvenient (fridge, drawer, vehicle). Scan it to begin or end a focus session.",
@@ -718,7 +739,7 @@ fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {
     ThemeVariant.Neutral -> NeutralVocab
 }
 
-val LocalVocab = staticCompositionLocalOf { KawaiiVocab }
+val LocalVocab = staticCompositionLocalOf { NeutralVocab }
 
 val vocab: Vocab
     @Composable @ReadOnlyComposable

@@ -59,7 +59,7 @@ class MainActivity : ComponentActivity() {
     private val pendingPairedTag = MutableStateFlow<String?>(null)
 
     @Volatile
-    private var currentVocab: com.ascendy.app.ui.theme.Vocab = com.ascendy.app.ui.theme.KawaiiVocab
+    private var currentVocab: com.ascendy.app.ui.theme.Vocab = com.ascendy.app.ui.theme.NeutralVocab
 
     private val notifPermLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val variant by app.themePrefs.variant.collectAsState(initial = com.ascendy.app.ui.theme.ThemeVariant.Kawaii)
+            val variant by app.themePrefs.variant.collectAsState(initial = com.ascendy.app.ui.theme.ThemeVariant.Neutral)
             AscendyTheme(variant = variant) {
                 Surface(
                     modifier = Modifier
@@ -207,13 +207,14 @@ private fun AppNav(
     val nav = rememberNavController()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val currentVariant by themePrefs.variant.collectAsState(initial = com.ascendy.app.ui.theme.ThemeVariant.Kawaii)
+    val currentVariant by themePrefs.variant.collectAsState(initial = com.ascendy.app.ui.theme.ThemeVariant.Neutral)
 
     val tags by repo.observeTags().collectAsState(initial = emptyList())
     val lists by repo.observeLists().collectAsState(initial = emptyList())
     val pairing by pairingFlow.collectAsState()
     val detected by detectedTagFlow.collectAsState()
     val onboarded by themePrefs.onboarded.collectAsState(initial = false)
+    val themesIntroSeen by themePrefs.themesIntroSeen.collectAsState(initial = true)
 
     var permissions by remember { mutableStateOf(checkPermissions(context)) }
 
@@ -493,6 +494,36 @@ private fun AppNav(
                 onBack = { nav.popBackStack() }
             )
         }
+    }
+
+    // One-time themes intro dialog (after onboarding, before the user does anything else).
+    if (onboarded && !themesIntroSeen) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {
+                scope.launch { themePrefs.markThemesIntroSeen() }
+            },
+            title = {
+                androidx.compose.material3.Text(com.ascendy.app.ui.theme.vocab.themesIntroTitle)
+            },
+            text = {
+                androidx.compose.material3.Text(com.ascendy.app.ui.theme.vocab.themesIntroBody)
+            },
+            confirmButton = {
+                androidx.compose.material3.Button(onClick = {
+                    scope.launch { themePrefs.markThemesIntroSeen() }
+                    nav.navigate("settings")
+                }) {
+                    androidx.compose.material3.Text(com.ascendy.app.ui.theme.vocab.themesIntroOpen)
+                }
+            },
+            dismissButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    scope.launch { themePrefs.markThemesIntroSeen() }
+                }) {
+                    androidx.compose.material3.Text(com.ascendy.app.ui.theme.vocab.themesIntroLater)
+                }
+            }
+        )
     }
 }
 

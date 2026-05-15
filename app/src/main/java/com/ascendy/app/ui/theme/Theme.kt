@@ -15,15 +15,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 object AscendyColors {
-    val Cream = Color(0xFFFFF8F3)
-    val Cloud = Color(0xFFFDF2F8)
-    val Petal = Color(0xFFFFC8DD)
-    val Lilac = Color(0xFFCDB4DB)
-    val Mint = Color(0xFFBDE0FE)
-    val Sage = Color(0xFFC8E6C9)
-    val Ink = Color(0xFF1A1224)
-    val Smoke = Color(0xFF4F4258)
-    val Mist = Color(0xFFE6DAEC)
+    val Cream = Color(0xFFFFFBFD)          // background — almost white, breath of pink
+    val Cloud = Color(0xFFFAF1F7)          // secondary surface
+    val Petal = Color(0xFFFFD4E5)          // primary, slightly softer pink
+    val Lilac = Color(0xFFE0CFEC)          // lighter lavender
+    val Mint = Color(0xFFCFEAFE)
+    val Sage = Color(0xFFD4ECD5)
+    val Ink = Color(0xFF2E2538)            // purple-charcoal, not jet black
+    val Smoke = Color(0xFF8278A0)          // lighter muted for secondary text
+    val Mist = Color(0xFFF0E8F3)
 
     val Night = Color(0xFF1F1A24)
     val NightSurface = Color(0xFF2A2330)
@@ -42,7 +42,7 @@ private val Light = lightColorScheme(
     onTertiary = AscendyColors.Ink,
     background = AscendyColors.Cream,
     onBackground = AscendyColors.Ink,
-    surface = AscendyColors.Cream,
+    surface = Color(0xFFFFFFFF),                          // pure white cards float above bg
     onSurface = AscendyColors.Ink,
     surfaceVariant = AscendyColors.Mist,
     onSurfaceVariant = AscendyColors.Smoke,
@@ -76,18 +76,18 @@ private val AscendyShapes = Shapes(
 )
 
 private val AscendyTypography = Typography(
-    displayLarge = TextStyle(fontSize = 56.sp, fontWeight = FontWeight.Black, letterSpacing = (-1).sp, lineHeight = 60.sp),
-    displayMedium = TextStyle(fontSize = 44.sp, fontWeight = FontWeight.Black, letterSpacing = (-0.5).sp, lineHeight = 48.sp),
-    displaySmall = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 40.sp),
-    headlineLarge = TextStyle(fontSize = 32.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 36.sp),
-    headlineMedium = TextStyle(fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 32.sp),
-    headlineSmall = TextStyle(fontSize = 22.sp, fontWeight = FontWeight.Bold, lineHeight = 28.sp),
-    titleLarge = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold, lineHeight = 26.sp),
-    titleMedium = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, lineHeight = 22.sp),
+    displayLarge = TextStyle(fontSize = 56.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-1).sp, lineHeight = 60.sp),
+    displayMedium = TextStyle(fontSize = 44.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.5).sp, lineHeight = 48.sp),
+    displaySmall = TextStyle(fontSize = 36.sp, fontWeight = FontWeight.SemiBold, lineHeight = 40.sp),
+    headlineLarge = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.SemiBold, lineHeight = 36.sp),
+    headlineMedium = TextStyle(fontSize = 24.sp, fontWeight = FontWeight.SemiBold, lineHeight = 30.sp),
+    headlineSmall = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Medium, lineHeight = 26.sp),
+    titleLarge = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Medium, lineHeight = 24.sp),
+    titleMedium = TextStyle(fontSize = 15.sp, fontWeight = FontWeight.Medium, lineHeight = 21.sp),
     bodyLarge = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp),
     bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 20.sp),
     bodySmall = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Normal, lineHeight = 18.sp),
-    labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, lineHeight = 20.sp),
+    labelLarge = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp),
 )
 
 @Composable

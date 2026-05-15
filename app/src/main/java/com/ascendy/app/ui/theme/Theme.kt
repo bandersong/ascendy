@@ -35,35 +35,35 @@ data class Palette(
     val Surface: Color,        // card surface
 )
 
-// ───── Kawaii (default — soft, pastel, friendly) ─────
+// ───── Kawaii (mint + peach macaron palette — cute, fresh, not girly-pink) ─────
 val KawaiiLight = Palette(
     variant = ThemeVariant.Kawaii,
     isDark = false,
-    Cream = Color(0xFFFFFBFD),
-    Cloud = Color(0xFFFAF1F7),
-    Petal = Color(0xFFFFD4E5),
-    Lilac = Color(0xFFE0CFEC),
-    Mint = Color(0xFFCFEAFE),
-    Sage = Color(0xFFD4ECD5),
-    Ink = Color(0xFF2E2538),
-    Smoke = Color(0xFF8278A0),
-    Mist = Color(0xFFF0E8F3),
+    Cream = Color(0xFFF6FBF6),          // fresh near-white with whisper of mint
+    Cloud = Color(0xFFE9F6EC),          // soft mint cream for secondary surfaces
+    Petal = Color(0xFFA8E6CE),          // primary — mint candy
+    Lilac = Color(0xFFFFB7A8),          // secondary — coral peach
+    Mint = Color(0xFFCDEEFE),           // tertiary — sky blue accent
+    Sage = Color(0xFFDFF1C2),           // success-ish — fresh leaf
+    Ink = Color(0xFF1F3A2F),            // deep forest-charcoal text
+    Smoke = Color(0xFF60806E),          // muted sage for secondary text
+    Mist = Color(0xFFE3EFE6),           // dividers
     Surface = Color(0xFFFFFFFF),
 )
 
 val KawaiiDark = Palette(
     variant = ThemeVariant.Kawaii,
     isDark = true,
-    Cream = Color(0xFF1F1A24),
-    Cloud = Color(0xFF2A2330),
-    Petal = Color(0xFFFFC8DD),
-    Lilac = Color(0xFFCDB4DB),
-    Mint = Color(0xFFBDE0FE),
-    Sage = Color(0xFFC8E6C9),
-    Ink = Color(0xFFF5EBFF),
-    Smoke = Color(0xFFB8AFC4),
-    Mist = Color(0xFF3A3140),
-    Surface = Color(0xFF2A2330),
+    Cream = Color(0xFF142019),
+    Cloud = Color(0xFF1C2C24),
+    Petal = Color(0xFF95D9BD),
+    Lilac = Color(0xFFFFB7A8),
+    Mint = Color(0xFFA4D2EA),
+    Sage = Color(0xFFB8D89F),
+    Ink = Color(0xFFE6F2EA),
+    Smoke = Color(0xFF9BB3A4),
+    Mist = Color(0xFF263a30),
+    Surface = Color(0xFF1A2920),
 )
 
 // ───── Tough (gritty, monochrome with iron accents) ─────

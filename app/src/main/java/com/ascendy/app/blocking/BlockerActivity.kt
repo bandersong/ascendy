@@ -22,7 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.theme.AscendyTheme
-import com.ascendy.app.ui.theme.AscendyColors
+import com.ascendy.app.ui.theme.palette
 import androidx.compose.material3.MaterialTheme
 
 class BlockerActivity : ComponentActivity() {
@@ -73,14 +73,14 @@ private fun BlockerScreen() {
             Text(
                 "shhh… you're focusing ♡",
                 style = MaterialTheme.typography.headlineMedium,
-                color = AscendyColors.Ink,
+                color = palette.Ink,
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(12.dp))
             Text(
                 "tap your tag to come back",
                 style = MaterialTheme.typography.bodyLarge,
-                color = AscendyColors.Smoke,
+                color = palette.Smoke,
                 textAlign = TextAlign.Center
             )
         }

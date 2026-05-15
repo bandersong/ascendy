@@ -42,7 +42,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
-import com.ascendy.app.ui.theme.AscendyColors
+import com.ascendy.app.ui.theme.palette
 
 data class AppInfo(
     val packageName: String,
@@ -86,9 +86,9 @@ fun AppPickerScreen(
             modifier = Modifier.padding(horizontal = 4.dp)
         ) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = AscendyColors.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
             }
-            Text(listName, style = MaterialTheme.typography.headlineMedium, color = AscendyColors.Ink)
+            Text(listName, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
         OutlinedTextField(
@@ -136,8 +136,8 @@ private fun AppRow(app: AppInfo, checked: Boolean, onCheckedChange: (Boolean) ->
                 Spacer(Modifier.size(12.dp))
             }
             Column(Modifier.weight(1f)) {
-                Text(app.label, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
-                Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = AscendyColors.Smoke)
+                Text(app.label, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
             }
             Switch(checked = checked, onCheckedChange = onCheckedChange)
         }

@@ -30,7 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.SoftCard
-import com.ascendy.app.ui.theme.AscendyColors
+import com.ascendy.app.ui.theme.palette
 
 data class PermissionStatus(
     val accessibility: Boolean,
@@ -59,9 +59,9 @@ fun PermissionsScreen(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = AscendyColors.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
             }
-            Text("permissions", style = MaterialTheme.typography.headlineMedium, color = AscendyColors.Ink)
+            Text("permissions", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
         Spacer(Modifier.height(8.dp))
@@ -69,7 +69,7 @@ fun PermissionsScreen(
         Text(
             "ascendy needs these to block apps. nothing leaves your device.",
             style = MaterialTheme.typography.bodyMedium,
-            color = AscendyColors.Smoke
+            color = palette.Smoke
         )
 
         Spacer(Modifier.height(16.dp))
@@ -134,12 +134,12 @@ fun PermissionsScreen(
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Column {
-                Text("a heads-up about android 17", style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+                Text("a heads-up about android 17", style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "advanced protection mode disables accessibility services for apps not categorised as accessibility tools. ascendy isn't one — so when aapm is on, only the usage-stats path runs.",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = AscendyColors.Smoke
+                    color = palette.Smoke
                 )
             }
         }
@@ -160,15 +160,15 @@ private fun PermissionCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(emoji, style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.size(10.dp))
-                Text(title, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+                Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Spacer(Modifier.weight(1f))
                 Badge(
                     label = if (granted) "ok" else "missing",
-                    color = if (granted) AscendyColors.Sage else AscendyColors.Petal
+                    color = if (granted) palette.Sage else palette.Petal
                 )
             }
             Spacer(Modifier.height(6.dp))
-            Text(body, style = MaterialTheme.typography.bodyMedium, color = AscendyColors.Smoke)
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
             if (!granted) {
                 Spacer(Modifier.height(4.dp))
                 TextButton(onClick = onClick) { Text(actionLabel) }

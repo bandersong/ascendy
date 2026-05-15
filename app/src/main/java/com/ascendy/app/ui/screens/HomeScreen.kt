@@ -30,7 +30,7 @@ import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.SoftCard
-import com.ascendy.app.ui.theme.AscendyColors
+import com.ascendy.app.ui.theme.palette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +41,7 @@ fun HomeScreen(
     onPairTag: () -> Unit,
     onOpenLists: () -> Unit,
     onOpenPermissions: () -> Unit,
+    onOpenSettings: () -> Unit,
     onEmergencyUnlock: () -> Unit,
 ) {
     val active by BlockState.active.collectAsState()
@@ -59,13 +60,21 @@ fun HomeScreen(
             Text(
                 "ascendy ♡",
                 style = MaterialTheme.typography.headlineMedium,
-                color = AscendyColors.Ink
+                color = palette.Ink
             )
             Spacer(Modifier.weight(1f))
             Badge(
                 label = if (active) "focusing" else "ready",
-                color = if (active) AscendyColors.Lilac else AscendyColors.Sage
+                color = if (active) palette.Lilac else palette.Sage
             )
+            Spacer(Modifier.size(8.dp))
+            androidx.compose.material3.IconButton(onClick = onOpenSettings) {
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Rounded.Settings,
+                    contentDescription = "settings",
+                    tint = palette.Ink
+                )
+            }
         }
 
         Spacer(Modifier.height(24.dp))
@@ -83,7 +92,7 @@ fun HomeScreen(
                     if (active) "you're focusing — tap your tag to come back 🌙"
                     else "tap your tag whenever you're ready ✨",
                     style = MaterialTheme.typography.titleMedium,
-                    color = AscendyColors.Ink
+                    color = palette.Ink
                 )
             }
         }
@@ -93,7 +102,7 @@ fun HomeScreen(
         Text(
             "setup",
             style = MaterialTheme.typography.titleLarge,
-            color = AscendyColors.Smoke
+            color = palette.Smoke
         )
         Spacer(Modifier.height(8.dp))
 
@@ -101,7 +110,7 @@ fun HomeScreen(
             emoji = "🌸",
             title = "pair an nfc tag",
             badge = if (tagCount > 0) "$tagCount" else "todo",
-            badgeColor = if (tagCount > 0) AscendyColors.Sage else AscendyColors.Petal,
+            badgeColor = if (tagCount > 0) palette.Sage else palette.Petal,
             onClick = onPairTag
         )
         Spacer(Modifier.height(8.dp))
@@ -109,7 +118,7 @@ fun HomeScreen(
             emoji = "✨",
             title = "build your focus list",
             badge = if (listCount > 0) "$listCount" else "todo",
-            badgeColor = if (listCount > 0) AscendyColors.Sage else AscendyColors.Petal,
+            badgeColor = if (listCount > 0) palette.Sage else palette.Petal,
             onClick = onOpenLists
         )
         Spacer(Modifier.height(8.dp))
@@ -117,7 +126,7 @@ fun HomeScreen(
             emoji = "🔒",
             title = "permissions",
             badge = if (permissionsReady) "ok" else "todo",
-            badgeColor = if (permissionsReady) AscendyColors.Sage else AscendyColors.Petal,
+            badgeColor = if (permissionsReady) palette.Sage else palette.Petal,
             onClick = onOpenPermissions
         )
 
@@ -125,12 +134,12 @@ fun HomeScreen(
             Spacer(Modifier.height(24.dp))
             SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
                 Column {
-                    Text("emergency unlock", style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+                    Text("emergency unlock", style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                     Spacer(Modifier.height(6.dp))
                     Text(
                         "one-time per session. for true emergencies only.",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = AscendyColors.Smoke
+                        color = palette.Smoke
                     )
                     Spacer(Modifier.height(8.dp))
                     TextButton(onClick = onEmergencyUnlock) {
@@ -158,7 +167,7 @@ private fun SetupRow(emoji: String, title: String, badge: String, badgeColor: Co
         ) {
             Text(emoji, style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.size(12.dp))
-            Text(title, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
             Spacer(Modifier.weight(1f))
             Badge(label = badge, color = badgeColor)
         }

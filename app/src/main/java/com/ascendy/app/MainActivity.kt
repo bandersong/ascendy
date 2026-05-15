@@ -78,7 +78,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            AscendyTheme {
+            val variant by app.themePrefs.variant.collectAsState(initial = com.ascendy.app.ui.theme.ThemeVariant.Kawaii)
+            AscendyTheme(variant = variant) {
                 Surface(
                     modifier = Modifier
                         .fillMaxSize()
@@ -86,7 +87,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNav(
-                        repo = app.repo,
+                        app = app,
                         controller = controller,
                         pairingFlow = pairingMode,
                         detectedTagFlow = pendingPairedTag,
@@ -153,15 +154,18 @@ class MainActivity : ComponentActivity() {
 
 @androidx.compose.runtime.Composable
 private fun AppNav(
-    repo: com.ascendy.app.data.AscendyRepo,
+    app: AscendyApp,
     controller: SessionController,
     pairingFlow: MutableStateFlow<Boolean>,
     detectedTagFlow: MutableStateFlow<String?>,
     onRequestNotifications: () -> Unit,
 ) {
+    val repo = app.repo
+    val themePrefs = app.themePrefs
     val nav = rememberNavController()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val currentVariant by themePrefs.variant.collectAsState(initial = com.ascendy.app.ui.theme.ThemeVariant.Kawaii)
 
     val tags by repo.observeTags().collectAsState(initial = emptyList())
     val lists by repo.observeLists().collectAsState(initial = emptyList())
@@ -191,6 +195,7 @@ private fun AppNav(
                 onPairTag = { nav.navigate("pair") },
                 onOpenLists = { nav.navigate("lists") },
                 onOpenPermissions = { nav.navigate("perms") },
+                onOpenSettings = { nav.navigate("settings") },
                 onEmergencyUnlock = {
                     scope.launch {
                         if (controller.useEmergencyUnlock()) {
@@ -276,6 +281,13 @@ private fun AppNav(
                 status = permissions,
                 onBack = { nav.popBackStack() },
                 onRequestNotifications = onRequestNotifications
+            )
+        }
+        composable("settings") {
+            com.ascendy.app.ui.screens.SettingsScreen(
+                current = currentVariant,
+                onPickTheme = { v -> scope.launch { themePrefs.set(v) } },
+                onBack = { nav.popBackStack() }
             )
         }
     }

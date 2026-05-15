@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.BoundTag
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.SoftCard
-import com.ascendy.app.ui.theme.AscendyColors
+import com.ascendy.app.ui.theme.palette
 
 @Composable
 fun PairTagScreen(
@@ -58,9 +58,9 @@ fun PairTagScreen(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = AscendyColors.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
             }
-            Text("tags", style = MaterialTheme.typography.headlineMedium, color = AscendyColors.Ink)
+            Text("tags", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
         Spacer(Modifier.height(8.dp))
@@ -76,7 +76,7 @@ fun PairTagScreen(
                         Text(
                             "pair a blank ntag21x sticker. you can keep it on the fridge, in a drawer, or in your bag.",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = AscendyColors.Smoke
+                            color = palette.Smoke
                         )
                         Spacer(Modifier.height(12.dp))
                         Button(onClick = onStartPairing) { Text("start pairing") }
@@ -85,13 +85,13 @@ fun PairTagScreen(
                         Text(
                             "hold the back of your phone against the tag ✨",
                             style = MaterialTheme.typography.titleMedium,
-                            color = AscendyColors.Ink
+                            color = palette.Ink
                         )
                         Spacer(Modifier.height(8.dp))
                         TextButton(onClick = onCancelPairing) { Text("cancel") }
                     }
                     detectedTagId != null -> {
-                        Text("tag found 🌸", style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+                        Text("tag found 🌸", style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                         Spacer(Modifier.height(12.dp))
                         OutlinedTextField(
                             value = nickname,
@@ -114,7 +114,7 @@ fun PairTagScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        Text("your tags", style = MaterialTheme.typography.titleLarge, color = AscendyColors.Smoke)
+        Text("your tags", style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
         Spacer(Modifier.height(8.dp))
 
         if (knownTags.isEmpty()) {
@@ -127,7 +127,7 @@ fun PairTagScreen(
                 Text(
                     "no tags yet — pair one above ♡",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = AscendyColors.Smoke
+                    color = palette.Smoke
                 )
             }
         } else {
@@ -138,11 +138,11 @@ fun PairTagScreen(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(tag.nickname, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+                            Text(tag.nickname, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                             Text(
                                 tag.tagId.take(10) + "…",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = AscendyColors.Smoke
+                                color = palette.Smoke
                             )
                         }
                         TextButton(onClick = { onDeleteTag(tag) }) { Text("remove") }

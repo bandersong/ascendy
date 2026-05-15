@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.SoftCard
-import com.ascendy.app.ui.theme.AscendyColors
+import com.ascendy.app.ui.theme.palette
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,9 +62,9 @@ fun BlocklistScreen(
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = AscendyColors.Ink)
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
                 }
-                Text("focus lists", style = MaterialTheme.typography.headlineMedium, color = AscendyColors.Ink)
+                Text("focus lists", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
             }
             Spacer(Modifier.height(8.dp))
 
@@ -79,7 +79,7 @@ fun BlocklistScreen(
                         Text(
                             "no lists yet — tap + to start ✨",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = AscendyColors.Smoke
+                            color = palette.Smoke
                         )
                     }
                 }
@@ -96,14 +96,14 @@ fun BlocklistScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text(list.name, style = MaterialTheme.typography.titleMedium, color = AscendyColors.Ink)
+                                Text(list.name, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                                 Text(
                                     "${appCountFor(list.id)} apps",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = AscendyColors.Smoke
+                                    color = palette.Smoke
                                 )
                             }
-                            if (list.isDefault) Badge(label = "default", color = AscendyColors.Mint)
+                            if (list.isDefault) Badge(label = "default", color = palette.Mint)
                             else TextButton(onClick = { onDeleteList(list) }) { Text("remove") }
                         }
                     }
@@ -118,7 +118,7 @@ fun BlocklistScreen(
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = AscendyColors.Ink
+            contentColor = palette.Ink
         ) {
             Icon(Icons.Rounded.Add, contentDescription = "new list")
         }

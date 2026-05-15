@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
             val sess = app.repo.currentSession()
             if (sess?.active == true) {
                 val pkgs = app.repo.packages(sess.listId).toSet()
-                com.ascendy.app.blocking.BlockState.set(true, pkgs)
+                com.ascendy.app.blocking.BlockState.set(true, pkgs, sess.startedAt)
             }
         }
 
@@ -182,6 +182,7 @@ private fun AppNav(
     val lists by repo.observeLists().collectAsState(initial = emptyList())
     val pairing by pairingFlow.collectAsState()
     val detected by detectedTagFlow.collectAsState()
+    val onboarded by themePrefs.onboarded.collectAsState(initial = false)
 
     var permissions by remember { mutableStateOf(checkPermissions(context)) }
 
@@ -196,11 +197,24 @@ private fun AppNav(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    NavHost(navController = nav, startDestination = "home") {
+    val startDest = if (onboarded) "home" else "onboarding"
+    NavHost(navController = nav, startDestination = startDest) {
+        composable("onboarding") {
+            com.ascendy.app.ui.screens.OnboardingScreen(
+                onFinish = {
+                    scope.launch { themePrefs.markOnboarded() }
+                    nav.navigate("home") {
+                        popUpTo("onboarding") { inclusive = true }
+                    }
+                }
+            )
+        }
         composable("home") {
             LaunchedEffect(Unit) { permissions = checkPermissions(context) }
             val emergencyUsedMsg = com.ascendy.app.ui.theme.vocab.emergencyUsed
             val emergencyNoneMsg = com.ascendy.app.ui.theme.vocab.emergencyNone
+            val manualStartMsg = com.ascendy.app.ui.theme.vocab.toastManualStarted
+            val manualEndMsg = com.ascendy.app.ui.theme.vocab.toastManualEnded
             HomeScreen(
                 tagCount = tags.size,
                 listCount = lists.size,
@@ -209,6 +223,17 @@ private fun AppNav(
                 onOpenLists = { nav.navigate("lists") },
                 onOpenPermissions = { nav.navigate("perms") },
                 onOpenSettings = { nav.navigate("settings") },
+                onManualToggle = {
+                    scope.launch {
+                        val wasActive = com.ascendy.app.blocking.BlockState.isActive()
+                        controller.toggleManual()
+                        Toast.makeText(
+                            context,
+                            if (wasActive) manualEndMsg else manualStartMsg,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
                 onEmergencyUnlock = {
                     scope.launch {
                         if (controller.useEmergencyUnlock()) {

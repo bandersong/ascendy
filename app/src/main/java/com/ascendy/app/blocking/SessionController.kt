@@ -36,16 +36,17 @@ class SessionController(private val context: Context, private val repo: AscendyR
 
     suspend fun startSession(listId: Long, tagId: String?) {
         val packages = repo.packages(listId).toSet()
+        val now = System.currentTimeMillis()
         val session = BlockSession(
             id = 1L,
             active = true,
-            startedAt = System.currentTimeMillis(),
+            startedAt = now,
             listId = listId,
             tagId = tagId,
             emergencyUnlocksLeft = 1
         )
         repo.saveSession(session)
-        BlockState.set(active = true, blocked = packages)
+        BlockState.set(active = true, blocked = packages, startedAt = now)
         startForegroundService()
     }
 
@@ -69,8 +70,19 @@ class SessionController(private val context: Context, private val repo: AscendyR
         val current = repo.currentSession() ?: return
         if (!current.active) return
         val packages = repo.packages(current.listId).toSet()
-        BlockState.set(active = true, blocked = packages)
+        BlockState.set(active = true, blocked = packages, startedAt = current.startedAt)
         startForegroundService()
+    }
+
+    /** Manual toggle — no tag involved. Used by the long-press shortcut. */
+    suspend fun toggleManual() {
+        val current = repo.currentSession()
+        if (current?.active == true) {
+            endSession()
+        } else {
+            val list = repo.defaultList() ?: repo.ensureDefaultList()
+            startSession(list.id, tagId = null)
+        }
     }
 
     private fun startForegroundService() {

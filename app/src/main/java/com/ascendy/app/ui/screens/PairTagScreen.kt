@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.SoftCard
@@ -41,10 +42,12 @@ fun PairTagScreen(
     waiting: Boolean,
     detectedTagId: String?,
     knownTags: List<BoundTag>,
+    lists: List<Blocklist>,
     onStartPairing: () -> Unit,
     onCancelPairing: () -> Unit,
     onSavePairing: (nickname: String) -> Unit,
     onDeleteTag: (BoundTag) -> Unit,
+    onAssignList: (BoundTag, Long?) -> Unit,
     onBack: () -> Unit,
 ) {
     var nickname by remember { mutableStateOf("") }
@@ -137,20 +140,60 @@ fun PairTagScreen(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surface
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(tag.nickname, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                            Text(
-                                tag.tagId.take(10) + "…",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = palette.Smoke
-                            )
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Column(Modifier.weight(1f)) {
+                                Text(tag.nickname, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                                Text(
+                                    tag.tagId.take(10) + "…",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.Smoke
+                                )
+                            }
+                            TextButton(onClick = { onDeleteTag(tag) }) { Text(vocab.tagsRemove) }
                         }
-                        TextButton(onClick = { onDeleteTag(tag) }) { Text(vocab.tagsRemove) }
+                        if (lists.size > 1 || tag.listId != null) {
+                            Spacer(Modifier.height(6.dp))
+                            Text(vocab.tagListPickerLabel,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = palette.Smoke)
+                            Spacer(Modifier.height(4.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                ListChip(
+                                    text = vocab.tagListPickerDefault,
+                                    selected = tag.listId == null,
+                                    onClick = { onAssignList(tag, null) }
+                                )
+                                lists.forEach { l ->
+                                    ListChip(
+                                        text = l.name,
+                                        selected = tag.listId == l.id,
+                                        onClick = { onAssignList(tag, l.id) }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
                 Spacer(Modifier.height(8.dp))
             }
         }
+    }
+}
+
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun ListChip(text: String, selected: Boolean, onClick: () -> Unit) {
+    androidx.compose.material3.Surface(
+        onClick = onClick,
+        color = if (selected) palette.Petal else palette.Mist,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Text(
+            text,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.Ink
+        )
     }
 }

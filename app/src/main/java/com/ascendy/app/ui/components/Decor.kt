@@ -33,7 +33,7 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun Mascot(locked: Boolean, modifier: Modifier = Modifier.fillMaxWidth()) {
+fun Mascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier.fillMaxWidth()) {
     val p = palette
     val transition = rememberInfiniteTransition(label = "mascot")
     val bob by transition.animateFloat(
@@ -52,20 +52,85 @@ fun Mascot(locked: Boolean, modifier: Modifier = Modifier.fillMaxWidth()) {
             val cy = size.height / 2f + bob
             val radius = size.minDimension * 0.32f
             drawMascot(p, locked, cx, cy, radius, withChains = p.variant == ThemeVariant.Tough)
+            drawAccessory(p, streakDays, cx, cy, radius)
         }
     }
 }
 
 /** A tiny static mascot for inline use (no animation). */
 @Composable
-fun MiniMascot(locked: Boolean, modifier: Modifier = Modifier) {
+fun MiniMascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier) {
     val p = palette
     Canvas(modifier = modifier) {
         val cx = size.width / 2f
         val cy = size.height / 2f
         val radius = size.minDimension * 0.38f
         drawMascot(p, locked, cx, cy, radius, withChains = false)
+        drawAccessory(p, streakDays, cx, cy, radius)
     }
+}
+
+/** Streak-driven decoration: 7 days = headband/hat, 30 = star above, 100 = crown. */
+private fun DrawScope.drawAccessory(p: Palette, streakDays: Int, cx: Float, cy: Float, r: Float) {
+    if (streakDays < 7) return
+
+    val accent = when (p.variant) {
+        ThemeVariant.Kawaii -> p.Lilac      // coral peach in new kawaii
+        ThemeVariant.Tough -> p.Lilac       // gunmetal
+        ThemeVariant.Neutral -> p.Petal     // corporate blue
+    }
+    val accent2 = when (p.variant) {
+        ThemeVariant.Kawaii -> p.Mint
+        ThemeVariant.Tough -> p.Petal
+        ThemeVariant.Neutral -> p.Sage
+    }
+
+    // 7+ : little headband across the top
+    val bandY = cy - r * 0.92f
+    drawLine(
+        color = accent,
+        start = Offset(cx - r * 0.65f, bandY),
+        end = Offset(cx + r * 0.65f, bandY),
+        strokeWidth = r * 0.14f
+    )
+    // tied knot dots
+    drawCircle(color = accent2, radius = r * 0.08f, center = Offset(cx + r * 0.62f, bandY - r * 0.04f))
+    drawCircle(color = accent2, radius = r * 0.08f, center = Offset(cx + r * 0.70f, bandY + r * 0.06f))
+
+    if (streakDays >= 30) {
+        // floating sparkle star above the head
+        val sx = cx + r * 0.85f
+        val sy = cy - r * 1.20f
+        val sR = r * 0.18f
+        drawSparkleStar(sx, sy, sR, accent)
+    }
+
+    if (streakDays >= 100) {
+        // little crown — three triangle peaks centered above the headband
+        val crownBase = bandY - r * 0.08f
+        val crownTop = bandY - r * 0.42f
+        for (i in -1..1) {
+            val px = cx + i * r * 0.30f
+            drawLine(accent, Offset(px, crownBase), Offset(px, crownTop), strokeWidth = r * 0.06f)
+            drawCircle(color = accent2, radius = r * 0.07f, center = Offset(px, crownTop - r * 0.02f))
+        }
+    }
+}
+
+private fun DrawScope.drawSparkleStar(cx: Float, cy: Float, r: Float, color: androidx.compose.ui.graphics.Color) {
+    val path = Path()
+    val points = 4
+    val outer = r
+    val inner = r * 0.35f
+    for (i in 0 until points * 2) {
+        val angle = (Math.PI * i / points).toFloat() - (Math.PI / 2).toFloat()
+        val rad = if (i % 2 == 0) outer else inner
+        val x = cx + rad * kotlin.math.cos(angle)
+        val y = cy + rad * kotlin.math.sin(angle)
+        if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+    }
+    path.close()
+    drawPath(path, color)
 }
 
 private fun DrawScope.drawMascot(p: Palette, locked: Boolean, cx: Float, cy: Float, r: Float, withChains: Boolean) {

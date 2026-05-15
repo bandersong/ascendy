@@ -186,11 +186,20 @@ private fun AppNav(
 
     var permissions by remember { mutableStateOf(checkPermissions(context)) }
 
+    // Streak: recompute on resume from session_log distinct dates
+    var streakDays by remember { mutableStateOf(0) }
+    LaunchedEffect(Unit) {
+        streakDays = com.ascendy.app.data.Stats.streakDays(repo.distinctSessionDates())
+    }
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 permissions = checkPermissions(context)
+                scope.launch {
+                    streakDays = com.ascendy.app.data.Stats.streakDays(repo.distinctSessionDates())
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -219,10 +228,13 @@ private fun AppNav(
                 tagCount = tags.size,
                 listCount = lists.size,
                 permissionsReady = permissions.accessibility || permissions.usageStats,
+                streakDays = streakDays,
                 onPairTag = { nav.navigate("pair") },
                 onOpenLists = { nav.navigate("lists") },
                 onOpenPermissions = { nav.navigate("perms") },
                 onOpenSettings = { nav.navigate("settings") },
+                onOpenStats = { nav.navigate("stats") },
+                onOpenPomodoro = { nav.navigate("pomodoro") },
                 onManualToggle = {
                     scope.launch {
                         val wasActive = com.ascendy.app.blocking.BlockState.isActive()
@@ -250,6 +262,7 @@ private fun AppNav(
                 waiting = pairing,
                 detectedTagId = detected,
                 knownTags = tags,
+                lists = lists,
                 onStartPairing = { pairingFlow.value = true },
                 onCancelPairing = {
                     pairingFlow.value = false
@@ -270,6 +283,9 @@ private fun AppNav(
                     }
                 },
                 onDeleteTag = { tag -> scope.launch { repo.deleteTag(tag) } },
+                onAssignList = { tag, listId ->
+                    scope.launch { repo.saveTag(tag.copy(listId = listId)) }
+                },
                 onBack = { nav.popBackStack() }
             )
         }
@@ -325,6 +341,80 @@ private fun AppNav(
             com.ascendy.app.ui.screens.SettingsScreen(
                 current = currentVariant,
                 onPickTheme = { v -> scope.launch { themePrefs.set(v) } },
+                onOpenStats = { nav.navigate("stats") },
+                onOpenSchedules = { nav.navigate("schedules") },
+                onOpenPomodoro = { nav.navigate("pomodoro") },
+                onBack = { nav.popBackStack() }
+            )
+        }
+        composable("stats") {
+            val todayMs by repo.observeFocusMsSince(
+                com.ascendy.app.data.Stats.startOfTodayMs(),
+                System.currentTimeMillis()
+            ).collectAsState(initial = 0L)
+            val weekMs by repo.observeFocusMsSince(
+                com.ascendy.app.data.Stats.startOfWeekMs(),
+                System.currentTimeMillis()
+            ).collectAsState(initial = 0L)
+            val allMs by repo.observeFocusMsSince(0L, System.currentTimeMillis())
+                .collectAsState(initial = 0L)
+            val recent by repo.observeLogsSince(
+                com.ascendy.app.data.Stats.localMidnightDaysAgo(30)
+            ).collectAsState(initial = emptyList())
+            com.ascendy.app.ui.screens.StatsScreen(
+                todayMs = todayMs,
+                weekMs = weekMs,
+                allTimeMs = allMs,
+                streakDays = streakDays,
+                recent = recent,
+                onBack = { nav.popBackStack() }
+            )
+        }
+        composable("schedules") {
+            val schedules by repo.observeSchedules().collectAsState(initial = emptyList())
+            com.ascendy.app.ui.screens.SchedulesScreen(
+                schedules = schedules,
+                lists = lists,
+                onSave = { s ->
+                    scope.launch {
+                        val id = repo.upsertSchedule(s)
+                        val saved = repo.scheduleById(id)
+                        if (saved != null && saved.enabled) {
+                            com.ascendy.app.service.AlarmScheduler.scheduleDailyTrigger(context, saved, isStart = true)
+                        }
+                    }
+                },
+                onDelete = { s ->
+                    scope.launch {
+                        com.ascendy.app.service.AlarmScheduler.cancelDailyTrigger(context, s.id, isStart = true)
+                        com.ascendy.app.service.AlarmScheduler.cancelDailyTrigger(context, s.id, isStart = false)
+                        repo.deleteSchedule(s.id)
+                    }
+                },
+                onToggle = { s, en ->
+                    scope.launch {
+                        val updated = s.copy(enabled = en)
+                        repo.upsertSchedule(updated)
+                        if (en) {
+                            com.ascendy.app.service.AlarmScheduler.scheduleDailyTrigger(context, updated, isStart = true)
+                        } else {
+                            com.ascendy.app.service.AlarmScheduler.cancelDailyTrigger(context, s.id, isStart = true)
+                            com.ascendy.app.service.AlarmScheduler.cancelDailyTrigger(context, s.id, isStart = false)
+                        }
+                    }
+                },
+                onBack = { nav.popBackStack() }
+            )
+        }
+        composable("pomodoro") {
+            com.ascendy.app.ui.screens.PomodoroScreen(
+                lists = lists,
+                onStart = { durationMs, listId ->
+                    scope.launch {
+                        controller.startTimedSession(durationMs, listId)
+                        nav.popBackStack()
+                    }
+                },
                 onBack = { nav.popBackStack() }
             )
         }

@@ -53,10 +53,13 @@ fun HomeScreen(
     tagCount: Int,
     listCount: Int,
     permissionsReady: Boolean,
+    streakDays: Int,
     onPairTag: () -> Unit,
     onOpenLists: () -> Unit,
     onOpenPermissions: () -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenPomodoro: () -> Unit,
     onManualToggle: () -> Unit,
     onEmergencyUnlock: () -> Unit,
 ) {
@@ -119,7 +122,7 @@ fun HomeScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Mascot(locked = active)
+                    Mascot(locked = active, streakDays = streakDays)
                 }
                 Spacer(Modifier.height(12.dp))
                 Text(
@@ -182,6 +185,25 @@ fun HomeScreen(
             onClick = onOpenPermissions
         )
 
+        Spacer(Modifier.height(20.dp))
+
+        // Stats + Pomodoro tiles
+        Row(modifier = Modifier.fillMaxWidth()) {
+            HomeTile(
+                title = vocab.statsTitle,
+                subtitle = if (streakDays > 0) vocab.statsStreakFmt.format(streakDays) else "",
+                onClick = onOpenStats,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(Modifier.size(8.dp))
+            HomeTile(
+                title = vocab.pomodoroTitle,
+                subtitle = vocab.pomodoro25,
+                onClick = onOpenPomodoro,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
         if (active) {
             Spacer(Modifier.height(24.dp))
             SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
@@ -231,6 +253,25 @@ private fun formatElapsed(startedAt: Long?, now: Long): String {
         totalMin < 1 -> vocab.timerJustStarted
         totalMin < 60 -> vocab.timerMinFmt.format(totalMin)
         else -> vocab.timerHourMinFmt.format(totalMin / 60, totalMin % 60)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun HomeTile(title: String, subtitle: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+        modifier = modifier
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+            if (subtitle.isNotEmpty()) {
+                Spacer(Modifier.height(4.dp))
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
+            }
+        }
     }
 }
 

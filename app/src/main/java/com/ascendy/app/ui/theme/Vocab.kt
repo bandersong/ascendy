@@ -133,6 +133,51 @@ data class Vocab(
     val onboardP2Body: String,
     val onboardP3Title: String,
     val onboardP3Body: String,
+
+    // settings extra entries
+    val settingsRowStats: String,
+    val settingsRowSchedules: String,
+    val settingsRowPomodoro: String,
+
+    // stats screen
+    val statsTitle: String,
+    val statsToday: String,
+    val statsWeek: String,
+    val statsAllTime: String,
+    val statsStreakFmt: String,           // "%d-day streak"
+    val statsRecent: String,
+    val statsEmpty: String,
+    val statsAchievement7: String,
+    val statsAchievement30: String,
+    val statsAchievement100: String,
+
+    // schedules screen
+    val schedulesTitle: String,
+    val schedulesEmpty: String,
+    val schedulesNewDialogTitle: String,
+    val schedulesNickname: String,
+    val schedulesList: String,
+    val schedulesDays: String,
+    val schedulesStartTime: String,
+    val schedulesEndTime: String,
+    val schedulesEnabled: String,
+    val schedulesSave: String,
+    val schedulesCancel: String,
+    val schedulesDelete: String,
+    val daysShort: List<String>,          // S M T W T F S (size 7, Sun first)
+
+    // pomodoro screen / quick-lock
+    val pomodoroTitle: String,
+    val pomodoroIntro: String,
+    val pomodoro15: String,
+    val pomodoro25: String,
+    val pomodoro50: String,
+    val pomodoro90: String,
+    val pomodoroStart: String,
+
+    // per-tag list picker in PairTagScreen
+    val tagListPickerLabel: String,
+    val tagListPickerDefault: String,
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -246,6 +291,46 @@ val KawaiiVocab = Vocab(
     onboardP2Body = "pick the apps you want gone during a session. ascendy will gently bounce you back home if you try to open one.",
     onboardP3Title = "a few permissions ♡",
     onboardP3Body = "ascendy needs accessibility, usage access, and overlay permission to do its thing. nothing leaves your phone — promise.",
+
+    settingsRowStats = "your stats 🌸",
+    settingsRowSchedules = "scheduled focus ✨",
+    settingsRowPomodoro = "quick lock ⏱",
+
+    statsTitle = "your stats ♡",
+    statsToday = "today",
+    statsWeek = "this week",
+    statsAllTime = "all time",
+    statsStreakFmt = "%d-day streak 🔥",
+    statsRecent = "recent sessions",
+    statsEmpty = "no sessions yet — try a focus run ✨",
+    statsAchievement7 = "7-day streak: your little guy got a headband 🌸",
+    statsAchievement30 = "30-day streak: a sparkle floats above them ✨",
+    statsAchievement100 = "100-day streak: a crown ♡",
+
+    schedulesTitle = "scheduled focus",
+    schedulesEmpty = "no schedules yet — tap + to add one ✨",
+    schedulesNewDialogTitle = "new schedule",
+    schedulesNickname = "name (e.g. mornings)",
+    schedulesList = "focus list",
+    schedulesDays = "days",
+    schedulesStartTime = "start",
+    schedulesEndTime = "end",
+    schedulesEnabled = "enabled",
+    schedulesSave = "save",
+    schedulesCancel = "cancel",
+    schedulesDelete = "delete",
+    daysShort = listOf("S", "M", "T", "W", "T", "F", "S"),
+
+    pomodoroTitle = "quick lock ⏱",
+    pomodoroIntro = "pick a duration. blocked apps unlock automatically when the timer ends — no tag needed.",
+    pomodoro15 = "15 min",
+    pomodoro25 = "25 min",
+    pomodoro50 = "50 min",
+    pomodoro90 = "90 min",
+    pomodoroStart = "start",
+
+    tagListPickerLabel = "this tag locks…",
+    tagListPickerDefault = "default list",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -359,6 +444,46 @@ val ToughVocab = Vocab(
     onboardP2Body = "name the apps that steal your time. ascendy slams the door on them the second they try to surface.",
     onboardP3Title = "PERMISSIONS — A FEW",
     onboardP3Body = "accessibility, usage access, overlay. on-device only. no telemetry. no nonsense.",
+
+    settingsRowStats = "STATS",
+    settingsRowSchedules = "SCHEDULES",
+    settingsRowPomodoro = "QUICK LOCK",
+
+    statsTitle = "STATS",
+    statsToday = "TODAY",
+    statsWeek = "THIS WEEK",
+    statsAllTime = "ALL TIME",
+    statsStreakFmt = "%d-DAY STREAK ⛓",
+    statsRecent = "RECENT SESSIONS",
+    statsEmpty = "no sessions yet. lock in.",
+    statsAchievement7 = "7-DAY STREAK: HEADBAND EARNED.",
+    statsAchievement30 = "30-DAY STREAK: SPARKLE EARNED.",
+    statsAchievement100 = "100-DAY STREAK: CROWN EARNED.",
+
+    schedulesTitle = "SCHEDULES",
+    schedulesEmpty = "no schedules. tap + to add.",
+    schedulesNewDialogTitle = "NEW SCHEDULE",
+    schedulesNickname = "name (e.g. mornings)",
+    schedulesList = "list",
+    schedulesDays = "days",
+    schedulesStartTime = "start",
+    schedulesEndTime = "end",
+    schedulesEnabled = "enabled",
+    schedulesSave = "SAVE",
+    schedulesCancel = "CANCEL",
+    schedulesDelete = "DELETE",
+    daysShort = listOf("S", "M", "T", "W", "T", "F", "S"),
+
+    pomodoroTitle = "QUICK LOCK",
+    pomodoroIntro = "pick a duration. blocks lift automatically when the timer ends. no anchor needed.",
+    pomodoro15 = "15 MIN",
+    pomodoro25 = "25 MIN",
+    pomodoro50 = "50 MIN",
+    pomodoro90 = "90 MIN",
+    pomodoroStart = "LOCK IN",
+
+    tagListPickerLabel = "THIS ANCHOR LOCKS…",
+    tagListPickerDefault = "DEFAULT LIST",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -472,6 +597,46 @@ val NeutralVocab = Vocab(
     onboardP2Body = "Choose the apps you want unavailable during a focus session. Ascendy returns to the home screen whenever a blocked app is opened.",
     onboardP3Title = "Grant permissions",
     onboardP3Body = "Ascendy uses accessibility, usage access, and the overlay permission to enforce blocking. No data leaves the device.",
+
+    settingsRowStats = "Statistics",
+    settingsRowSchedules = "Scheduled sessions",
+    settingsRowPomodoro = "Timed session",
+
+    statsTitle = "Statistics",
+    statsToday = "Today",
+    statsWeek = "This week",
+    statsAllTime = "All time",
+    statsStreakFmt = "%d-day streak",
+    statsRecent = "Recent sessions",
+    statsEmpty = "No sessions logged yet.",
+    statsAchievement7 = "7-day streak achieved.",
+    statsAchievement30 = "30-day streak achieved.",
+    statsAchievement100 = "100-day streak achieved.",
+
+    schedulesTitle = "Scheduled sessions",
+    schedulesEmpty = "No schedules. Tap + to add one.",
+    schedulesNewDialogTitle = "New schedule",
+    schedulesNickname = "Name (e.g. Mornings)",
+    schedulesList = "List",
+    schedulesDays = "Days",
+    schedulesStartTime = "Start",
+    schedulesEndTime = "End",
+    schedulesEnabled = "Enabled",
+    schedulesSave = "Save",
+    schedulesCancel = "Cancel",
+    schedulesDelete = "Delete",
+    daysShort = listOf("S", "M", "T", "W", "T", "F", "S"),
+
+    pomodoroTitle = "Timed session",
+    pomodoroIntro = "Choose a duration. The session ends automatically when the timer expires. No tag required.",
+    pomodoro15 = "15 min",
+    pomodoro25 = "25 min",
+    pomodoro50 = "50 min",
+    pomodoro90 = "90 min",
+    pomodoroStart = "Start",
+
+    tagListPickerLabel = "This tag locks…",
+    tagListPickerDefault = "Default list",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

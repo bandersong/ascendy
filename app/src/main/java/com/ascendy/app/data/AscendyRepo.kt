@@ -8,6 +8,8 @@ class AscendyRepo(context: Context) {
     private val tags = db.tagDao()
     private val lists = db.blocklistDao()
     private val sessions = db.sessionDao()
+    private val logs = db.sessionLogDao()
+    private val schedules = db.scheduleDao()
 
     fun observeTags(): Flow<List<BoundTag>> = tags.observeAll()
     suspend fun allTags(): List<BoundTag> = tags.all()
@@ -35,4 +37,23 @@ class AscendyRepo(context: Context) {
         val id = upsertList(Blocklist(name = "focus", isDefault = true))
         return list(id)!!
     }
+
+    // ── session log (stats) ──
+    suspend fun startLog(listId: Long, startedAt: Long, source: String): Long =
+        logs.insert(SessionLog(listId = listId, startedAt = startedAt, endedAt = null, source = source))
+
+    suspend fun finishLog(logId: Long, endedAt: Long) = logs.finishLog(logId, endedAt)
+    suspend fun latestLog(): SessionLog? = logs.latest()
+    fun observeFocusMsSince(sinceMs: Long, nowMs: Long): kotlinx.coroutines.flow.Flow<Long> =
+        logs.observeFocusMsSince(sinceMs, nowMs)
+    fun observeLogsSince(sinceMs: Long): kotlinx.coroutines.flow.Flow<List<SessionLog>> =
+        logs.observeSince(sinceMs)
+    suspend fun distinctSessionDates(): List<String> = logs.distinctDates()
+
+    // ── schedules ──
+    fun observeSchedules(): kotlinx.coroutines.flow.Flow<List<Schedule>> = schedules.observeAll()
+    suspend fun allEnabledSchedules(): List<Schedule> = schedules.allEnabled()
+    suspend fun upsertSchedule(s: Schedule): Long = schedules.upsert(s)
+    suspend fun deleteSchedule(id: Long) = schedules.delete(id)
+    suspend fun scheduleById(id: Long): Schedule? = schedules.byId(id)
 }

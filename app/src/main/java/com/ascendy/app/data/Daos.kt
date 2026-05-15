@@ -66,3 +66,42 @@ interface SessionDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(s: BlockSession)
 }
+
+@Dao
+interface SessionLogDao {
+    @Insert
+    suspend fun insert(log: SessionLog): Long
+
+    @Query("UPDATE session_log SET endedAt = :endedAt WHERE id = :id")
+    suspend fun finishLog(id: Long, endedAt: Long)
+
+    @Query("SELECT * FROM session_log ORDER BY startedAt DESC LIMIT 1")
+    suspend fun latest(): SessionLog?
+
+    @Query("SELECT COALESCE(SUM(COALESCE(endedAt, :nowMs) - startedAt), 0) FROM session_log WHERE startedAt >= :sinceMs")
+    fun observeFocusMsSince(sinceMs: Long, nowMs: Long): Flow<Long>
+
+    @Query("SELECT * FROM session_log WHERE startedAt >= :sinceMs ORDER BY startedAt DESC")
+    fun observeSince(sinceMs: Long): Flow<List<SessionLog>>
+
+    @Query("SELECT DISTINCT date(startedAt / 1000, 'unixepoch', 'localtime') FROM session_log ORDER BY 1 DESC")
+    suspend fun distinctDates(): List<String>
+}
+
+@Dao
+interface ScheduleDao {
+    @Query("SELECT * FROM schedule ORDER BY startMinuteOfDay ASC")
+    fun observeAll(): Flow<List<Schedule>>
+
+    @Query("SELECT * FROM schedule WHERE enabled = 1")
+    suspend fun allEnabled(): List<Schedule>
+
+    @Query("SELECT * FROM schedule WHERE id = :id")
+    suspend fun byId(id: Long): Schedule?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(s: Schedule): Long
+
+    @Query("DELETE FROM schedule WHERE id = :id")
+    suspend fun delete(id: Long)
+}

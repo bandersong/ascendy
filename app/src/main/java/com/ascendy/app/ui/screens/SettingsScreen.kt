@@ -42,6 +42,9 @@ import com.ascendy.app.ui.theme.vocabFor
 fun SettingsScreen(
     current: ThemeVariant,
     onPickTheme: (ThemeVariant) -> Unit,
+    onOpenStats: () -> Unit,
+    onOpenSchedules: () -> Unit,
+    onOpenPomodoro: () -> Unit,
     onBack: () -> Unit,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
@@ -102,6 +105,21 @@ fun SettingsScreen(
             onClick = { onPickTheme(ThemeVariant.Neutral) }
         )
 
+        Spacer(Modifier.height(20.dp))
+
+        Text(
+            "more",
+            style = MaterialTheme.typography.titleLarge,
+            color = palette.Smoke
+        )
+        Spacer(Modifier.height(8.dp))
+
+        SettingsRow(label = vocab.settingsRowStats, onClick = onOpenStats)
+        Spacer(Modifier.height(8.dp))
+        SettingsRow(label = vocab.settingsRowSchedules, onClick = onOpenSchedules)
+        Spacer(Modifier.height(8.dp))
+        SettingsRow(label = vocab.settingsRowPomodoro, onClick = onOpenPomodoro)
+
         Spacer(Modifier.height(24.dp))
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Text(
@@ -110,6 +128,24 @@ fun SettingsScreen(
                 color = palette.Smoke
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsRow(label: String, onClick: () -> Unit) {
+    Surface(
+        onClick = onClick,
+        color = MaterialTheme.colorScheme.surface,
+        shape = MaterialTheme.shapes.large,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            label,
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.Ink
+        )
     }
 }
 

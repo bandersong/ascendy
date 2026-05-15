@@ -14,7 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -68,12 +72,8 @@ fun HomeScreen(
                 color = if (active) palette.Lilac else palette.Sage
             )
             Spacer(Modifier.size(8.dp))
-            androidx.compose.material3.IconButton(onClick = onOpenSettings) {
-                androidx.compose.material3.Icon(
-                    androidx.compose.material.icons.Icons.Rounded.Settings,
-                    contentDescription = "settings",
-                    tint = palette.Ink
-                )
+            IconButton(onClick = onOpenSettings) {
+                Icon(Icons.Rounded.Settings, contentDescription = "settings", tint = palette.Ink)
             }
         }
 

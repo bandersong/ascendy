@@ -94,6 +94,19 @@
                 android:value="App blocking enforcement during user-initiated focus sessions" />
         </service>
 
+        <service
+            android:name=".vpn.AscendyVpnService"
+            android:exported="false"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:foregroundServiceType="specialUse">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="DNS sinkhole for website blocking during user-initiated focus sessions" />
+        </service>
+
         <receiver
             android:name=".service.BootReceiver"
             android:enabled="true"
@@ -108,6 +121,20 @@
             android:name=".service.ScheduleAlarmReceiver"
             android:enabled="true"
             android:exported="false" />
+
+        <receiver
+            android:name=".widget.AscendyWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.ascendy.app.WIDGET_REFRESH" />
+                <action android:name="com.ascendy.app.SESSION_STARTED" />
+                <action android:name="com.ascendy.app.SESSION_ENDED" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

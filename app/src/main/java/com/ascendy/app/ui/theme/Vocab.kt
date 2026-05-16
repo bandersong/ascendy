@@ -249,6 +249,24 @@ data class Vocab(
     // stats — chart labels
     val statsChartLabel: String,
     val statsBestDay: String,
+
+    // whitelist mode
+    val allowListToggleLabel: String,
+    val allowListBadge: String,
+
+    // daily focus goal
+    val goalTitle: String,
+    val goalBody: String,
+    val goalProgressFmt: String,         // "%d / %d min today"
+    val goalReached: String,
+
+    // vpn
+    val permsVpnEmoji: String,
+    val permsVpnTitle: String,
+    val permsVpnBody: String,
+    val permsVpnAction: String,
+    val vpnNotifTitle: String,
+    val vpnNotifText: String,
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -465,6 +483,21 @@ val KawaiiVocab = Vocab(
 
     statsChartLabel = "last 7 days",
     statsBestDay = "best day this week",
+
+    allowListToggleLabel = "allow-only mode",
+    allowListBadge = "allow-only ✨",
+
+    goalTitle = "daily focus goal ♡",
+    goalBody = "pick how many minutes you want to focus each day. your little guy cheers when you hit it.",
+    goalProgressFmt = "%d / %d min today",
+    goalReached = "goal reached 🌸",
+
+    permsVpnEmoji = "🌐",
+    permsVpnTitle = "vpn website blocking",
+    permsVpnBody = "stronger than url-bar reading — sinkholes blocked domains at the dns layer so pages never load. an android vpn icon shows while a session is active. only your phone, no traffic leaves the device.",
+    permsVpnAction = "enable vpn",
+    vpnNotifTitle = "blocking websites ♡",
+    vpnNotifText = "dns sinkhole active during this session",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -681,6 +714,21 @@ val ToughVocab = Vocab(
 
     statsChartLabel = "LAST 7 DAYS",
     statsBestDay = "BEST DAY",
+
+    allowListToggleLabel = "ALLOW-ONLY MODE",
+    allowListBadge = "ALLOW-ONLY",
+
+    goalTitle = "DAILY FOCUS GOAL",
+    goalBody = "set a minimum. hit it. no excuses.",
+    goalProgressFmt = "%d / %d MIN TODAY",
+    goalReached = "GOAL HIT.",
+
+    permsVpnEmoji = "🌐",
+    permsVpnTitle = "VPN BLOCKING",
+    permsVpnBody = "dns sinkhole — slams the door at the network layer. catches what url-bar reading misses. android shows a vpn icon during sessions. on-device only. nothing leaves your phone.",
+    permsVpnAction = "ENABLE",
+    vpnNotifTitle = "DNS LOCKDOWN",
+    vpnNotifText = "blocking domains at the dns layer",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -897,6 +945,21 @@ val NeutralVocab = Vocab(
 
     statsChartLabel = "Last 7 days",
     statsBestDay = "Best day this week",
+
+    allowListToggleLabel = "Allow-only mode",
+    allowListBadge = "Allow-only",
+
+    goalTitle = "Daily focus goal",
+    goalBody = "Set a daily target for focused minutes. Progress is tracked on the home screen.",
+    goalProgressFmt = "%d / %d min today",
+    goalReached = "Goal reached.",
+
+    permsVpnEmoji = "",
+    permsVpnTitle = "VPN-based website blocking",
+    permsVpnBody = "DNS-level blocking — prevents blocked domains from resolving so pages never load. Catches DNS-over-HTTPS traffic the URL-bar reader misses. A VPN icon is shown by Android while a session is active. No traffic leaves the device.",
+    permsVpnAction = "Enable VPN blocking",
+    vpnNotifTitle = "VPN blocking active",
+    vpnNotifText = "DNS sinkhole enforcing website blocks",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

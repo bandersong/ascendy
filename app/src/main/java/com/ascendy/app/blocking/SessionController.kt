@@ -3,11 +3,14 @@ package com.ascendy.app.blocking
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.net.VpnService
+import com.ascendy.app.widget.AscendyWidget
 import com.ascendy.app.data.AscendyRepo
 import com.ascendy.app.data.BlockSession
 import com.ascendy.app.data.ThemePrefs
 import com.ascendy.app.service.AlarmScheduler
 import com.ascendy.app.service.BlockingForegroundService
+import com.ascendy.app.vpn.AscendyVpnService
 import kotlinx.coroutines.flow.first
 
 sealed class TapResult {
@@ -87,9 +90,14 @@ class SessionController(
             startedAt = now,
             emergencyAvailable = !isStrict && unlocksLeft > 0,
             strict = isStrict,
+            inverted = list.isAllowList,
         )
         startForegroundService()
         AlarmScheduler.scheduleSessionEnd(context, effectiveEndsAt)
+        // Auto-start VPN sinkhole if user has consented AND any domains are configured
+        if (domains.isNotEmpty() && VpnService.prepare(context) == null) {
+            startVpnService()
+        }
         // Public broadcast for Tasker / other automation
         context.sendBroadcast(
             Intent(ACTION_SESSION_STARTED)
@@ -100,6 +108,7 @@ class SessionController(
                 .putExtra(EXTRA_ENDS_AT, effectiveEndsAt)
                 .putExtra(EXTRA_STRICT, isStrict)
         )
+        AscendyWidget.refresh(context)
     }
 
     suspend fun endSession() {
@@ -112,6 +121,7 @@ class SessionController(
         val durationMs = now - current.startedAt
         BlockState.clear()
         stopForegroundService()
+        stopVpnService()
         AlarmScheduler.cancelSessionEnd(context)
         context.sendBroadcast(
             Intent(ACTION_SESSION_ENDED)
@@ -119,6 +129,7 @@ class SessionController(
                 .putExtra(EXTRA_LIST_ID, current.listId)
                 .putExtra(EXTRA_DURATION_MS, durationMs)
         )
+        AscendyWidget.refresh(context)
     }
 
     suspend fun useEmergencyUnlock(): Boolean {
@@ -143,6 +154,7 @@ class SessionController(
             startedAt = current.startedAt,
             emergencyAvailable = list?.isStrict != true && current.emergencyUnlocksLeft > 0,
             strict = list?.isStrict == true,
+            inverted = list?.isAllowList == true,
         )
         startForegroundService()
         current.endsAt?.let { AlarmScheduler.scheduleSessionEnd(context, it) }
@@ -187,6 +199,22 @@ class SessionController(
 
     private fun stopForegroundService() {
         context.stopService(Intent(context, BlockingForegroundService::class.java))
+    }
+
+    private fun startVpnService() {
+        val intent = Intent(context, AscendyVpnService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent)
+        } else {
+            context.startService(intent)
+        }
+    }
+
+    private fun stopVpnService() {
+        context.startService(
+            Intent(context, AscendyVpnService::class.java)
+                .setAction(AscendyVpnService.ACTION_STOP)
+        )
     }
 
     companion object {

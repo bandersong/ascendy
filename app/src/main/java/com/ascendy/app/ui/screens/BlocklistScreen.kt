@@ -51,6 +51,7 @@ fun BlocklistScreen(
     onCreateList: (String) -> Unit,
     onDeleteList: (Blocklist) -> Unit,
     onToggleStrict: (Blocklist, Boolean) -> Unit,
+    onToggleAllowList: (Blocklist, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     var showCreate by remember { mutableStateOf(false) }
@@ -121,6 +122,14 @@ fun BlocklistScreen(
                                 Spacer(Modifier.weight(1f))
                                 Switch(checked = list.isStrict,
                                     onCheckedChange = { onToggleStrict(list, it) })
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(vocab.allowListToggleLabel,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.Smoke)
+                                Spacer(Modifier.weight(1f))
+                                Switch(checked = list.isAllowList,
+                                    onCheckedChange = { onToggleAllowList(list, it) })
                             }
                         }
                     }

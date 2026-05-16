@@ -15,7 +15,9 @@ private val THEME_KEY = stringPreferencesKey("variant")
 private val ONBOARDED_KEY = booleanPreferencesKey("onboarded")
 private val THEMES_INTRO_KEY = booleanPreferencesKey("themes_intro_seen")
 private val MAX_SESSION_KEY = intPreferencesKey("max_session_minutes")
+private val DAILY_GOAL_KEY = intPreferencesKey("daily_goal_minutes")
 const val MAX_SESSION_DEFAULT_MIN = 480   // 8h
+const val DAILY_GOAL_DEFAULT_MIN = 120    // 2h
 
 class ThemePrefs(private val context: Context) {
     val variant: Flow<ThemeVariant> = context.themeStore.data.map { prefs ->
@@ -38,6 +40,10 @@ class ThemePrefs(private val context: Context) {
         prefs[MAX_SESSION_KEY] ?: MAX_SESSION_DEFAULT_MIN
     }
 
+    val dailyGoalMinutes: Flow<Int> = context.themeStore.data.map { prefs ->
+        prefs[DAILY_GOAL_KEY] ?: DAILY_GOAL_DEFAULT_MIN
+    }
+
     suspend fun set(variant: ThemeVariant) {
         context.themeStore.edit { it[THEME_KEY] = variant.name }
     }
@@ -52,5 +58,9 @@ class ThemePrefs(private val context: Context) {
 
     suspend fun setMaxSessionMinutes(min: Int) {
         context.themeStore.edit { it[MAX_SESSION_KEY] = min.coerceIn(60, 24 * 60) }
+    }
+
+    suspend fun setDailyGoalMinutes(min: Int) {
+        context.themeStore.edit { it[DAILY_GOAL_KEY] = min.coerceIn(15, 12 * 60) }
     }
 }

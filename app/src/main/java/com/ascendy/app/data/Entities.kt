@@ -24,6 +24,12 @@ data class Blocklist(
     val createdAt: Long = System.currentTimeMillis(),
     /** Strict lists: no emergency override, no manual-end. Only tag/QR scan or safety timer. */
     val isStrict: Boolean = false,
+    /**
+     * Allow-list mode: invert the semantics. When true, the listed apps/domains are the
+     * ONLY ones allowed during a session. Everything else gets bounced. Great for study-only
+     * setups where you whitelist your textbook + class apps and block the rest of the phone.
+     */
+    val isAllowList: Boolean = false,
 )
 
 @Entity(

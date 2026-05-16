@@ -85,6 +85,27 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val vpnConsentLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val intent = android.content.Intent(this, com.ascendy.app.vpn.AscendyVpnService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+            else startService(intent)
+        }
+    }
+
+    fun requestVpnConsent() {
+        val prepare = android.net.VpnService.prepare(this)
+        if (prepare != null) {
+            vpnConsentLauncher.launch(prepare)
+        } else {
+            val intent = android.content.Intent(this, com.ascendy.app.vpn.AscendyVpnService::class.java)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
+            else startService(intent)
+        }
+    }
+
     fun launchQrScan() {
         val options = com.journeyapps.barcodescanner.ScanOptions().apply {
             setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
@@ -106,9 +127,16 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val sess = app.repo.currentSession()
             if (sess?.active == true) {
+                val list = app.repo.list(sess.listId)
                 val pkgs = app.repo.packages(sess.listId).toSet()
                 val doms = app.repo.domains(sess.listId).toSet()
-                com.ascendy.app.blocking.BlockState.set(true, pkgs, doms, sess.startedAt)
+                com.ascendy.app.blocking.BlockState.set(
+                    active = true,
+                    blocked = pkgs,
+                    blockedDomains = doms,
+                    startedAt = sess.startedAt,
+                    inverted = list?.isAllowList == true,
+                )
             }
         }
 
@@ -263,11 +291,18 @@ private fun AppNav(
             val manualStartMsg = com.ascendy.app.ui.theme.vocab.toastManualStarted
             val manualEndMsg = com.ascendy.app.ui.theme.vocab.toastManualEnded
             val strictBlockedMsg = com.ascendy.app.ui.theme.vocab.strictManualBlockedToast
+            val todayMs by repo.observeFocusMsSince(
+                com.ascendy.app.data.Stats.startOfTodayMs(),
+                System.currentTimeMillis()
+            ).collectAsState(initial = 0L)
+            val dailyGoal by themePrefs.dailyGoalMinutes.collectAsState(initial = com.ascendy.app.data.DAILY_GOAL_DEFAULT_MIN)
             HomeScreen(
                 tagCount = tags.size,
                 listCount = lists.size,
                 permissionsReady = permissions.accessibility || permissions.usageStats,
                 streakDays = streakDays,
+                todayFocusedMinutes = com.ascendy.app.data.Stats.msToMinutes(todayMs),
+                dailyGoalMinutes = dailyGoal,
                 onPairTag = { nav.navigate("pair") },
                 onOpenLists = { nav.navigate("lists") },
                 onOpenPermissions = { nav.navigate("perms") },
@@ -394,6 +429,9 @@ private fun AppNav(
                 onToggleStrict = { l, on ->
                     scope.launch { repo.upsertList(l.copy(isStrict = on)) }
                 },
+                onToggleAllowList = { l, on ->
+                    scope.launch { repo.upsertList(l.copy(isAllowList = on)) }
+                },
                 onBack = { nav.popBackStack() }
             )
         }
@@ -421,16 +459,20 @@ private fun AppNav(
             PermissionsScreen(
                 status = permissions,
                 onBack = { nav.popBackStack() },
-                onRequestNotifications = onRequestNotifications
+                onRequestNotifications = onRequestNotifications,
+                onRequestVpn = { (context as? MainActivity)?.requestVpnConsent() }
             )
         }
         composable("settings") {
             val safetyMin by themePrefs.maxSessionMinutes.collectAsState(initial = com.ascendy.app.data.MAX_SESSION_DEFAULT_MIN)
+            val goalMin by themePrefs.dailyGoalMinutes.collectAsState(initial = com.ascendy.app.data.DAILY_GOAL_DEFAULT_MIN)
             com.ascendy.app.ui.screens.SettingsScreen(
                 current = currentVariant,
                 safetyMinutes = safetyMin,
+                dailyGoalMinutes = goalMin,
                 onPickTheme = { v -> scope.launch { themePrefs.set(v) } },
                 onPickSafetyMinutes = { m -> scope.launch { themePrefs.setMaxSessionMinutes(m) } },
+                onPickGoalMinutes = { m -> scope.launch { themePrefs.setDailyGoalMinutes(m) } },
                 onOpenStats = { nav.navigate("stats") },
                 onOpenSchedules = { nav.navigate("schedules") },
                 onOpenPomodoro = { nav.navigate("pomodoro") },
@@ -552,6 +594,7 @@ private fun checkPermissions(context: Context): PermissionStatus {
         overlay = Settings.canDrawOverlays(context),
         notifications = hasNotificationPermission(context),
         batteryExempt = isBatteryOptIgnored(context),
+        vpnConsented = android.net.VpnService.prepare(context) == null,
     )
 }
 

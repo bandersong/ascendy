@@ -57,6 +57,8 @@ fun HomeScreen(
     listCount: Int,
     permissionsReady: Boolean,
     streakDays: Int,
+    todayFocusedMinutes: Int,
+    dailyGoalMinutes: Int,
     onPairTag: () -> Unit,
     onOpenLists: () -> Unit,
     onOpenPermissions: () -> Unit,
@@ -147,6 +149,17 @@ fun HomeScreen(
                         Spacer(Modifier.size(6.dp))
                         Badge(label = "🔥 $streakDays", color = palette.Mint)
                     }
+                }
+                // Daily goal progress
+                if (dailyGoalMinutes > 0) {
+                    Spacer(Modifier.height(8.dp))
+                    val goalHit = todayFocusedMinutes >= dailyGoalMinutes
+                    Text(
+                        if (goalHit) vocab.goalReached
+                        else vocab.goalProgressFmt.format(todayFocusedMinutes, dailyGoalMinutes),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (goalHit) palette.Sage else palette.Smoke
+                    )
                 }
                 Spacer(Modifier.height(10.dp))
                 Text(

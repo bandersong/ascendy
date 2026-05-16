@@ -24,17 +24,24 @@ object BlockState {
     private val _strict = MutableStateFlow(false)
     val strict: StateFlow<Boolean> = _strict
 
+    /** True iff the active list is allow-mode: blocked = NOT in [blocked]. */
+    private val _inverted = MutableStateFlow(false)
+    val inverted: StateFlow<Boolean> = _inverted
+
     fun snapshot(): Set<String> = _blocked.value
     fun isActive(): Boolean = _active.value
-    fun isBlocked(pkg: String): Boolean = _active.value && pkg in _blocked.value
+    fun isBlocked(pkg: String): Boolean {
+        if (!_active.value) return false
+        val inSet = pkg in _blocked.value
+        return if (_inverted.value) !inSet else inSet
+    }
     fun blockedCount(): Int = _blocked.value.size
     fun isDomainBlocked(host: String): Boolean {
         if (!_active.value) return false
         val h = host.lowercase().removePrefix("www.")
         val set = _blockedDomains.value
-        // direct match OR any blocked domain is a suffix (subdomain of blocked)
-        if (h in set) return true
-        return set.any { d -> h == d || h.endsWith(".$d") }
+        val matched = h in set || set.any { d -> h == d || h.endsWith(".$d") }
+        return if (_inverted.value) !matched else matched
     }
 
     fun set(
@@ -44,6 +51,7 @@ object BlockState {
         startedAt: Long? = null,
         emergencyAvailable: Boolean = false,
         strict: Boolean = false,
+        inverted: Boolean = false,
     ) {
         _active.value = active
         _blocked.value = if (active) blocked else emptySet()
@@ -51,6 +59,7 @@ object BlockState {
         _startedAt.value = if (active) startedAt else null
         _emergencyAvailable.value = active && emergencyAvailable
         _strict.value = active && strict
+        _inverted.value = active && inverted
     }
 
     fun clear() {
@@ -60,5 +69,6 @@ object BlockState {
         _startedAt.value = null
         _emergencyAvailable.value = false
         _strict.value = false
+        _inverted.value = false
     }
 }

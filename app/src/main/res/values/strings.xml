@@ -5,4 +5,5 @@
     <string name="accessibility_service_description">watches the foreground app and bounces back to home when a blocked app opens during a focus session. tap your nfc tag to start or end the session.</string>
     <string name="notif_channel_name">Focus session</string>
     <string name="notif_channel_desc">Shown while a focus session is active.</string>
+    <string name="widget_description">Ascendy focus status</string>
 </resources>

@@ -39,6 +39,7 @@ data class PermissionStatus(
     val overlay: Boolean,
     val notifications: Boolean,
     val batteryExempt: Boolean,
+    val vpnConsented: Boolean,
 )
 
 @Composable
@@ -46,6 +47,7 @@ fun PermissionsScreen(
     status: PermissionStatus,
     onBack: () -> Unit,
     onRequestNotifications: () -> Unit,
+    onRequestVpn: () -> Unit,
 ) {
     val context = LocalContext.current
     val insets = WindowInsets.systemBars.asPaddingValues()
@@ -147,6 +149,16 @@ fun PermissionsScreen(
                     ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
             }
+        )
+        Spacer(Modifier.height(8.dp))
+
+        PermissionCard(
+            emoji = vocab.permsVpnEmoji,
+            title = vocab.permsVpnTitle,
+            body = vocab.permsVpnBody,
+            granted = status.vpnConsented,
+            actionLabel = vocab.permsVpnAction,
+            onClick = onRequestVpn
         )
 
         Spacer(Modifier.height(24.dp))

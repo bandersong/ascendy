@@ -25,6 +25,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -49,6 +50,7 @@ fun BlocklistScreen(
     onOpenList: (Blocklist) -> Unit,
     onCreateList: (String) -> Unit,
     onDeleteList: (Blocklist) -> Unit,
+    onToggleStrict: (Blocklist, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
     var showCreate by remember { mutableStateOf(false) }
@@ -92,20 +94,34 @@ fun BlocklistScreen(
                         shape = MaterialTheme.shapes.large,
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(Modifier.weight(1f)) {
-                                Text(list.name, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                                Text(
-                                    vocab.listsAppCountFmt.format(appCountFor(list.id)),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = palette.Smoke
-                                )
+                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(list.name, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                                        if (list.isStrict) {
+                                            Spacer(Modifier.size(8.dp))
+                                            Badge(label = vocab.strictBadge, color = palette.Petal)
+                                        }
+                                    }
+                                    Text(
+                                        vocab.listsAppCountFmt.format(appCountFor(list.id)),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = palette.Smoke
+                                    )
+                                }
+                                if (list.isDefault) Badge(label = vocab.listsBadgeDefault, color = palette.Mint)
+                                else TextButton(onClick = { onDeleteList(list) }) { Text(vocab.tagsRemove) }
                             }
-                            if (list.isDefault) Badge(label = vocab.listsBadgeDefault, color = palette.Mint)
-                            else TextButton(onClick = { onDeleteList(list) }) { Text(vocab.tagsRemove) }
+                            Spacer(Modifier.height(4.dp))
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(vocab.strictToggleLabel,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.Smoke)
+                                Spacer(Modifier.weight(1f))
+                                Switch(checked = list.isStrict,
+                                    onCheckedChange = { onToggleStrict(list, it) })
+                            }
                         }
                     }
                     Spacer(Modifier.height(8.dp))

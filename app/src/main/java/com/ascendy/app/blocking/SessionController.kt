@@ -5,8 +5,10 @@ import android.content.Intent
 import android.os.Build
 import com.ascendy.app.data.AscendyRepo
 import com.ascendy.app.data.BlockSession
+import com.ascendy.app.data.ThemePrefs
 import com.ascendy.app.service.AlarmScheduler
 import com.ascendy.app.service.BlockingForegroundService
+import kotlinx.coroutines.flow.first
 
 sealed class TapResult {
     data class Locked(val listName: String) : TapResult()
@@ -19,7 +21,13 @@ enum class SessionSource(val tag: String) {
     Nfc("nfc"), Manual("manual"), Pomodoro("pomodoro"), Scheduled("scheduled");
 }
 
-class SessionController(private val context: Context, private val repo: AscendyRepo) {
+enum class ManualEndResult { Ended, BlockedStrict, NoSession }
+
+class SessionController(
+    private val context: Context,
+    private val repo: AscendyRepo,
+    private val themePrefs: ThemePrefs,
+) {
 
     suspend fun handleTagTap(tagId: String): TapResult {
         val tag = repo.tagById(tagId) ?: return TapResult.UnknownTag(tagId)
@@ -33,7 +41,6 @@ class SessionController(private val context: Context, private val repo: AscendyR
                 TapResult.Unlocked
             }
         } else {
-            // Per-tag binding: if the tag has a listId, use it; else fall back to default
             val list = tag.listId?.let { repo.list(it) }
                 ?: repo.defaultList()
                 ?: repo.ensureDefaultList()
@@ -48,27 +55,41 @@ class SessionController(private val context: Context, private val repo: AscendyR
         source: SessionSource = SessionSource.Nfc,
         endsAt: Long? = null,
     ) {
-        val packages = repo.packages(listId).toSet()
-        val domains = repo.domains(listId).toSet()
+        val list = repo.list(listId) ?: repo.ensureDefaultList()
+        val packages = repo.packages(list.id).toSet()
+        val domains = repo.domains(list.id).toSet()
         val now = System.currentTimeMillis()
+
+        // Safety timer: force every session to have an auto-end. Explicit endsAt (pomodoro,
+        // scheduled) wins if shorter; otherwise we use the user's configured max duration.
+        val maxMin = themePrefs.maxSessionMinutes.first().coerceIn(60, 24 * 60)
+        val safetyEndsAt = now + maxMin * 60_000L
+        val effectiveEndsAt = if (endsAt != null) minOf(endsAt, safetyEndsAt) else safetyEndsAt
+
+        val isStrict = list.isStrict
+        val unlocksLeft = if (isStrict) 0 else 1
+
         val session = BlockSession(
             id = 1L,
             active = true,
             startedAt = now,
-            listId = listId,
+            listId = list.id,
             tagId = tagId,
-            emergencyUnlocksLeft = 1,
-            endsAt = endsAt,
+            emergencyUnlocksLeft = unlocksLeft,
+            endsAt = effectiveEndsAt,
         )
         repo.saveSession(session)
-        repo.startLog(listId, now, source.tag)
-        BlockState.set(active = true, blocked = packages, blockedDomains = domains, startedAt = now)
+        repo.startLog(list.id, now, source.tag)
+        BlockState.set(
+            active = true,
+            blocked = packages,
+            blockedDomains = domains,
+            startedAt = now,
+            emergencyAvailable = !isStrict && unlocksLeft > 0,
+            strict = isStrict,
+        )
         startForegroundService()
-
-        // Pomodoro / scheduled auto-end alarm
-        if (endsAt != null) {
-            AlarmScheduler.scheduleSessionEnd(context, endsAt)
-        }
+        AlarmScheduler.scheduleSessionEnd(context, effectiveEndsAt)
     }
 
     suspend fun endSession() {
@@ -95,25 +116,43 @@ class SessionController(private val context: Context, private val repo: AscendyR
     suspend fun restoreOnBoot() {
         val current = repo.currentSession() ?: return
         if (!current.active) return
+        val list = repo.list(current.listId)
         val packages = repo.packages(current.listId).toSet()
         val domains = repo.domains(current.listId).toSet()
-        BlockState.set(active = true, blocked = packages, blockedDomains = domains, startedAt = current.startedAt)
+        BlockState.set(
+            active = true,
+            blocked = packages,
+            blockedDomains = domains,
+            startedAt = current.startedAt,
+            emergencyAvailable = list?.isStrict != true && current.emergencyUnlocksLeft > 0,
+            strict = list?.isStrict == true,
+        )
         startForegroundService()
         current.endsAt?.let { AlarmScheduler.scheduleSessionEnd(context, it) }
     }
 
-    /** Manual toggle — no tag involved. Used by the long-press shortcut. */
-    suspend fun toggleManual() {
+    /**
+     * Manual long-press toggle. Starts a session if none is active. If an active session is
+     * strict, [ManualEndResult.BlockedStrict] is returned and the session is NOT ended — the user
+     * must use the bound tag/QR or wait for the safety timer.
+     */
+    suspend fun toggleManual(): ManualEndResult {
         val current = repo.currentSession()
-        if (current?.active == true) {
-            endSession()
+        return if (current?.active == true) {
+            val list = repo.list(current.listId)
+            if (list?.isStrict == true) {
+                ManualEndResult.BlockedStrict
+            } else {
+                endSession()
+                ManualEndResult.Ended
+            }
         } else {
             val list = repo.defaultList() ?: repo.ensureDefaultList()
             startSession(list.id, tagId = null, source = SessionSource.Manual)
+            ManualEndResult.NoSession  // semantically "started fresh"
         }
     }
 
-    /** Pomodoro / quick-lock: start a session that auto-ends after [durationMs]. */
     suspend fun startTimedSession(durationMs: Long, listId: Long? = null) {
         val list = listId?.let { repo.list(it) } ?: repo.defaultList() ?: repo.ensureDefaultList()
         val endsAt = System.currentTimeMillis() + durationMs

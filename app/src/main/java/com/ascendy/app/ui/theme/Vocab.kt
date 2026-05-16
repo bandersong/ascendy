@@ -123,11 +123,27 @@ data class Vocab(
     // blocked-app count badge during a session
     val homeBadgeBlockedFmt: String,        // "%d blocked"
 
-    // emergency confirm dialog
+    // emergency confirm dialog (now friction-tax)
     val emergencyConfirmTitle: String,
     val emergencyConfirmBody: String,
     val emergencyConfirmYes: String,
     val emergencyConfirmNo: String,
+    val frictionPrompt: String,         // "type this exactly to unlock:"
+    val frictionSentence: String,       // the verbatim sentence the user must match
+    val frictionInputLabel: String,
+    val frictionMatchOk: String,
+
+    // strict mode
+    val strictBadge: String,
+    val strictModeNote: String,         // shown when active session is strict (no emergency UI)
+    val strictToggleLabel: String,      // per-list toggle label
+    val strictManualBlockedToast: String, // when long-press tries to end a strict session
+
+    // safety timer (mandatory auto-end)
+    val safetyTimerTitle: String,
+    val safetyTimerBody: String,
+    val safetyTimerOnboardTitle: String,
+    val safetyTimerOnboardBody: String,
 
     // onboarding
     val onboardSkip: String,
@@ -312,6 +328,20 @@ val KawaiiVocab = Vocab(
     emergencyConfirmBody = "this uses your one emergency unlock for the session. it won't come back until you start a new session.",
     emergencyConfirmYes = "yes, unlock",
     emergencyConfirmNo = "nevermind",
+    frictionPrompt = "type this exactly to break — every character matters:",
+    frictionSentence = "i am breaking my focus session even though my little guy is going to be very sad ♡",
+    frictionInputLabel = "type it here",
+    frictionMatchOk = "matches ✓",
+
+    strictBadge = "strict 🔒",
+    strictModeNote = "strict mode — only the tag/qr can end this session ♡",
+    strictToggleLabel = "strict mode",
+    strictManualBlockedToast = "strict mode — tap your tag/qr to end ♡",
+
+    safetyTimerTitle = "max session length",
+    safetyTimerBody = "every session auto-ends after this (safety in case you lose your tag/qr).",
+    safetyTimerOnboardTitle = "safety timer ✨",
+    safetyTimerOnboardBody = "pick how long sessions are allowed to run before auto-ending. if you lose your tag, this is your way out.",
 
     onboardSkip = "skip",
     onboardNext = "next",
@@ -486,8 +516,22 @@ val ToughVocab = Vocab(
 
     emergencyConfirmTitle = "BREAK GLASS?",
     emergencyConfirmBody = "one use per session. no resets. weak move. you sure?",
-    emergencyConfirmYes = "YES. BREAK.",
-    emergencyConfirmNo = "NO. STAY IN.",
+    emergencyConfirmYes = "BREAK",
+    emergencyConfirmNo = "STAY IN",
+    frictionPrompt = "type this exactly. case-sensitive. punctuation included:",
+    frictionSentence = "I AM QUITTING EARLY. THIS IS A WEAK MOVE. I OWN IT AND WILL DO BETTER NEXT TIME.",
+    frictionInputLabel = "type it",
+    frictionMatchOk = "MATCH",
+
+    strictBadge = "STRICT",
+    strictModeNote = "STRICT MODE — ONLY THE ANCHOR ENDS THIS. NO OVERRIDE.",
+    strictToggleLabel = "STRICT MODE",
+    strictManualBlockedToast = "STRICT — USE YOUR ANCHOR TO END.",
+
+    safetyTimerTitle = "MAX SESSION LENGTH",
+    safetyTimerBody = "every session auto-ends after this. fail-safe for a lost anchor.",
+    safetyTimerOnboardTitle = "SAFETY TIMER",
+    safetyTimerOnboardBody = "pick the max duration. if your anchor disappears, this is your exit. choose carefully — strict mode plus a long timer is a real commitment.",
 
     onboardSkip = "SKIP",
     onboardNext = "NEXT",
@@ -664,6 +708,20 @@ val NeutralVocab = Vocab(
     emergencyConfirmBody = "This consumes the single override available for this session. A new override is only granted when the next session starts.",
     emergencyConfirmYes = "Use override",
     emergencyConfirmNo = "Cancel",
+    frictionPrompt = "Type the sentence below exactly. Punctuation and capitalization must match:",
+    frictionSentence = "I am ending this focus session before completion. I accept this decision.",
+    frictionInputLabel = "Enter the sentence",
+    frictionMatchOk = "Match",
+
+    strictBadge = "Strict",
+    strictModeNote = "Strict mode — only the bound tag/QR can end this session.",
+    strictToggleLabel = "Strict mode",
+    strictManualBlockedToast = "Strict mode is on — use your tag or QR to end the session.",
+
+    safetyTimerTitle = "Maximum session length",
+    safetyTimerBody = "Every session auto-ends after this duration. Provides a fail-safe if you lose access to your tag or QR code.",
+    safetyTimerOnboardTitle = "Set a safety timer",
+    safetyTimerOnboardBody = "Choose the longest a single session is allowed to run before it auto-ends. This guarantees you can recover even if you misplace your tag or QR.",
 
     onboardSkip = "Skip",
     onboardNext = "Next",

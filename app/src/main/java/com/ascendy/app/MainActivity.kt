@@ -99,7 +99,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val app = application as AscendyApp
-        controller = SessionController(this, app.repo)
+        controller = SessionController(this, app.repo, app.themePrefs)
 
         // restore in-memory state if a session is active
         lifecycleScope.launch {
@@ -241,9 +241,14 @@ private fun AppNav(
     val startDest = if (onboarded) "home" else "onboarding"
     NavHost(navController = nav, startDestination = startDest) {
         composable("onboarding") {
+            val initialSafety by themePrefs.maxSessionMinutes.collectAsState(initial = com.ascendy.app.data.MAX_SESSION_DEFAULT_MIN)
             com.ascendy.app.ui.screens.OnboardingScreen(
-                onFinish = {
-                    scope.launch { themePrefs.markOnboarded() }
+                initialSafetyMinutes = initialSafety,
+                onFinish = { safetyMin ->
+                    scope.launch {
+                        themePrefs.setMaxSessionMinutes(safetyMin)
+                        themePrefs.markOnboarded()
+                    }
                     nav.navigate("home") {
                         popUpTo("onboarding") { inclusive = true }
                     }
@@ -269,14 +274,16 @@ private fun AppNav(
                 onOpenPomodoro = { nav.navigate("pomodoro") },
                 onScanQr = { (context as? MainActivity)?.launchQrScan() },
                 onManualToggle = {
+                    val strictBlockedMsg = com.ascendy.app.ui.theme.vocab.strictManualBlockedToast
                     scope.launch {
                         val wasActive = com.ascendy.app.blocking.BlockState.isActive()
-                        controller.toggleManual()
-                        Toast.makeText(
-                            context,
-                            if (wasActive) manualEndMsg else manualStartMsg,
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        val result = controller.toggleManual()
+                        val msg = when (result) {
+                            com.ascendy.app.blocking.ManualEndResult.BlockedStrict -> strictBlockedMsg
+                            com.ascendy.app.blocking.ManualEndResult.Ended -> manualEndMsg
+                            com.ascendy.app.blocking.ManualEndResult.NoSession -> manualStartMsg
+                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                     }
                 },
                 onEmergencyUnlock = {
@@ -383,6 +390,9 @@ private fun AppNav(
                     }
                 },
                 onDeleteList = { l -> scope.launch { repo.deleteList(l.id) } },
+                onToggleStrict = { l, on ->
+                    scope.launch { repo.upsertList(l.copy(isStrict = on)) }
+                },
                 onBack = { nav.popBackStack() }
             )
         }
@@ -414,9 +424,12 @@ private fun AppNav(
             )
         }
         composable("settings") {
+            val safetyMin by themePrefs.maxSessionMinutes.collectAsState(initial = com.ascendy.app.data.MAX_SESSION_DEFAULT_MIN)
             com.ascendy.app.ui.screens.SettingsScreen(
                 current = currentVariant,
+                safetyMinutes = safetyMin,
                 onPickTheme = { v -> scope.launch { themePrefs.set(v) } },
+                onPickSafetyMinutes = { m -> scope.launch { themePrefs.setMaxSessionMinutes(m) } },
                 onOpenStats = { nav.navigate("stats") },
                 onOpenSchedules = { nav.navigate("schedules") },
                 onOpenPomodoro = { nav.navigate("pomodoro") },

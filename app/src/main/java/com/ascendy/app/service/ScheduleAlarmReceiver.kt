@@ -19,7 +19,7 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val controller = SessionController(context.applicationContext, app.repo)
+                val controller = SessionController(context.applicationContext, app.repo, app.themePrefs)
                 when (action) {
                     ACTION_END_SESSION -> {
                         controller.endSession()

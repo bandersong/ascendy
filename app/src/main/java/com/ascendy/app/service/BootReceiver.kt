@@ -19,7 +19,7 @@ class BootReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                SessionController(context.applicationContext, app.repo).restoreOnBoot()
+                SessionController(context.applicationContext, app.repo, app.themePrefs).restoreOnBoot()
                 // re-arm every enabled schedule's next firing
                 app.repo.allEnabledSchedules().forEach { schedule ->
                     AlarmScheduler.scheduleDailyTrigger(context, schedule, isStart = true)

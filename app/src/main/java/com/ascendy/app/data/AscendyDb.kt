@@ -10,7 +10,7 @@ import androidx.room.RoomDatabase
         BoundTag::class, Blocklist::class, BlockedPackage::class, BlockedDomain::class,
         BlockSession::class, SessionLog::class, Schedule::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AscendyDb : RoomDatabase() {

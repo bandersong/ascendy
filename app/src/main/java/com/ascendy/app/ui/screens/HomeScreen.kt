@@ -68,9 +68,11 @@ fun HomeScreen(
     val active by BlockState.active.collectAsState()
     val startedAt by BlockState.startedAt.collectAsState()
     val blockedSet by BlockState.blocked.collectAsState()
+    val emergencyAvailable by BlockState.emergencyAvailable.collectAsState()
+    val strict by BlockState.strict.collectAsState()
     val insets = WindowInsets.systemBars.asPaddingValues()
     val scroll = rememberScrollState()
-    var showEmergencyConfirm by remember { mutableStateOf(false) }
+    var showFrictionDialog by remember { mutableStateOf(false) }
 
     // re-tick every 30s while active to refresh the elapsed-minutes display
     var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -209,7 +211,16 @@ fun HomeScreen(
             )
         }
 
-        if (active) {
+        if (active && strict) {
+            Spacer(Modifier.height(24.dp))
+            SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
+                Text(
+                    vocab.strictModeNote,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.Smoke
+                )
+            }
+        } else if (active && emergencyAvailable) {
             Spacer(Modifier.height(24.dp))
             SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
                 Column {
@@ -221,7 +232,7 @@ fun HomeScreen(
                         color = palette.Smoke
                     )
                     Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = { showEmergencyConfirm = true }) {
+                    TextButton(onClick = { showFrictionDialog = true }) {
                         Text(vocab.emergencyButton)
                     }
                 }
@@ -229,24 +240,74 @@ fun HomeScreen(
         }
     }
 
-    if (showEmergencyConfirm) {
-        AlertDialog(
-            onDismissRequest = { showEmergencyConfirm = false },
-            title = { Text(vocab.emergencyConfirmTitle) },
-            text = { Text(vocab.emergencyConfirmBody) },
-            confirmButton = {
-                Button(onClick = {
-                    showEmergencyConfirm = false
-                    onEmergencyUnlock()
-                }) { Text(vocab.emergencyConfirmYes) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showEmergencyConfirm = false }) {
-                    Text(vocab.emergencyConfirmNo)
-                }
+    if (showFrictionDialog) {
+        FrictionTaxDialog(
+            sentence = vocab.frictionSentence,
+            onDismiss = { showFrictionDialog = false },
+            onConfirm = {
+                showFrictionDialog = false
+                onEmergencyUnlock()
             }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FrictionTaxDialog(
+    sentence: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    var input by remember { mutableStateOf("") }
+    val matches = input == sentence
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(vocab.emergencyConfirmTitle) },
+        text = {
+            Column {
+                Text(vocab.frictionPrompt,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = palette.Smoke)
+                Spacer(Modifier.height(8.dp))
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Text(
+                        sentence,
+                        modifier = Modifier.padding(12.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.Ink
+                    )
+                }
+                Spacer(Modifier.height(12.dp))
+                androidx.compose.material3.OutlinedTextField(
+                    value = input,
+                    onValueChange = { input = it },
+                    label = { Text(vocab.frictionInputLabel) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (matches) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(vocab.frictionMatchOk,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.Sage)
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm, enabled = matches) {
+                Text(vocab.emergencyConfirmYes)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(vocab.emergencyConfirmNo)
+            }
+        }
+    )
 }
 
 @Composable

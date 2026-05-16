@@ -21,7 +21,9 @@ data class Blocklist(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
     val isDefault: Boolean = false,
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    /** Strict lists: no emergency override, no manual-end. Only tag/QR scan or safety timer. */
+    val isStrict: Boolean = false,
 )
 
 @Entity(

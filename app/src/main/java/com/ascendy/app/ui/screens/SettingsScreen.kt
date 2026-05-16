@@ -37,11 +37,15 @@ import com.ascendy.app.ui.theme.paletteFor
 import com.ascendy.app.ui.theme.vocab
 import com.ascendy.app.ui.theme.vocabFor
 
+private val safetyChoices = listOf(60, 120, 240, 480, 720, 1440)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     current: ThemeVariant,
+    safetyMinutes: Int,
     onPickTheme: (ThemeVariant) -> Unit,
+    onPickSafetyMinutes: (Int) -> Unit,
     onOpenStats: () -> Unit,
     onOpenSchedules: () -> Unit,
     onOpenPomodoro: () -> Unit,
@@ -119,6 +123,43 @@ fun SettingsScreen(
         SettingsRow(label = vocab.settingsRowSchedules, onClick = onOpenSchedules)
         Spacer(Modifier.height(8.dp))
         SettingsRow(label = vocab.settingsRowPomodoro, onClick = onOpenPomodoro)
+
+        Spacer(Modifier.height(20.dp))
+
+        SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
+            Column {
+                Text(vocab.safetyTimerTitle,
+                    style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                Spacer(Modifier.height(4.dp))
+                Text(vocab.safetyTimerBody,
+                    style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
+                Spacer(Modifier.height(10.dp))
+                for (rowIdx in 0 until 2) {
+                    Row(modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                        for (colIdx in 0 until 3) {
+                            val mins = safetyChoices[rowIdx * 3 + colIdx]
+                            val sel = safetyMinutes == mins
+                            Surface(
+                                onClick = { onPickSafetyMinutes(mins) },
+                                color = if (sel) palette.Petal else palette.Mist,
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    if (mins % 60 == 0) "${mins / 60}h" else "${mins}m",
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = palette.Ink,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                    if (rowIdx == 0) Spacer(Modifier.height(6.dp))
+                }
+            }
+        }
 
         Spacer(Modifier.height(24.dp))
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {

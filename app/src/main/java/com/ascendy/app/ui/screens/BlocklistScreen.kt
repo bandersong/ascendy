@@ -155,11 +155,23 @@ fun BlocklistScreen(
             onDismiss = { showCreate = false },
             onConfirm = { name ->
                 showCreate = false
-                if (name.isNotBlank()) onCreateList(name.trim())
+                val final = name.trim().ifBlank { randomListName() }
+                onCreateList(final)
             }
         )
     }
 }
+
+private val randomListNames = listOf(
+    "willow", "ember", "drift", "comet", "petal", "moss", "lumen", "halo",
+    "tide", "nest", "echo", "saffron", "fern", "harbor", "lark", "cinder",
+    "spruce", "atlas", "veil", "ridge", "bloom", "river", "haven", "kite",
+    "marble", "stillwater", "afterglow", "meadow", "sable", "linden",
+    "juniper", "starling", "thistle", "lattice", "halcyon", "vellum",
+    "indigo", "alcove", "aurora", "ember", "quartz", "wisteria"
+)
+
+private fun randomListName(): String = randomListNames.random()
 
 @Composable
 private fun CreateListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {

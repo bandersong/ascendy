@@ -199,27 +199,19 @@ fun HomeScreen(
         // Setup section — single grouped card with check marks; collapses when all done
         if (setupAllDone && !active) {
             SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Rounded.Check,
-                            contentDescription = null,
-                            tint = palette.Sage,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.size(8.dp))
-                        Text(
-                            "all set",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = palette.Ink
-                        )
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Row {
-                        TextButton(onClick = onPairTag) { Text(vocab.rowPairTagLabel) }
-                        TextButton(onClick = onOpenLists) { Text(vocab.rowFocusListLabel) }
-                        TextButton(onClick = onOpenPermissions) { Text(vocab.rowPermissionsLabel) }
-                    }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Rounded.Check,
+                        contentDescription = null,
+                        tint = palette.Sage,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(Modifier.size(8.dp))
+                    Text(
+                        "all set",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.Ink
+                    )
                 }
             }
         } else {

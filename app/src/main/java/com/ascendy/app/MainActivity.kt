@@ -494,6 +494,9 @@ private fun AppNav(
                 onOpenPomodoro = { nav.navigate("pomodoro") },
                 onOpenUpdates = { nav.navigate("updates") },
                 onOpenAbout = { nav.navigate("about") },
+                onOpenTags = { nav.navigate("pair") },
+                onOpenLists = { nav.navigate("lists") },
+                onOpenPermissions = { nav.navigate("perms") },
                 onBack = { nav.popBackStack() }
             )
         }

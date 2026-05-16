@@ -493,11 +493,15 @@ private fun AppNav(
                 onOpenSchedules = { nav.navigate("schedules") },
                 onOpenPomodoro = { nav.navigate("pomodoro") },
                 onOpenUpdates = { nav.navigate("updates") },
+                onOpenAbout = { nav.navigate("about") },
                 onBack = { nav.popBackStack() }
             )
         }
         composable("updates") {
             com.ascendy.app.ui.screens.UpdateScreen(onBack = { nav.popBackStack() })
+        }
+        composable("about") {
+            com.ascendy.app.ui.screens.AboutScreen(onBack = { nav.popBackStack() })
         }
         composable("stats") {
             val todayMs by repo.observeFocusMsSince(

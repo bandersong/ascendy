@@ -1,35 +1,93 @@
 # ascendy ♡
 
-Open-source NFC focus app for Android. Tap a paired tag to lock distracting apps; tap the same tag to unlock.
+An NFC- and QR-based focus app for Android. Pair a physical anchor — tap it to lock distracting apps and websites, tap it again to unlock. The friction is the feature.
 
-## Build (phone-only flow)
+Three themes (Kawaii, Tough, Neutral) — the whole app rewrites itself: colors, typography, mascot, copy, even the foreground-service notification.
 
-1. Push this repo to GitHub.
-2. The `Build APK` workflow runs on every push to `main` (and via "Run workflow" on the Actions tab).
-3. Download `ascendy-debug-apk` from the run artifacts on your phone.
-4. Tap the APK to install (allow "install unknown apps" for your file manager / browser if prompted).
+[Privacy policy](https://bandersong.github.io/ascendy/privacy.html) · [Latest APK](https://github.com/bandersong/ascendy/releases/latest) · MIT licensed · nothing leaves your device.
 
-## First-run setup
+## What it does
 
-1. Open ascendy.
-2. Walk through **permissions** — grant accessibility, usage access, display-over-other-apps, and notifications.
-3. **Pair a tag** — tap "start pairing", hold a blank NTAG21x against the back of the phone, give it a name.
-4. **Build a focus list** — name a list, then toggle the apps you want to block.
-5. Tap the tag from anywhere → focus on → blocked apps show the kawaii overlay.
-6. Tap the same tag → focus off.
+- **NFC anchors** — write a UUID to any NTAG21x sticker. Tap to start a focus session. Tap the same tag to end it.
+- **QR anchors** — generate a printable QR code, stick it somewhere inconvenient, scan it with the in-app camera to toggle a session.
+- **App blocking** — pick installed apps to block. The accessibility service bounces you back to home if you try to open one during a session. Fallback path uses UsageStats polling.
+- **Website blocking** — two layers stacked:
+  - Accessibility service reads the URL bar in 15 known browsers and bounces you out
+  - VpnService DNS sinkhole answers blocked domains with NXDOMAIN at the network layer (on-device only, optional)
+- **Pomodoro** — timed sessions that auto-end (15 / 25 / 50 / 90 min)
+- **Scheduled focus** — daily sessions on chosen days, AlarmManager-driven
+- **Per-tag list bindings** — each anchor can trigger its own focus list
+- **Strict mode** — per-list. No emergency override, no manual end. Only the bound anchor or the safety timer.
+- **Friction-tax override** — for non-strict lists, the emergency unlock requires typing a verbatim sentence (case-sensitive, theme-specific)
+- **Forced safety timer** — every session auto-ends after a user-set max duration (1h–24h, default 8h). Fail-safe in case you lose your anchor.
+- **Allow-only mode** — invert the block list semantics. Only the listed apps work. Great for study-only sessions.
+- **Stats + 7-day chart + streaks** — earned mascot accessories at 7 / 30 / 100 day streaks.
+- **Daily focus goal** — pick a daily target; progress shown on home.
+- **Three themes** with full vocabulary swaps (every string is per-theme).
+- **Home-screen widget** — status, scan button, streak chip. Works on the lock screen on Android 13+.
+- **Quick Settings tile** — pull down the shade, tap to toggle a manual session.
+- **Notification actions** — End / Stats inline from the ongoing-session notification.
+- **Tasker broadcast intents** — `com.ascendy.app.SESSION_STARTED` / `SESSION_ENDED` for automation.
+- **In-app updater** — pulls the latest build from GitHub Releases. No more downloading artifacts from the Actions tab.
+
+## Get it
+
+- **Sideload:** download [the latest APK](https://github.com/bandersong/ascendy/releases/latest) and tap to install.
+- **F-Droid:** coming soon.
+- **Google Play:** coming soon.
+
+After installing the first time, future updates install over the top — the debug keystore is stable and committed to the repo so signing matches across builds.
+
+## Build it yourself
+
+CI builds the `foss` flavor on every push to `main`. Locally with Android Studio:
+
+```bash
+./gradlew :app:assembleFossDebug      # default sideload build (with in-app updater)
+./gradlew :app:bundlePlayRelease      # Play Store AAB (no in-app installer)
+```
+
+`compileSdk` / `targetSdk` 35 · `minSdk` 26 · Kotlin 1.9.24 · Compose BOM 2024.06.00 · Room 2.6.1.
 
 ## Architecture
 
-- `MainActivity` routes NFC intents and hosts the Compose nav graph.
-- `SessionController` is the state machine: start session, end session, emergency unlock, restore-on-boot.
-- `BlockingAccessibilityService` is the primary detector — listens to window-state-changed events and bounces back to home.
-- `BlockingForegroundService` is the fallback — polls `UsageStatsManager.queryEvents` every 700 ms. Required when accessibility is disabled (e.g. Android 17 Advanced Protection Mode).
-- `BlockState` is the in-memory cache so the accessibility service doesn't hit Room on every window event.
-- `BootReceiver` restores state after reboot.
+```
+                    ┌──────────────┐
+   NFC tag tap ──►  │ MainActivity │  reads tag id, calls SessionController
+   QR scan     ──►  └──────┬───────┘
+                           ▼
+                    ┌──────────────────────┐
+                    │ SessionController    │  state machine: lock/unlock
+                    └──────┬───────────────┘
+                           ▼
+                    ┌──────────────────────┐         ┌──────────────────┐
+                    │ Room DB (session)    │ ──────► │ BlockState cache │
+                    └──────────────────────┘         └────────┬─────────┘
+                                                              ▼
+        ┌──────────────────┐    ┌─────────────┐    ┌──────────────────┐
+        │ Accessibility    │    │ Foreground  │    │ VpnService DNS   │
+        │ Service          │    │ Service     │    │ sinkhole         │
+        │ (primary)        │    │ (fallback)  │    │ (websites)       │
+        │                  │    │ UsageStats  │    │                  │
+        └────────┬─────────┘    └──────┬──────┘    └──────────────────┘
+                 │                      │
+                 ▼                      ▼
+              foreground app ∈ blockset → home + blocker overlay
+              URL bar host ∈ domain set → home + blocker overlay
+```
 
-## Known limitations
+`BlockState` is the in-memory hot cache so the accessibility service doesn't hit Room on every window event.
 
-- A blocked app may render one frame before the home action fires. Acceptable for v1.
-- Android 17 AAPM disables the accessibility path; only the usage-stats fallback runs. Documented on the permissions screen.
-- No website blocking (would need `VpnService`).
-- No uninstall protection (would need Device Admin opt-in).
+## Privacy
+
+Ascendy collects no personal data. All app and website blocking happens entirely on your device. Nothing is transmitted, shared, sold, or stored on any server we control. No analytics. No crash reporting. No third-party SDKs.
+
+The two outbound network calls Ascendy makes:
+- DNS forwarding during a focus session (only routing standard DNS queries to a public resolver like 1.1.1.1)
+- The optional in-app updater fetching release metadata + the APK file from GitHub when you tap "Check for updates"
+
+Full per-permission breakdown at the [privacy policy](https://bandersong.github.io/ascendy/privacy.html).
+
+## License
+
+MIT — see [LICENSE](LICENSE).

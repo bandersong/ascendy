@@ -252,6 +252,16 @@ data class Vocab(
     val statsChartLabel: String,
     val statsBestDay: String,
 
+    // about
+    val settingsRowAbout: String,
+    val aboutTitle: String,
+    val aboutVersionFmt: String,         // "version %s · build %d"
+    val aboutTagline: String,
+    val aboutLinkSource: String,
+    val aboutLinkPrivacy: String,
+    val aboutLinkReleases: String,
+    val aboutMadeWith: String,
+
     // whitelist mode
     val allowListToggleLabel: String,
     val allowListBadge: String,
@@ -488,6 +498,15 @@ val KawaiiVocab = Vocab(
     statsChartLabel = "last 7 days",
     statsBestDay = "best day this week",
 
+    settingsRowAbout = "about ♡",
+    aboutTitle = "about",
+    aboutVersionFmt = "version %s · build %d",
+    aboutTagline = "tap an anchor. focus. tap to come back ♡",
+    aboutLinkSource = "open source on github",
+    aboutLinkPrivacy = "privacy policy",
+    aboutLinkReleases = "all releases",
+    aboutMadeWith = "made with compose ✨",
+
     allowListToggleLabel = "allow-only mode",
     allowListBadge = "allow-only ✨",
 
@@ -721,6 +740,15 @@ val ToughVocab = Vocab(
     statsChartLabel = "LAST 7 DAYS",
     statsBestDay = "BEST DAY",
 
+    settingsRowAbout = "ABOUT",
+    aboutTitle = "ABOUT",
+    aboutVersionFmt = "VERSION %s · BUILD %d",
+    aboutTagline = "ANCHOR. LOCK IN. BREAK.",
+    aboutLinkSource = "SOURCE ON GITHUB",
+    aboutLinkPrivacy = "PRIVACY POLICY",
+    aboutLinkReleases = "ALL BUILDS",
+    aboutMadeWith = "BUILT WITH COMPOSE.",
+
     allowListToggleLabel = "ALLOW-ONLY MODE",
     allowListBadge = "ALLOW-ONLY",
 
@@ -953,6 +981,15 @@ val NeutralVocab = Vocab(
 
     statsChartLabel = "Last 7 days",
     statsBestDay = "Best day this week",
+
+    settingsRowAbout = "About",
+    aboutTitle = "About Ascendy",
+    aboutVersionFmt = "Version %s · Build %d",
+    aboutTagline = "Tap a physical anchor to start a focus session. Tap again to end it.",
+    aboutLinkSource = "Source code on GitHub",
+    aboutLinkPrivacy = "Privacy policy",
+    aboutLinkReleases = "All releases",
+    aboutMadeWith = "Built with Jetpack Compose.",
 
     allowListToggleLabel = "Allow-only mode",
     allowListBadge = "Allow-only",

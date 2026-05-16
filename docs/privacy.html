@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ascendy — Privacy Policy</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main>
+<p><a href="index.html">← back</a></p>
+<h1>Privacy Policy</h1>
+<p class="lede">Effective: 2026-05-16. Last updated: 2026-05-16.</p>
+
+<h2>Short version</h2>
+<p>Ascendy collects no personal data. All app and website blocking happens entirely on your device. Nothing is transmitted, shared, sold, or stored on any server we control. We do not use analytics, crash reporting, or any third-party SDKs.</p>
+
+<h2>What data Ascendy handles, and where it lives</h2>
+<table>
+  <tr><th>Data</th><th>Where</th><th>Why</th><th>Shared?</th></tr>
+  <tr><td>NFC tag identifiers (UUID you wrote, or SHA-256 of UID)</td><td>On-device only, in the app's local database.</td><td>To recognize your physical anchor and toggle focus sessions.</td><td>No.</td></tr>
+  <tr><td>QR-code anchor identifiers (UUID generated locally)</td><td>On-device only.</td><td>Same as above, for printed/saved QR codes.</td><td>No.</td></tr>
+  <tr><td>Names of apps and domains you've chosen to block</td><td>On-device only.</td><td>To enforce blocking during focus sessions you start.</td><td>No.</td></tr>
+  <tr><td>Focus-session history (start time, end time, source, list)</td><td>On-device only.</td><td>To compute stats, streaks, and the weekly chart.</td><td>No.</td></tr>
+  <tr><td>Theme, daily goal, safety timer, onboarding flag</td><td>On-device only.</td><td>App preferences.</td><td>No.</td></tr>
+</table>
+
+<h2>Permissions, and what each is used for</h2>
+<dl>
+  <dt>Accessibility service</dt>
+  <dd>Used to detect which app is in the foreground during a focus session, and to read the URL bar in known browsers to block specified websites. The service inspects only the currently-active window and only while a session is active. It does not log, transmit, or persist any window content.</dd>
+
+  <dt>VpnService</dt>
+  <dd>Used during a session to run a local DNS sinkhole — DNS queries for domains you've blocked are answered with NXDOMAIN; all other queries are forwarded to a public upstream resolver (Cloudflare, 1.1.1.1). No traffic is intercepted, logged, or sent to any server we control. The tunnel runs entirely on-device. It is automatically stopped when your focus session ends.</dd>
+
+  <dt>Usage access</dt>
+  <dd>Fallback path for foreground-app detection when the accessibility service is unavailable (for example, Android 17 Advanced Protection Mode). Queries are run on-device and not persisted.</dd>
+
+  <dt>Display over other apps</dt>
+  <dd>Used to display the "session active" overlay over a blocked app while a session is in progress.</dd>
+
+  <dt>Notifications</dt>
+  <dd>An ongoing notification is shown while a focus session is active, per Android foreground-service requirements.</dd>
+
+  <dt>NFC</dt>
+  <dd>Read/write NTAG21x stickers to identify your physical anchor. We read or write only the small UUID payload described above.</dd>
+
+  <dt>Camera</dt>
+  <dd>Used only when you tap the in-app "scan QR" button, to decode a QR code locally. No frames or images are stored or transmitted.</dd>
+
+  <dt>Schedule exact alarms</dt>
+  <dd>Used to fire scheduled focus sessions and pomodoro auto-end at the exact times you configure.</dd>
+
+  <dt>Battery exemption (Ignore Battery Optimizations)</dt>
+  <dd>Optional. Improves the reliability of background blocking on aggressive OEM battery managers (Samsung, Xiaomi, OnePlus). No data effect.</dd>
+
+  <dt>Query all packages</dt>
+  <dd>Used to populate the in-app picker that lets you choose which installed apps to block.</dd>
+
+  <dt>Request install packages (sideload / F-Droid builds only)</dt>
+  <dd>Used by the in-app updater to install a newer Ascendy APK downloaded from GitHub Releases. The Play Store build of Ascendy does not include the in-app updater and does not request this permission.</dd>
+</dl>
+
+<h2>Third parties</h2>
+<p>Ascendy contains no third-party advertising SDKs, analytics SDKs, crash-reporting SDKs, or social-login SDKs. Apart from the optional DNS forwarding above (which routes only standard DNS queries to a public resolver) and the optional in-app updater (which fetches release metadata and an APK file from GitHub when you tap "Check for updates"), Ascendy does not make any outbound network connections.</p>
+
+<h2>Children</h2>
+<p>Ascendy is not directed at children under 13. Because we collect no personal information, no special handling is required.</p>
+
+<h2>Changes to this policy</h2>
+<p>Any change to data handling will be published on this page with a new "Last updated" date and called out in the release notes.</p>
+
+<h2>Contact</h2>
+<p>Open an issue at <a href="https://github.com/bandersong/ascendy/issues">github.com/bandersong/ascendy/issues</a>.</p>
+</main>
+</body>
+</html>

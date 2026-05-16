@@ -3,6 +3,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      build_play_aab:
+        description: "Also build Play (release AAB) — requires release-signing secrets"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -27,25 +33,42 @@ jobs:
           fi
           chmod +x gradlew
 
-      - name: Build debug APK
+      - name: Build foss debug APK
         env:
           ASCENDY_VERSION_CODE: ${{ github.run_number }}
-        run: ./gradlew :app:assembleDebug --no-daemon --stacktrace
-
-      - uses: actions/upload-artifact@v4
-        with:
-          name: ascendy-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 30
+        run: ./gradlew :app:assembleFossDebug --no-daemon --stacktrace
 
       - name: Stage APK for release
         if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p release
-          cp app/build/outputs/apk/debug/app-debug.apk release/ascendy-debug.apk
+          cp app/build/outputs/apk/foss/debug/app-foss-debug.apk release/ascendy-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ascendy-debug-apk
+          path: release/ascendy-debug.apk
+          retention-days: 30
+
+      - name: Build Play release AAB
+        if: github.event_name == 'workflow_dispatch' && inputs.build_play_aab
+        env:
+          ASCENDY_VERSION_CODE: ${{ github.run_number }}
+          ASCENDY_RELEASE_STORE_PASSWORD: ${{ secrets.ASCENDY_RELEASE_STORE_PASSWORD }}
+          ASCENDY_RELEASE_KEY_PASSWORD: ${{ secrets.ASCENDY_RELEASE_KEY_PASSWORD }}
+          ASCENDY_RELEASE_KEY_ALIAS: ${{ secrets.ASCENDY_RELEASE_KEY_ALIAS }}
+          ASCENDY_RELEASE_KEYSTORE_BASE64: ${{ secrets.ASCENDY_RELEASE_KEYSTORE_BASE64 }}
+        run: ./gradlew :app:bundlePlayRelease --no-daemon --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.build_play_aab
+        with:
+          name: ascendy-play-aab
+          path: app/build/outputs/bundle/playRelease/*.aab
+          retention-days: 30
 
       - name: Create GitHub Release
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ github.run_number }}

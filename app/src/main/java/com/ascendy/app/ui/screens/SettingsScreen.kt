@@ -131,8 +131,10 @@ fun SettingsScreen(
         SettingsRow(label = vocab.settingsRowSchedules, onClick = onOpenSchedules)
         Spacer(Modifier.height(8.dp))
         SettingsRow(label = vocab.settingsRowPomodoro, onClick = onOpenPomodoro)
-        Spacer(Modifier.height(8.dp))
-        SettingsRow(label = vocab.settingsRowUpdate, onClick = onOpenUpdates)
+        if (com.ascendy.app.BuildConfig.HAS_INAPP_UPDATER) {
+            Spacer(Modifier.height(8.dp))
+            SettingsRow(label = vocab.settingsRowUpdate, onClick = onOpenUpdates)
+        }
 
         Spacer(Modifier.height(20.dp))
 

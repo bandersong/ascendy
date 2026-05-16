@@ -6,27 +6,57 @@ plugins {
 
 android {
     namespace = "com.ascendy.app"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.ascendy.app"
         minSdk = 26
-        targetSdk = 34
-        // CI sets ASCENDY_VERSION_CODE = github.run_number so every build is a strictly newer
-        // version. Locally we fall back to a sane default for sideload testing.
+        targetSdk = 35
         val envCode = System.getenv("ASCENDY_VERSION_CODE")?.toIntOrNull()
         versionCode = envCode ?: 30
         versionName = "0.3.${versionCode}"
         buildConfigField("String", "RELEASE_REPO", "\"bandersong/ascendy\"")
     }
 
+    // ───── Distribution flavors ─────
+    // foss: keeps the in-app GitHub-Releases updater + REQUEST_INSTALL_PACKAGES.
+    // play: stripped — no in-app installer; updates flow through Play.
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("foss") {
+            dimension = "distribution"
+            buildConfigField("Boolean", "HAS_INAPP_UPDATER", "true")
+        }
+        create("play") {
+            dimension = "distribution"
+            buildConfigField("Boolean", "HAS_INAPP_UPDATER", "false")
+        }
+    }
+
     signingConfigs {
         getByName("debug") {
-            // Stable debug keystore so updates install over existing app without uninstall.
             storeFile = file("debug.keystore")
             storePassword = "android"
             keyAlias = "androiddebugkey"
             keyPassword = "android"
+        }
+
+        // Release config — only created when CI has provided the secrets. Locally, releases fall
+        // back to debug signing so `assembleRelease` still produces a working APK for testing.
+        val rsPwd = System.getenv("ASCENDY_RELEASE_STORE_PASSWORD")
+        val rkPwd = System.getenv("ASCENDY_RELEASE_KEY_PASSWORD")
+        val rkAlias = System.getenv("ASCENDY_RELEASE_KEY_ALIAS")
+        val rksB64 = System.getenv("ASCENDY_RELEASE_KEYSTORE_BASE64")
+        if (!rsPwd.isNullOrBlank() && !rkPwd.isNullOrBlank() && !rkAlias.isNullOrBlank() && !rksB64.isNullOrBlank()) {
+            create("release") {
+                val ksFile = layout.buildDirectory.file("generated-keystore/release.keystore").get().asFile
+                ksFile.parentFile.mkdirs()
+                ksFile.writeBytes(java.util.Base64.getDecoder().decode(rksB64))
+                storeFile = ksFile
+                storePassword = rsPwd
+                keyAlias = rkAlias
+                keyPassword = rkPwd
+            }
         }
     }
 
@@ -37,8 +67,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Also sign release builds with the debug key for sideload — fine for a non-Play app.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
@@ -73,7 +102,6 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-compose:1.9.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.2")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
     implementation("androidx.lifecycle:lifecycle-service:2.8.2")
 

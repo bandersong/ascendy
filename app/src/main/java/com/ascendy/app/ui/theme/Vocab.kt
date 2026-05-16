@@ -389,7 +389,7 @@ val KawaiiVocab = Vocab(
     emergencyConfirmYes = "yes, unlock",
     emergencyConfirmNo = "nevermind",
     frictionPrompt = "type this exactly to break — every character matters:",
-    frictionSentence = "i am breaking my focus session even though my little guy is going to be very sad ♡",
+    frictionSentence = "i am breaking my focus session even though my little guy is going to be very sad",
     frictionInputLabel = "type it here",
     frictionMatchOk = "matches ✓",
 

@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -51,7 +53,7 @@ android {
             create("release") {
                 val ksFile = layout.buildDirectory.file("generated-keystore/release.keystore").get().asFile
                 ksFile.parentFile.mkdirs()
-                ksFile.writeBytes(java.util.Base64.getDecoder().decode(rksB64))
+                ksFile.writeBytes(Base64.getDecoder().decode(rksB64))
                 storeFile = ksFile
                 storePassword = rsPwd
                 keyAlias = rkAlias

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -57,10 +59,12 @@ fun SettingsScreen(
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
     val dark = isSystemInDarkTheme()
+    val scroll = rememberScrollState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(scroll)
             .padding(top = insets.calculateTopPadding(),
                      bottom = insets.calculateBottomPadding(),
                      start = 16.dp, end = 16.dp)

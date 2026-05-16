@@ -1,5 +1,6 @@
 package com.ascendy.app.ui.screens
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +21,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +45,25 @@ fun StatsScreen(
     recent: List<SessionLog>,
     onBack: () -> Unit,
 ) {
+    // Bucket recent logs into the last 7 days (today-back). Each bucket = total focused minutes.
+    val weekBuckets = remember(recent) {
+        val startOfToday = Stats.startOfTodayMs()
+        val dayMs = 24 * 60 * 60 * 1000L
+        val out = LongArray(7)
+        val now = System.currentTimeMillis()
+        recent.forEach { log ->
+            val end = log.endedAt ?: now
+            val dayStart = startOfToday + 0L  // today
+            // index 0 = 6 days ago, 6 = today
+            val daysAgo = ((startOfToday - (log.startedAt / dayMs * dayMs)) / dayMs).toInt()
+                .coerceIn(-6, 6)
+            val idx = 6 - daysAgo
+            if (idx in 0..6) {
+                out[idx] += (end - log.startedAt).coerceAtLeast(0L)
+            }
+        }
+        out
+    }
     val insets = WindowInsets.systemBars.asPaddingValues()
     val scroll = rememberScrollState()
 
@@ -100,6 +121,15 @@ fun StatsScreen(
 
         Spacer(Modifier.height(20.dp))
 
+        // 7-day bar chart
+        Text(vocab.statsChartLabel, style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
+        Spacer(Modifier.height(8.dp))
+        SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Surface) {
+            WeekChart(weekBuckets)
+        }
+
+        Spacer(Modifier.height(20.dp))
+
         Text(vocab.statsRecent, style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
         Spacer(Modifier.height(8.dp))
 
@@ -125,6 +155,75 @@ fun StatsScreen(
                 }
                 Spacer(Modifier.height(6.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun WeekChart(buckets: LongArray) {
+    val maxMs = (buckets.maxOrNull() ?: 0L).coerceAtLeast(1L)
+    val bestIdx = buckets.indices.maxByOrNull { buckets[it] } ?: -1
+    val dayLabels = remember {
+        val cal = java.util.Calendar.getInstance()
+        val fmt = java.text.SimpleDateFormat("EE", java.util.Locale.getDefault())
+        val out = Array(7) { "" }
+        for (i in 0 until 7) {
+            val c = java.util.Calendar.getInstance().apply {
+                timeInMillis = cal.timeInMillis
+                add(java.util.Calendar.DAY_OF_YEAR, -(6 - i))
+            }
+            out[i] = fmt.format(c.time).first().uppercase()
+        }
+        out
+    }
+    val barColor = palette.Petal
+    val highlightColor = palette.Lilac
+    val textColor = palette.Smoke
+    val labelInk = palette.Ink
+
+    Column {
+        androidx.compose.foundation.Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .padding(vertical = 4.dp)
+        ) {
+            val w = size.width
+            val h = size.height
+            val barW = w / 11f
+            val gap = barW * 0.45f
+            for (i in 0..6) {
+                val pct = (buckets[i].toFloat() / maxMs).coerceIn(0f, 1f)
+                val barH = (h * 0.82f) * pct
+                val left = i * (barW + gap) + gap
+                val top = (h * 0.82f) - barH
+                drawRoundRect(
+                    color = if (i == bestIdx && buckets[i] > 0) highlightColor else barColor,
+                    topLeft = androidx.compose.ui.geometry.Offset(left, top),
+                    size = androidx.compose.ui.geometry.Size(barW, barH.coerceAtLeast(2.dp.toPx())),
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(barW * 0.3f, barW * 0.3f)
+                )
+            }
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            val gapDp = 6.dp
+            for (i in 0..6) {
+                Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    Text(
+                        dayLabels[i],
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (i == bestIdx && buckets[i] > 0) labelInk else textColor
+                    )
+                }
+            }
+        }
+        if (bestIdx >= 0 && buckets[bestIdx] > 0) {
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "${vocab.statsBestDay}: ${dayLabels[bestIdx]} · ${Stats.formatMinutes(Stats.msToMinutes(buckets[bestIdx]))}",
+                style = MaterialTheme.typography.bodySmall,
+                color = palette.Smoke
+            )
         }
     }
 }

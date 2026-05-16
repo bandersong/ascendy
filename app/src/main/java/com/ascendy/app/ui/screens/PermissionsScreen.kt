@@ -38,6 +38,7 @@ data class PermissionStatus(
     val usageStats: Boolean,
     val overlay: Boolean,
     val notifications: Boolean,
+    val batteryExempt: Boolean,
 )
 
 @Composable
@@ -129,6 +130,23 @@ fun PermissionsScreen(
             granted = status.notifications,
             actionLabel = vocab.permsAllow,
             onClick = onRequestNotifications
+        )
+        Spacer(Modifier.height(8.dp))
+
+        PermissionCard(
+            emoji = vocab.permsBatteryEmoji,
+            title = vocab.permsBatteryTitle,
+            body = vocab.permsBatteryBody,
+            granted = status.batteryExempt,
+            actionLabel = vocab.permsBatteryAction,
+            onClick = {
+                context.startActivity(
+                    Intent(
+                        android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                        android.net.Uri.parse("package:" + context.packageName)
+                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                )
+            }
         )
 
         Spacer(Modifier.height(24.dp))

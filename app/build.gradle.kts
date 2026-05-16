@@ -12,8 +12,12 @@ android {
         applicationId = "com.ascendy.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 30
-        versionName = "0.3.0"
+        // CI sets ASCENDY_VERSION_CODE = github.run_number so every build is a strictly newer
+        // version. Locally we fall back to a sane default for sideload testing.
+        val envCode = System.getenv("ASCENDY_VERSION_CODE")?.toIntOrNull()
+        versionCode = envCode ?: 30
+        versionName = "0.3.${versionCode}"
+        buildConfigField("String", "RELEASE_REPO", "\"bandersong/ascendy\"")
     }
 
     signingConfigs {
@@ -49,6 +53,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {

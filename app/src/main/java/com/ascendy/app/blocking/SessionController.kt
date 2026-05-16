@@ -90,6 +90,16 @@ class SessionController(
         )
         startForegroundService()
         AlarmScheduler.scheduleSessionEnd(context, effectiveEndsAt)
+        // Public broadcast for Tasker / other automation
+        context.sendBroadcast(
+            Intent(ACTION_SESSION_STARTED)
+                .setPackage(context.packageName)
+                .putExtra(EXTRA_LIST_NAME, list.name)
+                .putExtra(EXTRA_LIST_ID, list.id)
+                .putExtra(EXTRA_SOURCE, source.tag)
+                .putExtra(EXTRA_ENDS_AT, effectiveEndsAt)
+                .putExtra(EXTRA_STRICT, isStrict)
+        )
     }
 
     suspend fun endSession() {
@@ -99,9 +109,16 @@ class SessionController(
         repo.latestLog()?.let { latest ->
             if (latest.endedAt == null) repo.finishLog(latest.id, now)
         }
+        val durationMs = now - current.startedAt
         BlockState.clear()
         stopForegroundService()
         AlarmScheduler.cancelSessionEnd(context)
+        context.sendBroadcast(
+            Intent(ACTION_SESSION_ENDED)
+                .setPackage(context.packageName)
+                .putExtra(EXTRA_LIST_ID, current.listId)
+                .putExtra(EXTRA_DURATION_MS, durationMs)
+        )
     }
 
     suspend fun useEmergencyUnlock(): Boolean {
@@ -170,5 +187,16 @@ class SessionController(
 
     private fun stopForegroundService() {
         context.stopService(Intent(context, BlockingForegroundService::class.java))
+    }
+
+    companion object {
+        const val ACTION_SESSION_STARTED = "com.ascendy.app.SESSION_STARTED"
+        const val ACTION_SESSION_ENDED = "com.ascendy.app.SESSION_ENDED"
+        const val EXTRA_LIST_ID = "list_id"
+        const val EXTRA_LIST_NAME = "list_name"
+        const val EXTRA_SOURCE = "source"
+        const val EXTRA_ENDS_AT = "ends_at"
+        const val EXTRA_STRICT = "strict"
+        const val EXTRA_DURATION_MS = "duration_ms"
     }
 }

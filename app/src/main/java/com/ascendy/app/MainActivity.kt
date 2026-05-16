@@ -434,8 +434,12 @@ private fun AppNav(
                 onOpenStats = { nav.navigate("stats") },
                 onOpenSchedules = { nav.navigate("schedules") },
                 onOpenPomodoro = { nav.navigate("pomodoro") },
+                onOpenUpdates = { nav.navigate("updates") },
                 onBack = { nav.popBackStack() }
             )
+        }
+        composable("updates") {
+            com.ascendy.app.ui.screens.UpdateScreen(onBack = { nav.popBackStack() })
         }
         composable("stats") {
             val todayMs by repo.observeFocusMsSince(
@@ -547,7 +551,14 @@ private fun checkPermissions(context: Context): PermissionStatus {
         usageStats = isUsageAccessGranted(context),
         overlay = Settings.canDrawOverlays(context),
         notifications = hasNotificationPermission(context),
+        batteryExempt = isBatteryOptIgnored(context),
     )
+}
+
+private fun isBatteryOptIgnored(context: Context): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return true
+    val pm = context.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager ?: return false
+    return pm.isIgnoringBatteryOptimizations(context.packageName)
 }
 
 private fun isAccessibilityEnabled(context: Context): Boolean {

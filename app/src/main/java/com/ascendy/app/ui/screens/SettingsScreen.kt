@@ -49,6 +49,7 @@ fun SettingsScreen(
     onOpenStats: () -> Unit,
     onOpenSchedules: () -> Unit,
     onOpenPomodoro: () -> Unit,
+    onOpenUpdates: () -> Unit,
     onBack: () -> Unit,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
@@ -123,6 +124,8 @@ fun SettingsScreen(
         SettingsRow(label = vocab.settingsRowSchedules, onClick = onOpenSchedules)
         Spacer(Modifier.height(8.dp))
         SettingsRow(label = vocab.settingsRowPomodoro, onClick = onOpenPomodoro)
+        Spacer(Modifier.height(8.dp))
+        SettingsRow(label = vocab.settingsRowUpdate, onClick = onOpenUpdates)
 
         Spacer(Modifier.height(20.dp))
 

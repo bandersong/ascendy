@@ -223,6 +223,32 @@ data class Vocab(
     // ongoing focus-session notification
     val notifTitle: String,
     val notifText: String,
+
+    // updater
+    val settingsRowUpdate: String,
+    val updateTitle: String,
+    val updateCurrentFmt: String,        // "current: %s (build %d)"
+    val updateChecking: String,
+    val updateUpToDate: String,
+    val updateAvailableFmt: String,       // "build %d · %s"
+    val updateDownload: String,
+    val updateDownloadingFmt: String,    // "downloading… %d%%"
+    val updateReady: String,
+    val updateInstall: String,
+    val updateNeedsInstallPerm: String,
+    val updateGrantInstallPerm: String,
+    val updateError: String,
+    val updateRetry: String,
+
+    // OEM battery whitelist
+    val permsBatteryEmoji: String,
+    val permsBatteryTitle: String,
+    val permsBatteryBody: String,
+    val permsBatteryAction: String,
+
+    // stats — chart labels
+    val statsChartLabel: String,
+    val statsBestDay: String,
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -416,6 +442,29 @@ val KawaiiVocab = Vocab(
 
     notifTitle = "focusing ♡",
     notifText = "tap your tag to come back",
+
+    settingsRowUpdate = "check for updates ✨",
+    updateTitle = "updates",
+    updateCurrentFmt = "you're on %s (build %d)",
+    updateChecking = "checking github releases…",
+    updateUpToDate = "you're all caught up ♡",
+    updateAvailableFmt = "build %d · %s",
+    updateDownload = "download",
+    updateDownloadingFmt = "downloading… %d%%",
+    updateReady = "ready to install ✨",
+    updateInstall = "install",
+    updateNeedsInstallPerm = "allow ascendy to install apks first ♡",
+    updateGrantInstallPerm = "open settings",
+    updateError = "couldn't check ♡",
+    updateRetry = "try again",
+
+    permsBatteryEmoji = "🔋",
+    permsBatteryTitle = "battery exemption",
+    permsBatteryBody = "samsung/xiaomi/oneplus love killing background apps. exempting ascendy keeps the blocker alive during long sessions.",
+    permsBatteryAction = "exempt ascendy",
+
+    statsChartLabel = "last 7 days",
+    statsBestDay = "best day this week",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -609,6 +658,29 @@ val ToughVocab = Vocab(
 
     notifTitle = "LOCKED IN",
     notifText = "tap your anchor to break",
+
+    settingsRowUpdate = "CHECK FOR UPDATES",
+    updateTitle = "UPDATES",
+    updateCurrentFmt = "ON %s (BUILD %d)",
+    updateChecking = "checking github releases…",
+    updateUpToDate = "UP TO DATE.",
+    updateAvailableFmt = "BUILD %d · %s",
+    updateDownload = "DOWNLOAD",
+    updateDownloadingFmt = "DOWNLOADING… %d%%",
+    updateReady = "READY TO INSTALL.",
+    updateInstall = "INSTALL",
+    updateNeedsInstallPerm = "ALLOW APK INSTALL FIRST.",
+    updateGrantInstallPerm = "OPEN SETTINGS",
+    updateError = "CHECK FAILED.",
+    updateRetry = "RETRY",
+
+    permsBatteryEmoji = "🔋",
+    permsBatteryTitle = "BATTERY EXEMPTION",
+    permsBatteryBody = "oem killers (samsung, oneplus, xiaomi) shut down accessibility services. exempt ascendy or the blocker dies mid-session.",
+    permsBatteryAction = "EXEMPT",
+
+    statsChartLabel = "LAST 7 DAYS",
+    statsBestDay = "BEST DAY",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -802,6 +874,29 @@ val NeutralVocab = Vocab(
 
     notifTitle = "Focus session active",
     notifText = "Tap your tag to end the session",
+
+    settingsRowUpdate = "Check for updates",
+    updateTitle = "Updates",
+    updateCurrentFmt = "Current version: %s (build %d)",
+    updateChecking = "Checking GitHub Releases…",
+    updateUpToDate = "Up to date.",
+    updateAvailableFmt = "Build %d · %s",
+    updateDownload = "Download",
+    updateDownloadingFmt = "Downloading… %d%%",
+    updateReady = "Ready to install.",
+    updateInstall = "Install",
+    updateNeedsInstallPerm = "Allow Ascendy to install APKs first.",
+    updateGrantInstallPerm = "Open settings",
+    updateError = "Could not check for updates.",
+    updateRetry = "Retry",
+
+    permsBatteryEmoji = "",
+    permsBatteryTitle = "Battery optimization exemption",
+    permsBatteryBody = "Aggressive OEM battery savers (Samsung, OnePlus, Xiaomi) terminate accessibility services. Exempting Ascendy keeps the blocker active throughout long sessions.",
+    permsBatteryAction = "Exempt Ascendy",
+
+    statsChartLabel = "Last 7 days",
+    statsBestDay = "Best day this week",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

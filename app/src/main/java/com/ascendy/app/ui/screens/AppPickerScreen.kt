@@ -1,8 +1,10 @@
 package com.ascendy.app.ui.screens
 
-import android.content.pm.ApplicationInfo
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,12 +18,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -32,24 +36,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class AppInfo(
     val packageName: String,
     val label: String,
-    val icon: Painter?
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,11 +76,27 @@ fun AppPickerScreen(
 
     var tab by remember { mutableStateOf(0) }     // 0=apps, 1=sites
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
+    var loadingApps by remember { mutableStateOf(true) }
+    val iconCache = remember { mutableStateMapOf<String, Painter>() }
     var query by remember { mutableStateOf("") }
     var newDomain by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
-        apps = loadApps(context.packageManager)
+        // Phase 1: labels only, off the main thread. Fast — single IPC to system_server.
+        val labels = withContext(Dispatchers.IO) { loadLaunchableAppLabels(context.packageManager) }
+        apps = labels
+        loadingApps = false
+
+        // Phase 2: icons stream in. Each icon's row recomposes individually via stateMap.
+        withContext(Dispatchers.IO) {
+            for (info in labels) {
+                if (iconCache.containsKey(info.packageName)) continue
+                val painter = loadIcon(context.packageManager, info.packageName) ?: continue
+                withContext(Dispatchers.Main) {
+                    iconCache[info.packageName] = painter
+                }
+            }
+        }
     }
 
     val filtered by remember(query, apps) {
@@ -98,7 +122,6 @@ fun AppPickerScreen(
             Text(listName, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        // Tabs
         Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
             TabChip(label = vocab.pickerTabApps, selected = tab == 0, onClick = { tab = 0 }, modifier = Modifier.weight(1f))
             Spacer(Modifier.size(8.dp))
@@ -120,10 +143,15 @@ fun AppPickerScreen(
                 )
             )
 
+            if (loadingApps) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+            }
+
             LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
                 items(filtered, key = { it.packageName }) { app ->
                     AppRow(
                         app = app,
+                        icon = iconCache[app.packageName],
                         checked = app.packageName in blockedPackages,
                         onCheckedChange = { onTogglePackage(app.packageName, it) }
                     )
@@ -131,7 +159,6 @@ fun AppPickerScreen(
                 }
             }
         } else {
-            // Sites tab
             Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
@@ -197,7 +224,7 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
             modifier = Modifier.padding(vertical = 10.dp),
             style = MaterialTheme.typography.titleMedium,
             color = palette.Ink,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            textAlign = TextAlign.Center
         )
     }
 }
@@ -225,7 +252,7 @@ private fun DomainRow(domain: String, onRemove: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun AppRow(app: AppInfo, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+private fun AppRow(app: AppInfo, icon: Painter?, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Surface(
         onClick = { onCheckedChange(!checked) },
         color = MaterialTheme.colorScheme.surface,
@@ -236,10 +263,25 @@ private fun AppRow(app: AppInfo, checked: Boolean, onCheckedChange: (Boolean) ->
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            if (app.icon != null) {
-                Image(painter = app.icon, contentDescription = null, modifier = Modifier.size(36.dp))
-                Spacer(Modifier.size(12.dp))
+            if (icon != null) {
+                Image(painter = icon, contentDescription = null, modifier = Modifier.size(36.dp))
+            } else {
+                // Letter-avatar placeholder while the real icon decodes in the background
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(palette.Mist),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        app.label.firstOrNull()?.uppercase() ?: "?",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = palette.Smoke
+                    )
+                }
             }
+            Spacer(Modifier.size(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(app.label, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
@@ -249,26 +291,31 @@ private fun AppRow(app: AppInfo, checked: Boolean, onCheckedChange: (Boolean) ->
     }
 }
 
-private fun loadApps(pm: PackageManager): List<AppInfo> {
-    val flags = PackageManager.GET_META_DATA
-    val packages = try {
-        pm.getInstalledApplications(flags)
-    } catch (_: Exception) { return emptyList() }
-
-    return packages.asSequence()
-        .filter { it.flags and ApplicationInfo.FLAG_SYSTEM == 0 || pm.getLaunchIntentForPackage(it.packageName) != null }
-        .filter { pm.getLaunchIntentForPackage(it.packageName) != null }
-        .map { info ->
-            val label = pm.getApplicationLabel(info).toString()
-            val drawable = try { pm.getApplicationIcon(info) } catch (_: Exception) { null }
-            val painter: Painter? = drawable?.let {
-                try {
-                    val bmp = it.toBitmap(width = 72, height = 72)
-                    BitmapPainter(bmp.asImageBitmap())
-                } catch (_: Exception) { null }
+/** Fast label-only enumeration: one IPC for all launchable apps. */
+private fun loadLaunchableAppLabels(pm: PackageManager): List<AppInfo> {
+    return try {
+        val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+        pm.queryIntentActivities(intent, 0)
+            .asSequence()
+            .map { it.activityInfo.applicationInfo }
+            .distinctBy { it.packageName }
+            .map { info ->
+                AppInfo(
+                    packageName = info.packageName,
+                    label = try { pm.getApplicationLabel(info).toString() } catch (_: Exception) { info.packageName }
+                )
             }
-            AppInfo(info.packageName, label, painter)
-        }
-        .sortedBy { it.label.lowercase() }
-        .toList()
+            .sortedBy { it.label.lowercase() }
+            .toList()
+    } catch (_: Exception) {
+        emptyList()
+    }
+}
+
+private fun loadIcon(pm: PackageManager, packageName: String): Painter? {
+    return try {
+        val drawable = pm.getApplicationIcon(packageName)
+        val bmp = drawable.toBitmap(width = 72, height = 72)
+        BitmapPainter(bmp.asImageBitmap())
+    } catch (_: Exception) { null }
 }

@@ -69,7 +69,10 @@ class SessionController(
         val safetyEndsAt = now + maxMin * 60_000L
         val effectiveEndsAt = if (endsAt != null) minOf(endsAt, safetyEndsAt) else safetyEndsAt
 
-        val isStrict = list.isStrict
+        // Manual sessions (no anchor) never inherit strict mode — strict is reserved for
+        // sessions you've explicitly committed to with a tag/QR anchor. Otherwise long-pressing
+        // the mascot can accidentally trap the user with no escape.
+        val isStrict = list.isStrict && source != SessionSource.Manual
         val unlocksLeft = if (isStrict) 0 else 1
 
         val session = BlockSession(
@@ -169,7 +172,10 @@ class SessionController(
         val current = repo.currentSession()
         return if (current?.active == true) {
             val list = repo.list(current.listId)
-            if (list?.isStrict == true) {
+            // Strict only blocks the manual exit for tag/QR-bound sessions — those are the
+            // ones the user committed to with a physical anchor. Manual sessions
+            // (tagId == null) are always endable via the long-press toggle.
+            if (list?.isStrict == true && current.tagId != null) {
                 ManualEndResult.BlockedStrict
             } else {
                 endSession()

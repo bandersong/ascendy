@@ -89,7 +89,8 @@ class MainActivity : ComponentActivity() {
         val options = com.journeyapps.barcodescanner.ScanOptions().apply {
             setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
             setBeepEnabled(false)
-            setOrientationLocked(false)
+            setOrientationLocked(true)
+            setCaptureActivity(com.ascendy.app.qr.PortraitCaptureActivity::class.java)
             setPrompt("")
         }
         qrScanLauncher.launch(options)

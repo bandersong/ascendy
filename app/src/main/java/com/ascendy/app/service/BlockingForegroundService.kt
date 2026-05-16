@@ -97,12 +97,26 @@ class BlockingForegroundService : Service() {
 
     private fun buildNotification(): Notification {
         ensureChannel()
+        val vocab = vocabFor((application as AscendyApp).currentVariant)
         val tap = PendingIntent.getActivity(
             this, 0,
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
-        val vocab = vocabFor((application as AscendyApp).currentVariant)
+        val statsTap = PendingIntent.getActivity(
+            this, 1,
+            Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_ROUTE, "stats")
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+        val toggleAction = PendingIntent.getBroadcast(
+            this, 2,
+            Intent(this, SessionControlReceiver::class.java)
+                .setAction(SessionControlReceiver.ACTION_TOGGLE)
+                .setPackage(packageName),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_logo)
             .setContentTitle(vocab.notifTitle)
@@ -111,6 +125,8 @@ class BlockingForegroundService : Service() {
             .setSilent(true)
             .setContentIntent(tap)
             .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(0, vocab.notifActionStats, statsTap)
+            .addAction(0, vocab.notifActionEnd, toggleAction)
             .build()
     }
 

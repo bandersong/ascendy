@@ -223,6 +223,8 @@ data class Vocab(
     // ongoing focus-session notification
     val notifTitle: String,
     val notifText: String,
+    val notifActionEnd: String,
+    val notifActionStats: String,
 
     // updater
     val settingsRowUpdate: String,
@@ -460,6 +462,8 @@ val KawaiiVocab = Vocab(
 
     notifTitle = "focusing ♡",
     notifText = "tap your tag to come back",
+    notifActionEnd = "end",
+    notifActionStats = "stats",
 
     settingsRowUpdate = "check for updates ✨",
     updateTitle = "updates",
@@ -691,6 +695,8 @@ val ToughVocab = Vocab(
 
     notifTitle = "LOCKED IN",
     notifText = "tap your anchor to break",
+    notifActionEnd = "END",
+    notifActionStats = "STATS",
 
     settingsRowUpdate = "CHECK FOR UPDATES",
     updateTitle = "UPDATES",
@@ -922,6 +928,8 @@ val NeutralVocab = Vocab(
 
     notifTitle = "Focus session active",
     notifText = "Tap your tag to end the session",
+    notifActionEnd = "End",
+    notifActionStats = "Stats",
 
     settingsRowUpdate = "Check for updates",
     updateTitle = "Updates",

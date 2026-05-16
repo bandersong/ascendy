@@ -54,9 +54,14 @@ import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
+    companion object {
+        const val EXTRA_ROUTE = "ascendy_route"
+    }
+
     private lateinit var controller: SessionController
     private val pairingMode = MutableStateFlow(false)
     private val pendingPairedTag = MutableStateFlow<String?>(null)
+    private val pendingRoute = MutableStateFlow<String?>(null)
 
     @Volatile
     private var currentVocab: com.ascendy.app.ui.theme.Vocab = com.ascendy.app.ui.theme.NeutralVocab
@@ -161,6 +166,7 @@ class MainActivity : ComponentActivity() {
                         controller = controller,
                         pairingFlow = pairingMode,
                         detectedTagFlow = pendingPairedTag,
+                        pendingRouteFlow = pendingRoute,
                         onRequestNotifications = { requestNotificationPermission() }
                     )
                 }
@@ -188,6 +194,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
+        intent.getStringExtra(EXTRA_ROUTE)?.let { pendingRoute.value = it }
         val action = intent.action ?: return
         val isNfc = action == android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED ||
             action == android.nfc.NfcAdapter.ACTION_TECH_DISCOVERED ||
@@ -229,6 +236,7 @@ private fun AppNav(
     controller: SessionController,
     pairingFlow: MutableStateFlow<Boolean>,
     detectedTagFlow: MutableStateFlow<String?>,
+    pendingRouteFlow: MutableStateFlow<String?>,
     onRequestNotifications: () -> Unit,
 ) {
     val repo = app.repo
@@ -265,6 +273,16 @@ private fun AppNav(
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    // Honor a pending deep-link route (notification action / tile)
+    val pendingRoute by pendingRouteFlow.collectAsState()
+    LaunchedEffect(pendingRoute) {
+        val r = pendingRoute ?: return@LaunchedEffect
+        if (onboarded) {
+            nav.navigate(r)
+            pendingRouteFlow.value = null
+        }
     }
 
     val startDest = if (onboarded) "home" else "onboarding"

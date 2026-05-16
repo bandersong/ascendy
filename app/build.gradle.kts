@@ -22,7 +22,9 @@ android {
 
     // ───── Distribution flavors ─────
     // foss: keeps the in-app GitHub-Releases updater + REQUEST_INSTALL_PACKAGES.
-    // play: stripped — no in-app installer; updates flow through Play.
+    // play: stripped — no in-app installer; updates flow through Play. Different
+    // applicationId so it can coexist with the foss sideload build, and because
+    // com.ascendy.app is reserved on the Play Store.
     flavorDimensions += "distribution"
     productFlavors {
         create("foss") {
@@ -31,6 +33,7 @@ android {
         }
         create("play") {
             dimension = "distribution"
+            applicationId = "io.github.bandersong.ascendy"
             buildConfigField("Boolean", "HAS_INAPP_UPDATER", "false")
         }
     }

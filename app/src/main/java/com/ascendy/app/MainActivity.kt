@@ -261,6 +261,7 @@ private fun AppNav(
             val emergencyNoneMsg = com.ascendy.app.ui.theme.vocab.emergencyNone
             val manualStartMsg = com.ascendy.app.ui.theme.vocab.toastManualStarted
             val manualEndMsg = com.ascendy.app.ui.theme.vocab.toastManualEnded
+            val strictBlockedMsg = com.ascendy.app.ui.theme.vocab.strictManualBlockedToast
             HomeScreen(
                 tagCount = tags.size,
                 listCount = lists.size,
@@ -274,7 +275,6 @@ private fun AppNav(
                 onOpenPomodoro = { nav.navigate("pomodoro") },
                 onScanQr = { (context as? MainActivity)?.launchQrScan() },
                 onManualToggle = {
-                    val strictBlockedMsg = com.ascendy.app.ui.theme.vocab.strictManualBlockedToast
                     scope.launch {
                         val wasActive = com.ascendy.app.blocking.BlockState.isActive()
                         val result = controller.toggleManual()

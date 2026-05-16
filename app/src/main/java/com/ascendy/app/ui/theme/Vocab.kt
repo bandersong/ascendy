@@ -219,6 +219,10 @@ data class Vocab(
     val qrSaveFailed: String,
     val homeScanLabel: String,           // a11y description
     val toastScanInvalid: String,
+
+    // ongoing focus-session notification
+    val notifTitle: String,
+    val notifText: String,
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -409,6 +413,9 @@ val KawaiiVocab = Vocab(
     qrSaveFailed = "couldn't save — try sharing instead ♡",
     homeScanLabel = "scan qr",
     toastScanInvalid = "that's not an ascendy qr ♡",
+
+    notifTitle = "focusing ♡",
+    notifText = "tap your tag to come back",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -599,6 +606,9 @@ val ToughVocab = Vocab(
     qrSaveFailed = "save failed. share instead.",
     homeScanLabel = "SCAN QR",
     toastScanInvalid = "not an ascendy code.",
+
+    notifTitle = "LOCKED IN",
+    notifText = "tap your anchor to break",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -789,6 +799,9 @@ val NeutralVocab = Vocab(
     qrSaveFailed = "Save failed. Try sharing instead.",
     homeScanLabel = "Scan QR",
     toastScanInvalid = "Not an Ascendy QR code.",
+
+    notifTitle = "Focus session active",
+    notifText = "Tap your tag to end the session",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

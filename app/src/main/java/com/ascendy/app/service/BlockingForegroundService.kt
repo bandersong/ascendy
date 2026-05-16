@@ -12,10 +12,12 @@ import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
 import androidx.core.app.NotificationCompat
+import com.ascendy.app.AscendyApp
 import com.ascendy.app.MainActivity
 import com.ascendy.app.R
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.blocking.BlockerActivity
+import com.ascendy.app.ui.theme.vocabFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -100,10 +102,11 @@ class BlockingForegroundService : Service() {
             Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+        val vocab = vocabFor((application as AscendyApp).currentVariant)
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_logo)
-            .setContentTitle(getString(R.string.notif_title))
-            .setContentText(getString(R.string.notif_text))
+            .setContentTitle(vocab.notifTitle)
+            .setContentText(vocab.notifText)
             .setOngoing(true)
             .setSilent(true)
             .setContentIntent(tap)

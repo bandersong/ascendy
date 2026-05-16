@@ -92,23 +92,21 @@ class MainActivity : ComponentActivity() {
 
     private val vpnConsentLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val intent = android.content.Intent(this, com.ascendy.app.vpn.AscendyVpnService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-            else startService(intent)
-        }
-    }
+    ) { /* Consent recorded by Android. The VPN starts only when a session starts. */ }
 
     fun requestVpnConsent() {
         val prepare = android.net.VpnService.prepare(this)
         if (prepare != null) {
             vpnConsentLauncher.launch(prepare)
-        } else {
-            val intent = android.content.Intent(this, com.ascendy.app.vpn.AscendyVpnService::class.java)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
-            else startService(intent)
         }
+        // If consent already granted, nothing to do here — SessionController auto-starts on session begin.
+    }
+
+    fun stopVpnNow() {
+        startService(
+            android.content.Intent(this, com.ascendy.app.vpn.AscendyVpnService::class.java)
+                .setAction(com.ascendy.app.vpn.AscendyVpnService.ACTION_STOP)
+        )
     }
 
     fun launchQrScan() {

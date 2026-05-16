@@ -174,6 +174,11 @@ class AscendyVpnService : VpnService() {
             this, 0, Intent(this, MainActivity::class.java),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
+        val stopPi = PendingIntent.getService(
+            this, 1,
+            Intent(this, AscendyVpnService::class.java).setAction(ACTION_STOP),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
         val notif: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_logo)
             .setContentTitle(vocab.vpnNotifTitle)
@@ -182,6 +187,7 @@ class AscendyVpnService : VpnService() {
             .setSilent(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(tap)
+            .addAction(0, "Stop", stopPi)
             .build()
         startForeground(NOTIF_ID, notif)
     }

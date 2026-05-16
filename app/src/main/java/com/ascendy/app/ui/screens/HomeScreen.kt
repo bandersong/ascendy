@@ -68,6 +68,7 @@ fun HomeScreen(
     val active by BlockState.active.collectAsState()
     val startedAt by BlockState.startedAt.collectAsState()
     val blockedSet by BlockState.blocked.collectAsState()
+    val blockedDomains by BlockState.blockedDomains.collectAsState()
     val emergencyAvailable by BlockState.emergencyAvailable.collectAsState()
     val strict by BlockState.strict.collectAsState()
     val insets = WindowInsets.systemBars.asPaddingValues()
@@ -211,8 +212,31 @@ fun HomeScreen(
             )
         }
 
+        // Live session diagnostics — helps verify domain/app counts and accessibility status
+        if (active) {
+            Spacer(Modifier.height(12.dp))
+            SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
+                Column {
+                    Text(
+                        "blocked: ${blockedSet.size} app${if (blockedSet.size == 1) "" else "s"} · ${blockedDomains.size} site${if (blockedDomains.size == 1) "" else "s"}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = palette.Ink
+                    )
+                    if (blockedDomains.isNotEmpty()) {
+                        Spacer(Modifier.height(2.dp))
+                        Text(
+                            blockedDomains.take(5).joinToString(", ") +
+                                if (blockedDomains.size > 5) "…" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = palette.Smoke
+                        )
+                    }
+                }
+            }
+        }
+
         if (active && strict) {
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(12.dp))
             SoftCard(color = MaterialTheme.colorScheme.surfaceVariant) {
                 Text(
                     vocab.strictModeNote,

@@ -3,6 +3,7 @@ package com.ascendy.app.service
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
 import android.os.SystemClock
+import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import com.ascendy.app.blocking.BlockState
@@ -12,6 +13,7 @@ class BlockingAccessibilityService : AccessibilityService() {
 
     private val lastBlockedAt = HashMap<String, Long>()
     private val debounceMs = 1500L
+    private val tag = "AscendyA11y"
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
@@ -29,15 +31,29 @@ class BlockingAccessibilityService : AccessibilityService() {
             }
         }
 
-        // Path 2: URL blocking inside browsers — check on content/text changes too
-        val browserUrlBarId = BROWSER_URL_BAR_IDS[pkg]
-        if (browserUrlBarId != null) {
-            val url = findUrlInTree(rootInActiveWindow, browserUrlBarId)
-            if (url != null) {
-                val host = extractHost(url)
-                if (host != null && BlockState.isDomainBlocked(host)) {
-                    bounceHome("$pkg:$host")
-                }
+        // Path 2: URL blocking inside browsers
+        if (BlockState.blockedDomains.value.isEmpty()) return
+        if (!BROWSER_PACKAGES.contains(pkg)) return
+
+        // Try the known URL-bar resource ID first
+        val knownId = BROWSER_URL_BAR_IDS[pkg]
+        val urlFromKnownId = knownId?.let { findFirstText(rootInActiveWindow, it) }
+        val candidates = mutableListOf<String>()
+        if (urlFromKnownId != null) candidates += urlFromKnownId
+
+        // Also walk for any EditText / TextView whose id looks like a url bar — covers newer
+        // browser versions where the resource id changed.
+        candidates += scanForUrlLikeNodes(rootInActiveWindow)
+
+        // Also consider event.text — TYPE_VIEW_TEXT_CHANGED includes the current text directly
+        event.text?.forEach { cs -> cs?.toString()?.takeIf { it.isNotBlank() }?.let { candidates += it } }
+
+        for (raw in candidates) {
+            val host = extractHost(raw) ?: continue
+            if (BlockState.isDomainBlocked(host)) {
+                Log.d(tag, "blocking host=$host in pkg=$pkg (raw=$raw)")
+                bounceHome("$pkg:$host")
+                return
             }
         }
     }
@@ -55,9 +71,9 @@ class BlockingAccessibilityService : AccessibilityService() {
         )
     }
 
-    private fun findUrlInTree(root: AccessibilityNodeInfo?, resourceId: String): String? {
+    private fun findFirstText(root: AccessibilityNodeInfo?, resourceId: String): String? {
         if (root == null) return null
-        val nodes = root.findAccessibilityNodeInfosByViewId(resourceId)
+        val nodes = try { root.findAccessibilityNodeInfosByViewId(resourceId) } catch (_: Exception) { null }
         if (nodes.isNullOrEmpty()) return null
         for (n in nodes) {
             val text = n.text?.toString() ?: continue
@@ -66,17 +82,43 @@ class BlockingAccessibilityService : AccessibilityService() {
         return null
     }
 
-    /** Extract the host from a URL bar string. Bars sometimes show the host only, sometimes the full URL. */
+    /** Walk the entire active-window tree for nodes whose view-id resource name hints at a URL bar. */
+    private fun scanForUrlLikeNodes(root: AccessibilityNodeInfo?): List<String> {
+        if (root == null) return emptyList()
+        val out = mutableListOf<String>()
+        val stack = ArrayDeque<AccessibilityNodeInfo>()
+        stack.addLast(root)
+        var visited = 0
+        val limit = 400        // hard cap to keep main thread responsive
+        while (stack.isNotEmpty() && visited < limit) {
+            val n = stack.removeFirst()
+            visited++
+            val viewId = n.viewIdResourceName?.lowercase()
+            val text = n.text?.toString()
+            if (viewId != null && (viewId.endsWith("url_bar") ||
+                                   viewId.endsWith("url_field") ||
+                                   viewId.endsWith("location_bar_edit_text") ||
+                                   viewId.contains("omnibar") ||
+                                   viewId.contains("mozac_browser_toolbar_url_view"))
+                && !text.isNullOrBlank()) {
+                out += text
+            }
+            for (i in 0 until n.childCount) {
+                n.getChild(i)?.let { stack.addLast(it) }
+            }
+        }
+        return out
+    }
+
+    /** Extract a host from a URL bar string. Bars show full URLs, or just hosts, or even search strings. */
     private fun extractHost(raw: String): String? {
         val trimmed = raw.trim()
         if (trimmed.isEmpty()) return null
-        // strip scheme
         var s = trimmed.removePrefix("https://").removePrefix("http://")
-        // some bars show "search query" instead of a URL — bail if no dot
-        if ('.' !in s.substringBefore('/').substringBefore(' ')) return null
-        // host portion only
-        s = s.substringBefore('/').substringBefore('?').substringBefore('#').substringBefore(' ')
-        s = s.removePrefix("www.").lowercase()
+        // bail on search queries (no dot in the host portion)
+        val hostPortion = s.substringBefore('/').substringBefore('?').substringBefore('#').substringBefore(' ')
+        if ('.' !in hostPortion) return null
+        s = hostPortion.removePrefix("www.").lowercase()
         return s.ifBlank { null }
     }
 
@@ -91,7 +133,6 @@ class BlockingAccessibilityService : AccessibilityService() {
             "com.android.launcher3"
         )
 
-        /** Known Android browser packages → their URL-bar accessibility view-IDs. */
         private val BROWSER_URL_BAR_IDS = mapOf(
             "com.android.chrome" to "com.android.chrome:id/url_bar",
             "com.chrome.beta" to "com.chrome.beta:id/url_bar",
@@ -108,6 +149,14 @@ class BlockingAccessibilityService : AccessibilityService() {
             "com.duckduckgo.mobile.android" to "com.duckduckgo.mobile.android:id/omnibarTextInput",
             "org.torproject.torbrowser" to "org.torproject.torbrowser:id/mozac_browser_toolbar_url_view",
             "com.vivaldi.browser" to "com.vivaldi.browser:id/url_bar",
+        )
+
+        /** Treat any of these as a browser for the purposes of running the URL scan. */
+        private val BROWSER_PACKAGES: Set<String> = BROWSER_URL_BAR_IDS.keys + setOf(
+            "com.kiwibrowser.browser",
+            "com.UCMobile.intl",
+            "com.yandex.browser",
+            "com.ecosia.android",
         )
     }
 }

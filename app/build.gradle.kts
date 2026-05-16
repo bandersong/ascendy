@@ -12,14 +12,29 @@ android {
         applicationId = "com.ascendy.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 30
+        versionName = "0.3.0"
+    }
+
+    signingConfigs {
+        getByName("debug") {
+            // Stable debug keystore so updates install over existing app without uninstall.
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("debug")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            // Also sign release builds with the debug key for sideload — fine for a non-Play app.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

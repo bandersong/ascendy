@@ -93,6 +93,12 @@ fun AboutScreen(onBack: () -> Unit) {
         Spacer(Modifier.height(16.dp))
 
         LinkRow(
+            label = vocab.aboutLinkDonate,
+            url = "https://ko-fi.com/bandersong",
+            emphasized = true
+        )
+        Spacer(Modifier.height(8.dp))
+        LinkRow(
             label = vocab.aboutLinkSource,
             url = "https://github.com/bandersong/ascendy"
         )
@@ -121,7 +127,7 @@ fun AboutScreen(onBack: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LinkRow(label: String, url: String) {
+private fun LinkRow(label: String, url: String, emphasized: Boolean = false) {
     val context = LocalContext.current
     Surface(
         onClick = {
@@ -130,7 +136,7 @@ private fun LinkRow(label: String, url: String) {
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
         },
-        color = MaterialTheme.colorScheme.surface,
+        color = if (emphasized) palette.Petal else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
         modifier = Modifier.fillMaxWidth()
     ) {

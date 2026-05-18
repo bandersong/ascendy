@@ -260,6 +260,7 @@ data class Vocab(
     val aboutLinkSource: String,
     val aboutLinkPrivacy: String,
     val aboutLinkReleases: String,
+    val aboutLinkDonate: String,
     val aboutMadeWith: String,
 
     // whitelist mode
@@ -505,6 +506,7 @@ val KawaiiVocab = Vocab(
     aboutLinkSource = "open source on github",
     aboutLinkPrivacy = "privacy policy",
     aboutLinkReleases = "all releases",
+    aboutLinkDonate = "buy me a coffee ♡",
     aboutMadeWith = "made with compose ✨",
 
     allowListToggleLabel = "allow-only mode",
@@ -747,6 +749,7 @@ val ToughVocab = Vocab(
     aboutLinkSource = "SOURCE ON GITHUB",
     aboutLinkPrivacy = "PRIVACY POLICY",
     aboutLinkReleases = "ALL BUILDS",
+    aboutLinkDonate = "TIP THE DEV",
     aboutMadeWith = "BUILT WITH COMPOSE.",
 
     allowListToggleLabel = "ALLOW-ONLY MODE",
@@ -989,6 +992,7 @@ val NeutralVocab = Vocab(
     aboutLinkSource = "Source code on GitHub",
     aboutLinkPrivacy = "Privacy policy",
     aboutLinkReleases = "All releases",
+    aboutLinkDonate = "Buy the developer a coffee",
     aboutMadeWith = "Built with Jetpack Compose.",
 
     allowListToggleLabel = "Allow-only mode",

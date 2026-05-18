@@ -263,6 +263,10 @@ data class Vocab(
     val aboutLinkDonate: String,
     val aboutMadeWith: String,
 
+    // what's-new dialog (shown once after each update)
+    val whatsNewTitle: String,
+    val whatsNewDismiss: String,
+
     // whitelist mode
     val allowListToggleLabel: String,
     val allowListBadge: String,
@@ -509,6 +513,9 @@ val KawaiiVocab = Vocab(
     aboutLinkDonate = "buy me a coffee ♡",
     aboutMadeWith = "made with compose ✨",
 
+    whatsNewTitle = "what's new ♡",
+    whatsNewDismiss = "got it",
+
     allowListToggleLabel = "allow-only mode",
     allowListBadge = "allow-only ✨",
 
@@ -752,6 +759,9 @@ val ToughVocab = Vocab(
     aboutLinkDonate = "TIP THE DEV",
     aboutMadeWith = "BUILT WITH COMPOSE.",
 
+    whatsNewTitle = "WHAT'S NEW",
+    whatsNewDismiss = "GOT IT",
+
     allowListToggleLabel = "ALLOW-ONLY MODE",
     allowListBadge = "ALLOW-ONLY",
 
@@ -994,6 +1004,9 @@ val NeutralVocab = Vocab(
     aboutLinkReleases = "All releases",
     aboutLinkDonate = "Buy the developer a coffee",
     aboutMadeWith = "Built with Jetpack Compose.",
+
+    whatsNewTitle = "What's new",
+    whatsNewDismiss = "Got it",
 
     allowListToggleLabel = "Allow-only mode",
     allowListBadge = "Allow-only",

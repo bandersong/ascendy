@@ -32,6 +32,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
@@ -126,21 +127,11 @@ class MainActivity : ComponentActivity() {
         val app = application as AscendyApp
         controller = SessionController(this, app.repo, app.themePrefs)
 
-        // restore in-memory state if a session is active
+        // Cold-start restore — delegate to SessionController so strict/emergency/inverted/safety-alarm
+        // are all re-hydrated identically to the boot path. (Avoids the bug where a strict session
+        // could show the emergency-unlock card after a kill+relaunch.)
         lifecycleScope.launch {
-            val sess = app.repo.currentSession()
-            if (sess?.active == true) {
-                val list = app.repo.list(sess.listId)
-                val pkgs = app.repo.packages(sess.listId).toSet()
-                val doms = app.repo.domains(sess.listId).toSet()
-                com.ascendy.app.blocking.BlockState.set(
-                    active = true,
-                    blocked = pkgs,
-                    blockedDomains = doms,
-                    startedAt = sess.startedAt,
-                    inverted = list?.isAllowList == true,
-                )
-            }
+            controller.restoreOnBoot()
         }
 
         // keep currentVocab in sync with the persisted theme so toasts use the right voice
@@ -250,6 +241,7 @@ private fun AppNav(
     val detected by detectedTagFlow.collectAsState()
     val onboarded by themePrefs.onboarded.collectAsState(initial = false)
     val themesIntroSeen by themePrefs.themesIntroSeen.collectAsState(initial = true)
+    val lastSeenVersion by themePrefs.lastSeenVersionCode.collectAsState(initial = com.ascendy.app.BuildConfig.VERSION_CODE)
 
     var permissions by remember { mutableStateOf(checkPermissions(context)) }
 
@@ -577,6 +569,48 @@ private fun AppNav(
                 onBack = { nav.popBackStack() }
             )
         }
+    }
+
+    // What's-new dialog — shown once after the app updates to a new versionCode that has changelog
+    // entries the user hasn't seen yet. Skipped during onboarding so we don't pile dialogs.
+    val unseen = com.ascendy.app.ui.screens.unseenChangelog(
+        currentVersionCode = com.ascendy.app.BuildConfig.VERSION_CODE,
+        lastSeenVersionCode = lastSeenVersion
+    )
+    if (onboarded && themesIntroSeen && unseen.isNotEmpty()) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = {
+                scope.launch { themePrefs.markSeenVersion(com.ascendy.app.BuildConfig.VERSION_CODE) }
+            },
+            title = { androidx.compose.material3.Text(com.ascendy.app.ui.theme.vocab.whatsNewTitle) },
+            text = {
+                androidx.compose.foundation.layout.Column {
+                    unseen.forEach { entry ->
+                        androidx.compose.material3.Text(
+                            entry.title,
+                            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                            color = com.ascendy.app.ui.theme.palette.Ink,
+                        )
+                        androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(4.dp))
+                        entry.notes.forEach { note ->
+                            androidx.compose.material3.Text(
+                                "• $note",
+                                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+                                color = com.ascendy.app.ui.theme.palette.Smoke,
+                            )
+                        }
+                        androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(8.dp))
+                    }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.Button(onClick = {
+                    scope.launch { themePrefs.markSeenVersion(com.ascendy.app.BuildConfig.VERSION_CODE) }
+                }) {
+                    androidx.compose.material3.Text(com.ascendy.app.ui.theme.vocab.whatsNewDismiss)
+                }
+            }
+        )
     }
 
     // One-time themes intro dialog (after onboarding, before the user does anything else).

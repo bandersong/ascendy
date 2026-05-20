@@ -82,6 +82,61 @@ object DnsTools {
         return packet
     }
 
+    /** Wrap a UDP payload in IPv6+UDP headers with mandatory UDP checksum. */
+    fun buildIpv6UdpPacket(
+        srcIp: ByteArray, dstIp: ByteArray,
+        srcPort: Int, dstPort: Int,
+        payload: ByteArray,
+    ): ByteArray {
+        val udpLen = 8 + payload.size
+        val packet = ByteArray(40 + udpLen)
+
+        // ── IPv6 fixed header (40 bytes) ──
+        packet[0] = 0x60; packet[1] = 0; packet[2] = 0; packet[3] = 0  // version=6, TC=0, flow=0
+        packet[4] = (udpLen ushr 8 and 0xFF).toByte()
+        packet[5] = (udpLen and 0xFF).toByte()
+        packet[6] = 17   // next header = UDP
+        packet[7] = 64   // hop limit
+        System.arraycopy(srcIp, 0, packet, 8, 16)
+        System.arraycopy(dstIp, 0, packet, 24, 16)
+
+        // ── UDP header ──
+        packet[40] = (srcPort ushr 8 and 0xFF).toByte()
+        packet[41] = (srcPort and 0xFF).toByte()
+        packet[42] = (dstPort ushr 8 and 0xFF).toByte()
+        packet[43] = (dstPort and 0xFF).toByte()
+        packet[44] = (udpLen ushr 8 and 0xFF).toByte()
+        packet[45] = (udpLen and 0xFF).toByte()
+        // checksum placeholder at [46..47]
+
+        System.arraycopy(payload, 0, packet, 48, payload.size)
+
+        // UDP checksum is mandatory in IPv6 (unlike IPv4 where zero = skip)
+        val chk = udpChecksumV6(srcIp, dstIp, packet, 40, udpLen)
+        packet[46] = (chk ushr 8 and 0xFF).toByte()
+        packet[47] = (chk and 0xFF).toByte()
+
+        return packet
+    }
+
+    private fun udpChecksumV6(srcIp: ByteArray, dstIp: ByteArray, packet: ByteArray, udpOffset: Int, udpLen: Int): Int {
+        var sum = 0
+        fun add(v: Int) { sum += v; if (sum and 0x10000 != 0) sum = (sum and 0xFFFF) + 1 }
+        // IPv6 pseudo-header: src addr + dst addr + UDP length (32-bit) + zeros (24-bit) + next-header
+        for (i in 0 until 16 step 2) add(((srcIp[i].toInt() and 0xFF) shl 8) or (srcIp[i + 1].toInt() and 0xFF))
+        for (i in 0 until 16 step 2) add(((dstIp[i].toInt() and 0xFF) shl 8) or (dstIp[i + 1].toInt() and 0xFF))
+        add(udpLen)  // upper 16 bits of 32-bit length are 0 for any practical DNS packet
+        add(17)      // next header = UDP
+        var i = udpOffset
+        val end = udpOffset + udpLen
+        while (i + 1 < end) {
+            add(((packet[i].toInt() and 0xFF) shl 8) or (packet[i + 1].toInt() and 0xFF))
+            i += 2
+        }
+        if (i < end) add((packet[i].toInt() and 0xFF) shl 8)
+        return sum.inv() and 0xFFFF
+    }
+
     private fun ipChecksum(buf: ByteArray, start: Int, len: Int): Int {
         var sum = 0
         var i = start

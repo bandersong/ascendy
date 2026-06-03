@@ -6,4 +6,7 @@
     <string name="notif_channel_name">Focus session</string>
     <string name="notif_channel_desc">Shown while a focus session is active.</string>
     <string name="widget_description">Ascendy focus status</string>
+    <string name="device_admin_label">ascendy lockdown</string>
+    <string name="device_admin_description">while lockdown is on, ascendy can\'t be uninstalled until you turn lockdown off.</string>
+    <string name="device_admin_disable_warning">turning this off removes lockdown protection and lets ascendy be uninstalled. you can\'t do this while a focus session is active.</string>
 </resources>

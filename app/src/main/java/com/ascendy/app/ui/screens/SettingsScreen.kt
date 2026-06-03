@@ -22,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -46,9 +47,12 @@ fun SettingsScreen(
     current: ThemeVariant,
     safetyMinutes: Int,
     dailyGoalMinutes: Int,
+    lockdownEnabled: Boolean,
+    lockdownLocked: Boolean,
     onPickTheme: (ThemeVariant) -> Unit,
     onPickSafetyMinutes: (Int) -> Unit,
     onPickGoalMinutes: (Int) -> Unit,
+    onToggleLockdown: (Boolean) -> Unit,
     onOpenStats: () -> Unit,
     onOpenSchedules: () -> Unit,
     onOpenPomodoro: () -> Unit,
@@ -212,6 +216,33 @@ fun SettingsScreen(
                         }
                     }
                     if (rowIdx == 0) Spacer(Modifier.height(6.dp))
+                }
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(vocab.lockdownTitle,
+                            style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                        Spacer(Modifier.height(4.dp))
+                        Text(vocab.lockdownBody,
+                            style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
+                    }
+                    Spacer(Modifier.size(12.dp))
+                    Switch(
+                        checked = lockdownEnabled,
+                        onCheckedChange = onToggleLockdown,
+                        enabled = !lockdownLocked,
+                    )
+                }
+                if (lockdownLocked) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(vocab.lockdownLockedNote,
+                        style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
                 }
             }
         }

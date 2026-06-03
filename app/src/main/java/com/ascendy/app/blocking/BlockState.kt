@@ -28,8 +28,18 @@ object BlockState {
     private val _inverted = MutableStateFlow(false)
     val inverted: StateFlow<Boolean> = _inverted
 
+    /**
+     * True iff the active session is running with Lockdown engaged. Tells the accessibility
+     * service to bounce the user out of any Settings screen that shows Ascendy (the
+     * accessibility-toggle, app-info/uninstall, and device-admin pages) so the blocker
+     * can't be disabled mid-session. Device-admin separately blocks the uninstall itself.
+     */
+    private val _lockdown = MutableStateFlow(false)
+    val lockdown: StateFlow<Boolean> = _lockdown
+
     fun snapshot(): Set<String> = _blocked.value
     fun isActive(): Boolean = _active.value
+    fun isLockdown(): Boolean = _lockdown.value
     fun isBlocked(pkg: String): Boolean {
         if (!_active.value) return false
         val inSet = pkg in _blocked.value
@@ -52,6 +62,7 @@ object BlockState {
         emergencyAvailable: Boolean = false,
         strict: Boolean = false,
         inverted: Boolean = false,
+        lockdown: Boolean = false,
     ) {
         _active.value = active
         _blocked.value = if (active) blocked else emptySet()
@@ -60,6 +71,7 @@ object BlockState {
         _emergencyAvailable.value = active && emergencyAvailable
         _strict.value = active && strict
         _inverted.value = active && inverted
+        _lockdown.value = active && lockdown
     }
 
     fun clear() {
@@ -70,5 +82,6 @@ object BlockState {
         _emergencyAvailable.value = false
         _strict.value = false
         _inverted.value = false
+        _lockdown.value = false
     }
 }

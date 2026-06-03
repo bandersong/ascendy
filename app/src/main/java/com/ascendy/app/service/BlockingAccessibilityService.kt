@@ -6,6 +6,7 @@ import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.ascendy.app.R
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.blocking.BlockerActivity
 
@@ -22,6 +23,21 @@ class BlockingAccessibilityService : AccessibilityService() {
         val pkg = event.packageName?.toString() ?: return
         if (pkg == packageName) return
         if (pkg in IGNORED_PACKAGES) return
+
+        // Path 0: Lockdown — bounce out of any Settings screen that shows Ascendy. Those are the
+        // only screens that can disable the blocker mid-session: the accessibility-service toggle,
+        // our app-info/uninstall page, and the device-admin deactivation page (all of which display
+        // the app's name). Narrowly scoped — other Settings screens stay usable. Device-admin
+        // separately blocks the uninstall itself; this closes the "just toggle it off" hole.
+        if (BlockState.isLockdown() &&
+            event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED &&
+            isSettingsPackage(pkg) &&
+            windowMentionsSelf(rootInActiveWindow)
+        ) {
+            Log.d(tag, "lockdown bounce from settings pkg=$pkg")
+            bounceHome("lockdown")
+            return
+        }
 
         // Path 1: app-level blocking on activity switch
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
@@ -80,6 +96,35 @@ class BlockingAccessibilityService : AccessibilityService() {
             if (text.isNotBlank()) return text
         }
         return null
+    }
+
+    /** The app's display label, lowercased, used to spot Settings screens that are about Ascendy. */
+    private val selfLabel: String by lazy { getString(R.string.app_name).trim().lowercase() }
+
+    private fun isSettingsPackage(pkg: String): Boolean =
+        pkg == "com.android.settings" || pkg.endsWith(".settings") || pkg.contains("settings")
+
+    /**
+     * Bounded scan of the active window for any node whose text names Ascendy — by display label or
+     * by package name. True only for the accessibility-toggle, app-info, and device-admin screens
+     * (and the lists that lead to them), keeping the lockdown bounce narrow.
+     */
+    private fun windowMentionsSelf(root: AccessibilityNodeInfo?): Boolean {
+        if (root == null) return false
+        val stack = ArrayDeque<AccessibilityNodeInfo>()
+        stack.addLast(root)
+        var visited = 0
+        val limit = 300
+        while (stack.isNotEmpty() && visited < limit) {
+            val n = stack.removeFirst()
+            visited++
+            val text = n.text?.toString()?.lowercase()
+            if (text != null && (text.contains(selfLabel) || text.contains(packageName))) return true
+            for (i in 0 until n.childCount) {
+                n.getChild(i)?.let { stack.addLast(it) }
+            }
+        }
+        return false
     }
 
     /** Walk the entire active-window tree for nodes whose view-id resource name hints at a URL bar. */

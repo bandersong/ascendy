@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Minimal device-admin policy. We request NO special powers (empty uses-policies) —
+  the only thing we rely on is that an *active* device admin cannot be uninstalled
+  until it is first deactivated. That deliberate multi-step deactivation is the
+  friction that backs Lockdown mode. The mandatory safety timer remains the
+  guaranteed escape hatch, so this can never permanently trap the user.
+-->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+    </uses-policies>
+</device-admin>

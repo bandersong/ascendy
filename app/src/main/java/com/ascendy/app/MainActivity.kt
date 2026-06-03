@@ -111,6 +111,36 @@ class MainActivity : ComponentActivity() {
         )
     }
 
+    private val deviceAdminLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        // Persist Lockdown as on only if the user actually granted device-admin.
+        val active = com.ascendy.app.service.AscendyDeviceAdminReceiver.isActive(this)
+        lifecycleScope.launch { (application as AscendyApp).themePrefs.setLockdownEnabled(active) }
+        if (!active) toast(currentVocab.lockdownNeedsAdmin)
+    }
+
+    /** Turn Lockdown on: activate device-admin (which blocks uninstall), then persist the pref. */
+    fun enableLockdown() {
+        if (com.ascendy.app.service.AscendyDeviceAdminReceiver.isActive(this)) {
+            lifecycleScope.launch { (application as AscendyApp).themePrefs.setLockdownEnabled(true) }
+            return
+        }
+        deviceAdminLauncher.launch(
+            com.ascendy.app.service.AscendyDeviceAdminReceiver.addIntent(this, currentVocab.lockdownAdminExplanation)
+        )
+    }
+
+    /** Turn Lockdown off — refused while a session is active (the safety timer is the way out). */
+    fun disableLockdown() {
+        if (com.ascendy.app.blocking.BlockState.isActive()) {
+            toast(currentVocab.lockdownLockedNote)
+            return
+        }
+        com.ascendy.app.service.AscendyDeviceAdminReceiver.remove(this)
+        lifecycleScope.launch { (application as AscendyApp).themePrefs.setLockdownEnabled(false) }
+    }
+
     fun launchQrScan() {
         val options = com.journeyapps.barcodescanner.ScanOptions().apply {
             setDesiredBarcodeFormats(com.journeyapps.barcodescanner.ScanOptions.QR_CODE)
@@ -475,13 +505,31 @@ private fun AppNav(
         composable("settings") {
             val safetyMin by themePrefs.maxSessionMinutes.collectAsState(initial = com.ascendy.app.data.MAX_SESSION_DEFAULT_MIN)
             val goalMin by themePrefs.dailyGoalMinutes.collectAsState(initial = com.ascendy.app.data.DAILY_GOAL_DEFAULT_MIN)
+            val lockdownPref by themePrefs.lockdownEnabled.collectAsState(initial = false)
+            val sessionActive by com.ascendy.app.blocking.BlockState.active.collectAsState()
+            // Reconcile a stale pref: if Lockdown is on in prefs but device-admin was removed
+            // externally (only possible with no active session), flip the pref back off.
+            LaunchedEffect(lockdownPref, sessionActive) {
+                if (lockdownPref && !sessionActive &&
+                    !com.ascendy.app.service.AscendyDeviceAdminReceiver.isActive(context)
+                ) {
+                    themePrefs.setLockdownEnabled(false)
+                }
+            }
             com.ascendy.app.ui.screens.SettingsScreen(
                 current = currentVariant,
                 safetyMinutes = safetyMin,
                 dailyGoalMinutes = goalMin,
+                lockdownEnabled = lockdownPref,
+                lockdownLocked = sessionActive && lockdownPref,
                 onPickTheme = { v -> scope.launch { themePrefs.set(v) } },
                 onPickSafetyMinutes = { m -> scope.launch { themePrefs.setMaxSessionMinutes(m) } },
                 onPickGoalMinutes = { m -> scope.launch { themePrefs.setDailyGoalMinutes(m) } },
+                onToggleLockdown = { on ->
+                    (context as? MainActivity)?.let { act ->
+                        if (on) act.enableLockdown() else act.disableLockdown()
+                    }
+                },
                 onOpenStats = { nav.navigate("stats") },
                 onOpenSchedules = { nav.navigate("schedules") },
                 onOpenPomodoro = { nav.navigate("pomodoro") },

@@ -17,6 +17,7 @@ private val THEMES_INTRO_KEY = booleanPreferencesKey("themes_intro_seen")
 private val MAX_SESSION_KEY = intPreferencesKey("max_session_minutes")
 private val DAILY_GOAL_KEY = intPreferencesKey("daily_goal_minutes")
 private val LAST_SEEN_VERSION_KEY = intPreferencesKey("last_seen_version_code")
+private val LOCKDOWN_KEY = booleanPreferencesKey("lockdown_enabled")
 const val MAX_SESSION_DEFAULT_MIN = 480   // 8h
 const val DAILY_GOAL_DEFAULT_MIN = 120    // 2h
 
@@ -49,6 +50,11 @@ class ThemePrefs(private val context: Context) {
         prefs[LAST_SEEN_VERSION_KEY] ?: 0
     }
 
+    /** Lockdown mode: device-admin uninstall block + Settings-screen bounce during sessions. */
+    val lockdownEnabled: Flow<Boolean> = context.themeStore.data.map { prefs ->
+        prefs[LOCKDOWN_KEY] ?: false
+    }
+
     suspend fun set(variant: ThemeVariant) {
         context.themeStore.edit { it[THEME_KEY] = variant.name }
     }
@@ -71,5 +77,9 @@ class ThemePrefs(private val context: Context) {
 
     suspend fun markSeenVersion(versionCode: Int) {
         context.themeStore.edit { it[LAST_SEEN_VERSION_KEY] = versionCode }
+    }
+
+    suspend fun setLockdownEnabled(enabled: Boolean) {
+        context.themeStore.edit { it[LOCKDOWN_KEY] = enabled }
     }
 }

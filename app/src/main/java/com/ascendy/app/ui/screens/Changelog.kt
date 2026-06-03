@@ -10,6 +10,16 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
+        versionCode = 45,
+        title = "lockdown mode 🔒",
+        notes = listOf(
+            "new lockdown toggle in settings — opt-in, off by default",
+            "blocks uninstalling ascendy mid-session (device-admin)",
+            "seals the settings pages used to switch the blocker off during a session",
+            "your safety timer is still the guaranteed way out",
+        )
+    ),
+    ChangelogEntry(
         versionCode = 40,
         title = "polish ✨",
         notes = listOf(

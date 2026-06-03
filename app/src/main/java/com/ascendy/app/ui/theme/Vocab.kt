@@ -284,6 +284,13 @@ data class Vocab(
     val permsVpnAction: String,
     val vpnNotifTitle: String,
     val vpnNotifText: String,
+
+    // lockdown (device-admin uninstall block + settings-screen bounce)
+    val lockdownTitle: String,
+    val lockdownBody: String,
+    val lockdownLockedNote: String,      // shown while a session is active (can't disable)
+    val lockdownNeedsAdmin: String,      // toast if admin activation was declined
+    val lockdownAdminExplanation: String, // shown in the system "activate device admin" dialog
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -530,6 +537,12 @@ val KawaiiVocab = Vocab(
     permsVpnAction = "enable vpn",
     vpnNotifTitle = "blocking websites ♡",
     vpnNotifText = "dns sinkhole active during this session",
+
+    lockdownTitle = "lockdown mode 🔐",
+    lockdownBody = "stops you wriggling out mid-session. ascendy can't be uninstalled, and you can't reach the settings pages that turn it off, until your session ends. your safety timer is still your way out ♡",
+    lockdownLockedNote = "you're focusing — lockdown can't be turned off until this session ends ♡",
+    lockdownNeedsAdmin = "lockdown needs device-admin to work — tap allow next time ♡",
+    lockdownAdminExplanation = "ascendy uses this only to stop itself being uninstalled while lockdown is on. turn lockdown off anytime there's no active session. ♡",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -776,6 +789,12 @@ val ToughVocab = Vocab(
     permsVpnAction = "ENABLE",
     vpnNotifTitle = "DNS LOCKDOWN",
     vpnNotifText = "blocking domains at the dns layer",
+
+    lockdownTitle = "LOCKDOWN 🔒",
+    lockdownBody = "no escape hatches. ascendy can't be uninstalled and the settings pages that kill it are sealed until the session ends. the safety timer is your only exit. choose it on purpose.",
+    lockdownLockedNote = "LOCKED IN — lockdown stays on until this session ends.",
+    lockdownNeedsAdmin = "lockdown needs device-admin. allow it next time.",
+    lockdownAdminExplanation = "ascendy uses this to block its own uninstall while lockdown is on. deactivate it anytime there's no active session.",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -1022,6 +1041,12 @@ val NeutralVocab = Vocab(
     permsVpnAction = "Enable VPN blocking",
     vpnNotifTitle = "VPN blocking active",
     vpnNotifText = "DNS sinkhole enforcing website blocks",
+
+    lockdownTitle = "Lockdown mode",
+    lockdownBody = "Prevents bypassing a session. While Lockdown is on, Ascendy cannot be uninstalled, and the Settings screens used to disable it are blocked for the duration of an active session. The safety timer still guarantees every session ends.",
+    lockdownLockedNote = "A session is active — Lockdown cannot be turned off until it ends.",
+    lockdownNeedsAdmin = "Lockdown requires device-admin access to function. Allow it to enable Lockdown.",
+    lockdownAdminExplanation = "Ascendy uses this only to prevent its own uninstallation while Lockdown is enabled. You can turn Lockdown off whenever no session is active.",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

@@ -74,6 +74,7 @@ class SessionController(
         // the mascot can accidentally trap the user with no escape.
         val isStrict = list.isStrict && source != SessionSource.Manual
         val unlocksLeft = if (isStrict) 0 else 1
+        val lockdown = themePrefs.lockdownEnabled.first()
 
         val session = BlockSession(
             id = 1L,
@@ -94,6 +95,7 @@ class SessionController(
             emergencyAvailable = !isStrict && unlocksLeft > 0,
             strict = isStrict,
             inverted = list.isAllowList,
+            lockdown = lockdown,
         )
         startForegroundService()
         AlarmScheduler.scheduleSessionEnd(context, effectiveEndsAt)
@@ -158,6 +160,7 @@ class SessionController(
             emergencyAvailable = list?.isStrict != true && current.emergencyUnlocksLeft > 0,
             strict = list?.isStrict == true,
             inverted = list?.isAllowList == true,
+            lockdown = themePrefs.lockdownEnabled.first(),
         )
         startForegroundService()
         current.endsAt?.let { AlarmScheduler.scheduleSessionEnd(context, it) }

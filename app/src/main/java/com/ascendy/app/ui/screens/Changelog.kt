@@ -10,7 +10,7 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
-        versionCode = 45,
+        versionCode = 47,
         title = "lockdown mode 🔒",
         notes = listOf(
             "new lockdown toggle in settings — opt-in, off by default",

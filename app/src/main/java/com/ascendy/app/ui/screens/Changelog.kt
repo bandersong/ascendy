@@ -10,12 +10,22 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
-        versionCode = 48,
+        versionCode = 50,
+        title = "stability + speed 🛠️",
+        notes = listOf(
+            "website (DNS) blocking no longer stalls when one lookup is slow — queries run in parallel",
+            "today's focus time now ticks up live during an active session",
+            "fixed a widget crash when two or more widgets are placed",
+            "hardened the database so future updates can't silently wipe your data",
+            "quick-settings tile no longer leaks a background worker",
+        )
+    ),
+    ChangelogEntry(
+        versionCode = 49,
         title = "critical bugfixes 🐛",
         notes = listOf(
-            "fixed data loss bug: toggling strict/allow-list mode no longer wipes your blocklist",
-            "fixed enforcement dying silently after process restart",
-            "fixed widget crashes with multiple instances",
+            "fixed data loss: toggling strict / allow-list mode no longer wipes your blocklist",
+            "fixed blocking dying silently after the app's process was restarted mid-session",
             "fixed scheduled sessions ending unrelated focus sessions",
         )
     ),

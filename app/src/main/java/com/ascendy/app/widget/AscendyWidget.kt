@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class AscendyWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
-        for (id in appWidgetIds) paint(context, appWidgetManager, id)
+        repaint(context, appWidgetManager, appWidgetIds)
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -29,60 +29,42 @@ class AscendyWidget : AppWidgetProvider() {
             intent.action == "com.ascendy.app.SESSION_STARTED" ||
             intent.action == "com.ascendy.app.SESSION_ENDED") {
             val mgr = AppWidgetManager.getInstance(context)
-            val widgetIds = mgr.getAppWidgetIds(ComponentName(context, AscendyWidget::class.java))
-            if (widgetIds.isEmpty()) return
-
-            val pending = goAsync()
-            GlobalScope.launch(Dispatchers.IO) {
-                try {
-                    val app = context.applicationContext as AscendyApp
-                    val vocab = vocabFor(app.currentVariant)
-                    val streak = Stats.streakDays(app.repo.distinctSessionDates())
-                    val streakText = if (streak > 0) "🔥 $streak" else ""
-                    widgetIds.forEach { widgetId -> paintSync(context, mgr, widgetId, vocab, streakText) }
-                } finally {
-                    pending.finish()
-                }
-            }
+            val ids = mgr.getAppWidgetIds(ComponentName(context, AscendyWidget::class.java))
+            repaint(context, mgr, ids)
         }
     }
 
     /**
-     * Single paint path for onUpdate. Uses goAsync() + GlobalScope to do the streak DB query off
-     * the main thread. Renders synchronously first, then re-renders with the streak when ready.
+     * Single repaint path for ALL widget instances. goAsync() must be called at most once per
+     * onReceive: it only returns a live PendingResult on the first call within a given dispatch —
+     * later calls return null, and finish() on null NPEs and crashes the process. So we call it
+     * exactly once here regardless of how many widgets are placed. Every widget shows identical
+     * content (status / title / streak), so one synchronous paint covers them all first (nothing
+     * ever flashes empty), then one streak DB query off the main thread re-renders them, and we
+     * finish() once.
      */
     @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
-    private fun paint(context: Context, mgr: AppWidgetManager, widgetId: Int) {
+    private fun repaint(context: Context, mgr: AppWidgetManager, widgetIds: IntArray) {
+        if (widgetIds.isEmpty()) return
         val app = context.applicationContext as AscendyApp
         val vocab = vocabFor(app.currentVariant)
 
-        // Fast sync paint — no streak yet
+        // Fast synchronous paint for every widget — no streak yet, never appears empty.
         val baseViews = buildViews(context, vocab, streakText = "")
-        mgr.updateAppWidget(widgetId, baseViews)
+        widgetIds.forEach { mgr.updateAppWidget(it, baseViews) }
 
-        // Async update with the streak text
+        // One async pass: query the streak once, re-render all widgets, finish once.
         val pending = goAsync()
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 val streak = Stats.streakDays(app.repo.distinctSessionDates())
                 val streakText = if (streak > 0) "🔥 $streak" else ""
                 val views = buildViews(context, vocab, streakText)
-                mgr.updateAppWidget(widgetId, views)
+                widgetIds.forEach { mgr.updateAppWidget(it, views) }
             } finally {
                 pending.finish()
             }
         }
-    }
-
-    private fun paintSync(
-        context: Context,
-        mgr: AppWidgetManager,
-        widgetId: Int,
-        vocab: com.ascendy.app.ui.theme.Vocab,
-        streakText: String,
-    ) {
-        val views = buildViews(context, vocab, streakText)
-        mgr.updateAppWidget(widgetId, views)
     }
 
     private fun buildViews(

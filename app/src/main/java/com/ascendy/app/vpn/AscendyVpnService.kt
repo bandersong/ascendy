@@ -120,14 +120,19 @@ class AscendyVpnService : VpnService() {
         val qname = DnsTools.parseQName(dns) ?: return
         val isBlocked = BlockState.isDomainBlocked(qname)
         Log.d(TAG, "dns q=$qname blocked=$isBlocked")
-        val response = if (isBlocked) DnsTools.nxdomainResponse(dns) else forwardUpstream(dns) ?: return
 
-        val replyPacket = DnsTools.buildIpv4UdpPacket(
-            srcIp = dstIp, dstIp = srcIp,
-            srcPort = dstPort, dstPort = srcPort,
-            payload = response,
-        )
-        try { output.write(replyPacket) } catch (e: Exception) { Log.w(TAG, "write reply failed", e) }
+        // forwardUpstream() blocks on a socket (up to ~4s across the v4→v6 fallback). Run it off
+        // the single tunnel read loop so one slow lookup can't serialize every other DNS query in
+        // the session. srcIp/dstIp/dns are already private copies, safe to hand to the coroutine.
+        scope.launch {
+            val response = if (isBlocked) DnsTools.nxdomainResponse(dns) else forwardUpstream(dns) ?: return@launch
+            val replyPacket = DnsTools.buildIpv4UdpPacket(
+                srcIp = dstIp, dstIp = srcIp,
+                srcPort = dstPort, dstPort = srcPort,
+                payload = response,
+            )
+            writeReply(output, replyPacket)
+        }
     }
 
     private fun handleIpv6(packet: ByteArray, output: FileOutputStream) {
@@ -145,14 +150,25 @@ class AscendyVpnService : VpnService() {
         val qname = DnsTools.parseQName(dns) ?: return
         val isBlocked = BlockState.isDomainBlocked(qname)
         Log.d(TAG, "dns6 q=$qname blocked=$isBlocked")
-        val response = if (isBlocked) DnsTools.nxdomainResponse(dns) else forwardUpstream(dns) ?: return
 
-        val replyPacket = DnsTools.buildIpv6UdpPacket(
-            srcIp = dstIp6, dstIp = srcIp6,
-            srcPort = dstPort, dstPort = srcPort,
-            payload = response,
-        )
-        try { output.write(replyPacket) } catch (e: Exception) { Log.w(TAG, "write ipv6 reply failed", e) }
+        // See handleIpv4: forward off the read loop so a slow upstream can't stall other lookups.
+        scope.launch {
+            val response = if (isBlocked) DnsTools.nxdomainResponse(dns) else forwardUpstream(dns) ?: return@launch
+            val replyPacket = DnsTools.buildIpv6UdpPacket(
+                srcIp = dstIp6, dstIp = srcIp6,
+                srcPort = dstPort, dstPort = srcPort,
+                payload = response,
+            )
+            writeReply(output, replyPacket)
+        }
+    }
+
+    // Many forward coroutines can complete concurrently; serialize writes into the tunnel fd so
+    // their reply packets never interleave on the shared FileOutputStream.
+    private fun writeReply(output: FileOutputStream, packet: ByteArray) {
+        synchronized(output) {
+            try { output.write(packet) } catch (e: Exception) { Log.w(TAG, "write reply failed", e) }
+        }
     }
 
     // Try IPv4 upstream first; fall back to IPv6 (needed on IPv6-only 5G networks).

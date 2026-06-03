@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
@@ -36,6 +37,13 @@ class AscendyTileService : TileService() {
         super.onStopListening()
         collectorJob?.cancel()
         collectorJob = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Tile can be removed/re-added repeatedly over the service's life; cancel the scope so
+        // each teardown doesn't leak its SupervisorJob and IO dispatcher references.
+        scope.cancel()
     }
 
     override fun onClick() {

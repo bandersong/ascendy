@@ -330,10 +330,23 @@ private fun AppNav(
             val manualStartMsg = com.ascendy.app.ui.theme.vocab.toastManualStarted
             val manualEndMsg = com.ascendy.app.ui.theme.vocab.toastManualEnded
             val strictBlockedMsg = com.ascendy.app.ui.theme.vocab.strictManualBlockedToast
-            val todayMs by repo.observeFocusMsSince(
-                com.ascendy.app.data.Stats.startOfTodayMs(),
-                System.currentTimeMillis()
-            ).collectAsState(initial = 0L)
+            // Re-subscribe every 30s with a fresh "now" so the counter advances live during an
+            // active session — observeFocusMsSince uses nowMs for the still-open session's slice,
+            // which is otherwise frozen at the moment the screen composed. We hold the last value
+            // across re-subscribes (instead of collectAsState) so it never flashes back to 0, and
+            // recomputing startOfTodayMs() each tick also rolls the counter over at midnight.
+            var todayMs by remember { mutableStateOf(0L) }
+            LaunchedEffect(Unit) {
+                while (true) {
+                    val nowMs = System.currentTimeMillis()
+                    val sinceMs = com.ascendy.app.data.Stats.startOfTodayMs()
+                    val job = launch {
+                        repo.observeFocusMsSince(sinceMs, nowMs).collect { todayMs = it }
+                    }
+                    kotlinx.coroutines.delay(30_000)
+                    job.cancel()
+                }
+            }
             val dailyGoal by themePrefs.dailyGoalMinutes.collectAsState(initial = com.ascendy.app.data.DAILY_GOAL_DEFAULT_MIN)
             HomeScreen(
                 tagCount = tags.size,

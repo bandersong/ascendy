@@ -10,7 +10,7 @@
 <main>
 <p><a href="index.html">← back</a></p>
 <h1>Privacy Policy</h1>
-<p class="lede">Effective: 2026-05-16. Last updated: 2026-05-16.</p>
+<p class="lede">Effective: 2026-05-16. Last updated: 2026-06-02.</p>
 
 <h2>Short version</h2>
 <p>Ascendy collects no personal data. All app and website blocking happens entirely on your device. Nothing is transmitted, shared, sold, or stored on any server we control. We do not use analytics, crash reporting, or any third-party SDKs.</p>
@@ -32,6 +32,9 @@
 
   <dt>VpnService</dt>
   <dd>Used during a session to run a local DNS sinkhole — DNS queries for domains you've blocked are answered with NXDOMAIN; all other queries are forwarded to a public upstream resolver (Cloudflare, 1.1.1.1). No traffic is intercepted, logged, or sent to any server we control. The tunnel runs entirely on-device. It is automatically stopped when your focus session ends.</dd>
+
+  <dt>Device administrator</dt>
+  <dd>Optional. Only activated when you enable Lockdown mode in settings. Prevents Ascendy from being uninstalled while a focus session is active. Automatically deactivated when no session is running. You can disable it at any time in Settings &gt; Security &gt; Device admin apps when outside a session.</dd>
 
   <dt>Usage access</dt>
   <dd>Fallback path for foreground-app detection when the accessibility service is unavailable (for example, Android 17 Advanced Protection Mode). Queries are run on-device and not persisted.</dd>

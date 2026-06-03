@@ -466,10 +466,10 @@ private fun AppNav(
                 },
                 onDeleteList = { l -> scope.launch { repo.deleteList(l.id) } },
                 onToggleStrict = { l, on ->
-                    scope.launch { repo.upsertList(l.copy(isStrict = on)) }
+                    scope.launch { repo.updateStrict(l.id, on) }
                 },
                 onToggleAllowList = { l, on ->
-                    scope.launch { repo.upsertList(l.copy(isAllowList = on)) }
+                    scope.launch { repo.updateAllowList(l.id, on) }
                 },
                 onBack = { nav.popBackStack() }
             )

@@ -29,16 +29,27 @@ class AscendyWidget : AppWidgetProvider() {
             intent.action == "com.ascendy.app.SESSION_STARTED" ||
             intent.action == "com.ascendy.app.SESSION_ENDED") {
             val mgr = AppWidgetManager.getInstance(context)
-            mgr.getAppWidgetIds(ComponentName(context, AscendyWidget::class.java))
-                .forEach { paint(context, mgr, it) }
+            val widgetIds = mgr.getAppWidgetIds(ComponentName(context, AscendyWidget::class.java))
+            if (widgetIds.isEmpty()) return
+
+            val pending = goAsync()
+            GlobalScope.launch(Dispatchers.IO) {
+                try {
+                    val app = context.applicationContext as AscendyApp
+                    val vocab = vocabFor(app.currentVariant)
+                    val streak = Stats.streakDays(app.repo.distinctSessionDates())
+                    val streakText = if (streak > 0) "🔥 $streak" else ""
+                    widgetIds.forEach { widgetId -> paintSync(context, mgr, widgetId, vocab, streakText) }
+                } finally {
+                    pending.finish()
+                }
+            }
         }
     }
 
     /**
-     * Single paint path. Uses goAsync() + GlobalScope to do the streak DB query off the main
-     * thread without leaking a per-call CoroutineScope. Renders synchronously first (status,
-     * title, click intent) so the widget never appears empty, then re-renders with the streak
-     * when the query completes.
+     * Single paint path for onUpdate. Uses goAsync() + GlobalScope to do the streak DB query off
+     * the main thread. Renders synchronously first, then re-renders with the streak when ready.
      */
     @OptIn(kotlinx.coroutines.DelicateCoroutinesApi::class)
     private fun paint(context: Context, mgr: AppWidgetManager, widgetId: Int) {
@@ -61,6 +72,17 @@ class AscendyWidget : AppWidgetProvider() {
                 pending.finish()
             }
         }
+    }
+
+    private fun paintSync(
+        context: Context,
+        mgr: AppWidgetManager,
+        widgetId: Int,
+        vocab: com.ascendy.app.ui.theme.Vocab,
+        streakText: String,
+    ) {
+        val views = buildViews(context, vocab, streakText)
+        mgr.updateAppWidget(widgetId, views)
     }
 
     private fun buildViews(

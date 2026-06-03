@@ -39,6 +39,12 @@ interface BlocklistDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(list: Blocklist): Long
 
+    @Query("UPDATE blocklist SET isStrict = :on WHERE id = :id")
+    suspend fun updateStrict(id: Long, on: Boolean)
+
+    @Query("UPDATE blocklist SET isAllowList = :on WHERE id = :id")
+    suspend fun updateAllowList(id: Long, on: Boolean)
+
     @Query("DELETE FROM blocklist WHERE id = :id")
     suspend fun delete(id: Long)
 

@@ -21,6 +21,8 @@ class AscendyRepo(context: Context) {
     suspend fun list(id: Long): Blocklist? = lists.byId(id)
     suspend fun defaultList(): Blocklist? = lists.defaultList()
     suspend fun upsertList(l: Blocklist): Long = lists.insert(l)
+    suspend fun updateStrict(id: Long, on: Boolean) = lists.updateStrict(id, on)
+    suspend fun updateAllowList(id: Long, on: Boolean) = lists.updateAllowList(id, on)
     suspend fun deleteList(id: Long) = lists.delete(id)
 
     fun observePackages(listId: Long): Flow<List<String>> = lists.observePackages(listId)

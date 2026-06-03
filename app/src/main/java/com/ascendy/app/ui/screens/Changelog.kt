@@ -10,6 +10,16 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
+        versionCode = 48,
+        title = "critical bugfixes 🐛",
+        notes = listOf(
+            "fixed data loss bug: toggling strict/allow-list mode no longer wipes your blocklist",
+            "fixed enforcement dying silently after process restart",
+            "fixed widget crashes with multiple instances",
+            "fixed scheduled sessions ending unrelated focus sessions",
+        )
+    ),
+    ChangelogEntry(
         versionCode = 47,
         title = "lockdown mode 🔒",
         notes = listOf(

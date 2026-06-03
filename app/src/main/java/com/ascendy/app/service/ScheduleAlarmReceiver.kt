@@ -42,8 +42,11 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
                     }
                     ACTION_SCHEDULE_END -> {
                         val id = intent.getLongExtra(EXTRA_SCHEDULE_ID, -1L)
-                        controller.endSession()
                         val schedule = if (id >= 0) app.repo.scheduleById(id) else null
+                        val current = app.repo.currentSession()
+                        if (schedule != null && current?.active == true && current.listId == schedule.listId) {
+                            controller.endSession()
+                        }
                         if (schedule != null && schedule.enabled) {
                             AlarmScheduler.scheduleDailyTrigger(context, schedule, isStart = false)
                         }

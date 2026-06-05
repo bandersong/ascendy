@@ -27,7 +27,7 @@ class VocabTest {
         val fmtProps = stringProps().filter { it.name.endsWith("Fmt") }
         assertTrue("expected several *Fmt fields", fmtProps.size >= 5)
         for (prop in fmtProps) {
-            val perTheme = themes.mapValues { (_, v) -> specifier.findAll(value(prop, v)).map { it.value }.sorted() }
+            val perTheme = themes.mapValues { (_, v) -> specifier.findAll(value(prop, v)).map { it.value }.toList().sorted() }
             val reference = perTheme.getValue("Neutral")
             assertTrue("Neutral.${prop.name} should contain a format specifier", reference.isNotEmpty())
             for ((name, specs) in perTheme) {

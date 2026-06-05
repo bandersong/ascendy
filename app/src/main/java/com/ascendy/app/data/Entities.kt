@@ -78,6 +78,12 @@ data class BlockSession(
     val emergencyUnlocksLeft: Int,
     /** Auto-end timestamp for pomodoro / scheduled sessions. null = open-ended (NFC-bound). */
     val endsAt: Long? = null,
+    /**
+     * The [Schedule] that started this session, if any. null for manual/NFC/QR/pomodoro sessions.
+     * A schedule's END alarm only ends the session whose scheduleId matches it, so a manual session
+     * the user happened to start on the same list is never killed out from under them.
+     */
+    val scheduleId: Long? = null,
 )
 
 @Entity(tableName = "session_log")

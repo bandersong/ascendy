@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BoundTag::class, Blocklist::class, BlockedPackage::class, BlockedDomain::class,
         BlockSession::class, SessionLog::class, Schedule::class,
     ],
-    version = 6,
+    version = 7,
     exportSchema = true   // schemas/ JSON feeds MigrationTest; commit the generated file on bump
 )
 abstract class AscendyDb : RoomDatabase() {
@@ -51,8 +51,9 @@ abstract class AscendyDb : RoomDatabase() {
          */
         val MIGRATION_6_7 = object : Migration(6, 7) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                // no-op: reserved for the next schema bump. Put ALTER/CREATE statements here when
-                // version 7 introduces schema changes; leave empty only if it genuinely doesn't.
+                // v7 adds BlockSession.scheduleId (nullable) so a schedule's END alarm only ends
+                // the session it actually started, not any session that shares the list.
+                db.execSQL("ALTER TABLE block_session ADD COLUMN scheduleId INTEGER")
             }
         }
 

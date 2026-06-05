@@ -9,6 +9,7 @@ import com.ascendy.app.data.ThemePrefs
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.runner.RunWith
@@ -149,6 +150,20 @@ class SessionControllerTest {
         controller.startSession(listId, tagId = null, source = SessionSource.Scheduled)
         assertTrue("scheduled honors strict", BlockState.strict.value)
         assertFalse("strict session offers no emergency unlock", BlockState.emergencyAvailable.value)
+    }
+
+    @Test fun scheduledSession_recordsItsScheduleId() = runTest {
+        val listId = newList(strict = false)
+        controller.startSession(listId, tagId = null, source = SessionSource.Scheduled, scheduleId = 42L)
+        assertEquals("schedule ownership tracked", 42L, repo.currentSession()!!.scheduleId)
+    }
+
+    @Test fun manualSessionOnScheduledList_hasNoScheduleId() = runTest {
+        // The fix: a manual session on a list that also has a schedule is NOT owned by it, so a
+        // schedule END alarm (which matches on scheduleId) can never end this session.
+        val listId = newList(strict = false)
+        controller.startSession(listId, tagId = null, source = SessionSource.Manual)
+        assertNull("manual session unowned by any schedule", repo.currentSession()!!.scheduleId)
     }
 
     @Test fun restoreOnBoot_rehydratesActiveSession() = runTest {

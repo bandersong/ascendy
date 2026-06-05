@@ -8,6 +8,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.junit.Test
@@ -56,5 +57,27 @@ class MigrationTest {
         } finally {
             db.close()
         }
+    }
+
+    @Test fun migrate6To7_addsNullableScheduleId_preservingData() {
+        // Seed a v6 block_session (no scheduleId column yet).
+        helper.createDatabase(TEST_DB, 6).apply {
+            execSQL(
+                "INSERT INTO block_session (id, active, startedAt, listId, tagId, emergencyUnlocksLeft, endsAt) " +
+                    "VALUES (1, 1, 1000, 5, NULL, 1, NULL)"
+            )
+            close()
+        }
+
+        // Runs MIGRATION_6_7 and validates the result matches the exported v7 schema exactly —
+        // a wrong ALTER (type/nullability mismatch) fails right here.
+        val db = helper.runMigrationsAndValidate(TEST_DB, 7, true, AscendyDb.MIGRATION_6_7)
+
+        db.query("SELECT listId, scheduleId FROM block_session WHERE id = 1").use { c ->
+            assertTrue("seeded row survived migration", c.moveToFirst())
+            assertEquals("existing data preserved", 5L, c.getLong(0))
+            assertTrue("new scheduleId is null for pre-existing rows", c.isNull(1))
+        }
+        db.close()
     }
 }

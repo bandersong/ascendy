@@ -33,6 +33,7 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
                                 tagId = null,
                                 source = SessionSource.Scheduled,
                                 endsAt = null,
+                                scheduleId = schedule.id,
                             )
                             // re-arm for next week
                             AlarmScheduler.scheduleDailyTrigger(context, schedule, isStart = true)
@@ -44,7 +45,9 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
                         val id = intent.getLongExtra(EXTRA_SCHEDULE_ID, -1L)
                         val schedule = if (id >= 0) app.repo.scheduleById(id) else null
                         val current = app.repo.currentSession()
-                        if (schedule != null && current?.active == true && current.listId == schedule.listId) {
+                        // Only end the session THIS schedule started — never a manual/other session
+                        // the user happens to be running on the same list.
+                        if (schedule != null && current?.active == true && current.scheduleId == schedule.id) {
                             controller.endSession()
                         }
                         if (schedule != null && schedule.enabled) {

@@ -57,6 +57,7 @@ class SessionController(
         tagId: String?,
         source: SessionSource = SessionSource.Nfc,
         endsAt: Long? = null,
+        scheduleId: Long? = null,
     ) {
         val list = repo.list(listId) ?: repo.ensureDefaultList()
         val packages = repo.packages(list.id).toSet()
@@ -84,6 +85,7 @@ class SessionController(
             tagId = tagId,
             emergencyUnlocksLeft = unlocksLeft,
             endsAt = effectiveEndsAt,
+            scheduleId = scheduleId,
         )
         repo.saveSession(session)
         repo.startLog(list.id, now, source.tag)

@@ -18,6 +18,7 @@ android {
         versionCode = envCode ?: 30
         versionName = "0.3.${versionCode}"
         buildConfigField("String", "RELEASE_REPO", "\"bandersong/ascendy\"")
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     // ───── Distribution flavors ─────
@@ -97,6 +98,13 @@ android {
     packaging {
         resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
     }
+
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true   // Robolectric needs merged resources/manifest
+            isReturnDefaultValues = true        // stub un-shadowed android.* calls instead of throwing
+        }
+    }
 }
 
 dependencies {
@@ -131,4 +139,19 @@ dependencies {
     implementation("com.google.zxing:core:3.5.3")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
+
+    // ── JVM unit tests (fast, no device) — run via :app:testFossDebugUnitTest ──
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
+    testImplementation("org.robolectric:robolectric:4.12.2")
+    testImplementation("androidx.test:core-ktx:1.6.1")
+    testImplementation("androidx.test.ext:junit-ktx:1.2.1")
+
+    // ── Instrumented tests (emulator) — run via :app:connectedFossDebugAndroidTest ──
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

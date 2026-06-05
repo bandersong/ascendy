@@ -156,16 +156,7 @@ class BlockingAccessibilityService : AccessibilityService() {
     }
 
     /** Extract a host from a URL bar string. Bars show full URLs, or just hosts, or even search strings. */
-    private fun extractHost(raw: String): String? {
-        val trimmed = raw.trim()
-        if (trimmed.isEmpty()) return null
-        var s = trimmed.removePrefix("https://").removePrefix("http://")
-        // bail on search queries (no dot in the host portion)
-        val hostPortion = s.substringBefore('/').substringBefore('?').substringBefore('#').substringBefore(' ')
-        if ('.' !in hostPortion) return null
-        s = hostPortion.removePrefix("www.").lowercase()
-        return s.ifBlank { null }
-    }
+    private fun extractHost(raw: String): String? = UrlHost.fromUrlBar(raw)
 
     override fun onInterrupt() = Unit
 

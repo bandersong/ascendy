@@ -40,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.blocking.BlockState
@@ -126,7 +127,7 @@ fun HomeScreen(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
                     modifier = Modifier
-                        .size(140.dp)
+                        .size(176.dp)
                         .combinedClickable(
                             onClick = {},
                             onLongClick = onManualToggle
@@ -196,8 +197,9 @@ fun HomeScreen(
 
         Spacer(Modifier.height(20.dp))
 
-        // Setup section — single grouped card with check marks; collapses when all done
-        if (setupAllDone && !active) {
+        // Setup section — single grouped card with check marks; collapses when all done.
+        // Stays collapsed during an active session too, so starting a session never expands it.
+        if (setupAllDone) {
             SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -254,7 +256,9 @@ fun HomeScreen(
 
         Spacer(Modifier.height(16.dp))
 
-        // Tools row — stats always; pomodoro only when idle (no point during a session)
+        // Tools row — both tiles always present so the layout never re-justifies when a session
+        // starts. Pomodoro is disabled (dimmed) during a session: starting a timer mid-session
+        // makes no sense and would otherwise overwrite the running session.
         Row(modifier = Modifier.fillMaxWidth()) {
             HomeTile(
                 title = vocab.statsTitle,
@@ -262,15 +266,14 @@ fun HomeScreen(
                 onClick = onOpenStats,
                 modifier = Modifier.weight(1f)
             )
-            if (!active) {
-                Spacer(Modifier.size(8.dp))
-                HomeTile(
-                    title = vocab.pomodoroTitle,
-                    subtitle = vocab.pomodoro25,
-                    onClick = onOpenPomodoro,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            Spacer(Modifier.size(8.dp))
+            HomeTile(
+                title = vocab.pomodoroTitle,
+                subtitle = vocab.pomodoro25,
+                onClick = onOpenPomodoro,
+                enabled = !active,
+                modifier = Modifier.weight(1f)
+            )
         }
 
         // Strict notice or emergency-override card
@@ -329,14 +332,21 @@ private fun formatElapsed(startedAt: Long?, now: Long): String {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun HomeTile(title: String, subtitle: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun HomeTile(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
     Surface(
         onClick = onClick,
+        enabled = enabled,
         color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
         modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(16.dp).alpha(if (enabled) 1f else 0.4f)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
             Spacer(Modifier.height(4.dp))
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)

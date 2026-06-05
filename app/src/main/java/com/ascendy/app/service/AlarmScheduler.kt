@@ -81,20 +81,34 @@ object AlarmScheduler {
 
     /** Find the next firing instant for a daily schedule. Returns null if no day is enabled. */
     private fun computeNextFiring(schedule: Schedule, isStart: Boolean): Long? {
-        if (schedule.daysOfWeek == 0 || !schedule.enabled) return null
         val minutes = if (isStart) schedule.startMinuteOfDay else schedule.endMinuteOfDay
-        val now = Calendar.getInstance()
+        return nextFiringFrom(schedule.daysOfWeek, schedule.enabled, minutes, Calendar.getInstance())
+    }
+
+    /**
+     * Pure, deterministic core of [computeNextFiring] — [now] is injected so the day-bitmask /
+     * wrap-around math can be unit-tested without depending on the wall clock. Returns the next
+     * instant strictly after [now] whose weekday bit is set in [daysOfWeek] and whose time-of-day
+     * is [minuteOfDay], or null if [daysOfWeek] is empty or the schedule is disabled.
+     */
+    internal fun nextFiringFrom(
+        daysOfWeek: Int,
+        enabled: Boolean,
+        minuteOfDay: Int,
+        now: Calendar,
+    ): Long? {
+        if (daysOfWeek == 0 || !enabled) return null
         for (offset in 0..7) {
-            val cand = Calendar.getInstance().apply {
+            val cand = (now.clone() as Calendar).apply {
                 add(Calendar.DAY_OF_YEAR, offset)
-                set(Calendar.HOUR_OF_DAY, minutes / 60)
-                set(Calendar.MINUTE, minutes % 60)
+                set(Calendar.HOUR_OF_DAY, minuteOfDay / 60)
+                set(Calendar.MINUTE, minuteOfDay % 60)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
             // Calendar.DAY_OF_WEEK: Sun=1, Mon=2, …, Sat=7. Our bit 0 = Sun.
             val bit = cand.get(Calendar.DAY_OF_WEEK) - 1
-            if ((schedule.daysOfWeek shr bit) and 1 == 1 && cand.timeInMillis > now.timeInMillis) {
+            if ((daysOfWeek shr bit) and 1 == 1 && cand.timeInMillis > now.timeInMillis) {
                 return cand.timeInMillis
             }
         }

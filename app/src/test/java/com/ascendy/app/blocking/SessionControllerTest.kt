@@ -26,16 +26,17 @@ import org.robolectric.annotation.Config
 @Config(sdk = [34])
 class SessionControllerTest {
 
-    private lateinit var repo: AscendyRepo
-    private lateinit var prefs: ThemePrefs
-    private lateinit var controller: SessionController
+    // Singletons: ThemePrefs wraps a real DataStore whose "one instance per file" guard would trip
+    // if we rebuilt it every @Before. Room is already a singleton via AscendyDb.get(). Per-method
+    // hygiene (session row + BlockState + maxSession) is reset in [reset] below.
+    companion object {
+        private val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
+        private val repo = AscendyRepo(ctx)
+        private val prefs = ThemePrefs(ctx)
+        private val controller = SessionController(ctx, repo, prefs)
+    }
 
-    @Before fun setUp() = runTest {
-        val ctx = ApplicationProvider.getApplicationContext<android.content.Context>()
-        repo = AscendyRepo(ctx)
-        prefs = ThemePrefs(ctx)
-        controller = SessionController(ctx, repo, prefs)
-        // Clean slate: deactivate any leftover session and clear in-memory state.
+    @Before fun reset() = runTest {
         repo.saveSession(BlockSession(id = 1L, active = false, startedAt = 0, listId = 0, tagId = null, emergencyUnlocksLeft = 0))
         BlockState.clear()
         prefs.setMaxSessionMinutes(60)
@@ -51,18 +52,15 @@ class SessionControllerTest {
         assertTrue(res is TapResult.UnknownTag)
     }
 
-    @Test fun manualStart_neverInheritsStrict_andIsEndable() = runTest {
-        // toggleManual on a STRICT default list must NOT produce a strict session.
-        val id = newList(strict = true)
-        repo.saveSession(repo.currentSession()!!.copy(active = false))
-        repo.upsertList(Blocklist(id = id, name = "t", isDefault = true, isStrict = true))
-
-        controller.toggleManual()                       // start
+    @Test fun manualSource_neverInheritsStrict_andIsEndable() = runTest {
+        // A manual session on a STRICT list must NOT become strict, and must stay endable via
+        // the long-press toggle (tagId == null). This is the "trapped in strict" regression guard.
+        val listId = newList(strict = true)
+        controller.startSession(listId, tagId = null, source = SessionSource.Manual)
         assertTrue("session active", BlockState.active.value)
         assertFalse("manual session is never strict", BlockState.strict.value)
 
-        val end = controller.toggleManual()             // end
-        assertEquals(ManualEndResult.Ended, end)
+        assertEquals(ManualEndResult.Ended, controller.toggleManual())
         assertFalse(BlockState.active.value)
     }
 
@@ -115,5 +113,52 @@ class SessionControllerTest {
         val cap = before + 60 * 60_000L
         assertTrue("clamped to <= max session window", endsAt <= cap + 5_000)
         assertTrue("but still a real future window", endsAt > before)
+    }
+
+    @Test fun safetyTimer_keepsShortPomodoroUnchanged() = runTest {
+        prefs.setMaxSessionMinutes(480)
+        val listId = newList(strict = false)
+        val before = System.currentTimeMillis()
+        controller.startTimedSession(durationMs = 25L * 60 * 1000, listId = listId)   // 25-min pomodoro
+
+        val endsAt = repo.currentSession()!!.endsAt!!
+        // The explicit 25-min request is far below the 8h cap, so it must win unchanged.
+        assertTrue("pomodoro window preserved", endsAt <= before + 25 * 60_000L + 5_000)
+    }
+
+    @Test fun allowList_setsInvertedFlag() = runTest {
+        val listId = newList(strict = false, allow = true)
+        controller.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        assertTrue("allow-only session is inverted", BlockState.inverted.value)
+    }
+
+    @Test fun lockdownPref_propagatesToBlockState() = runTest {
+        prefs.setLockdownEnabled(true)
+        try {
+            val listId = newList(strict = false)
+            controller.startSession(listId, tagId = null, source = SessionSource.Nfc)
+            assertTrue("lockdown flag carried into BlockState", BlockState.lockdown.value)
+        } finally {
+            prefs.setLockdownEnabled(false)
+        }
+    }
+
+    @Test fun scheduledSource_canBeStrict_unlikeManual() = runTest {
+        // Only Manual is strict-exempt; a Scheduled session on a strict list IS strict.
+        val listId = newList(strict = true)
+        controller.startSession(listId, tagId = null, source = SessionSource.Scheduled)
+        assertTrue("scheduled honors strict", BlockState.strict.value)
+        assertFalse("strict session offers no emergency unlock", BlockState.emergencyAvailable.value)
+    }
+
+    @Test fun restoreOnBoot_rehydratesActiveSession() = runTest {
+        val listId = newList(strict = false)
+        controller.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        // Simulate process death: in-memory state gone, DB row remains active.
+        BlockState.clear()
+        assertFalse(BlockState.active.value)
+
+        controller.restoreOnBoot()
+        assertTrue("session restored from DB", BlockState.active.value)
     }
 }

@@ -36,14 +36,7 @@ class AscendyRepo(context: Context) {
         lists.addDomain(BlockedDomain(listId, normalizeDomain(domain)))
     suspend fun removeDomain(listId: Long, domain: String) = lists.removeDomain(listId, domain)
 
-    private fun normalizeDomain(raw: String): String {
-        var d = raw.trim().lowercase()
-        d = d.removePrefix("https://").removePrefix("http://")
-        d = d.substringBefore('/')
-        d = d.substringBefore(':')
-        d = d.removePrefix("www.")
-        return d
-    }
+    private fun normalizeDomain(raw: String): String = Domains.normalize(raw)
 
     fun observeSession(): Flow<BlockSession?> = sessions.observe()
     suspend fun currentSession(): BlockSession? = sessions.current()

@@ -24,6 +24,12 @@ object Updater {
     private const val USER_AGENT = "ascendy-app"
     private const val APK_ASSET_NAME = "ascendy-debug.apk"
 
+    /** Parse a release tag like "v47" or "47" into its integer versionCode, or null if malformed. */
+    internal fun parseLatestVersionCode(tag: String): Int? = tag.removePrefix("v").trim().toIntOrNull()
+
+    /** An update is offered only when the published code is strictly greater than the installed one. */
+    internal fun isUpdateAvailable(latestCode: Int, currentCode: Int): Boolean = latestCode > currentCode
+
     sealed class CheckResult {
         data class Available(
             val latestVersionCode: Int,
@@ -57,10 +63,10 @@ object Updater {
             if (code !in 200..299) return@withDispatchers CheckResult.Error("HTTP $code")
             val body = conn.inputStream.bufferedReader().use { it.readText() }
             val json = JSONObject(body)
-            val tag = json.optString("tag_name").removePrefix("v")
-            val latestCode = tag.toIntOrNull()
-                ?: return@withDispatchers CheckResult.Error("bad tag: $tag")
-            if (latestCode <= BuildConfig.VERSION_CODE) return@withDispatchers CheckResult.UpToDate
+            val rawTag = json.optString("tag_name")
+            val latestCode = parseLatestVersionCode(rawTag)
+                ?: return@withDispatchers CheckResult.Error("bad tag: $rawTag")
+            if (!isUpdateAvailable(latestCode, BuildConfig.VERSION_CODE)) return@withDispatchers CheckResult.UpToDate
 
             val assets = json.optJSONArray("assets") ?: return@withDispatchers CheckResult.Error("no assets")
             var dl: String? = null

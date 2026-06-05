@@ -16,20 +16,21 @@ class DnsToolsTest {
     private fun query(name: String, id: Int = 0x1234): ByteArray {
         val labels = name.split(".").filter { it.isNotEmpty() }
         val body = ArrayList<Byte>()
+        fun b(v: Int) = body.add(v.toByte())
         // 12-byte header: id, flags(RD=1), QDCOUNT=1, others 0
-        body.add((id ushr 8).toByte()); body.add((id and 0xFF).toByte())
-        body.add(0x01); body.add(0x00)          // RD=1
-        body.add(0x00); body.add(0x01)          // QDCOUNT=1
-        body.add(0x00); body.add(0x00)          // ANCOUNT
-        body.add(0x00); body.add(0x00)          // NSCOUNT
-        body.add(0x00); body.add(0x00)          // ARCOUNT
+        b(id ushr 8); b(id and 0xFF)
+        b(0x01); b(0x00)          // RD=1
+        b(0x00); b(0x01)          // QDCOUNT=1
+        b(0x00); b(0x00)          // ANCOUNT
+        b(0x00); b(0x00)          // NSCOUNT
+        b(0x00); b(0x00)          // ARCOUNT
         for (label in labels) {
-            body.add(label.length.toByte())
-            label.forEach { body.add(it.code.toByte()) }
+            b(label.length)
+            label.forEach { b(it.code) }
         }
-        body.add(0x00)                          // root
-        body.add(0x00); body.add(0x01)          // QTYPE=A
-        body.add(0x00); body.add(0x01)          // QCLASS=IN
+        b(0x00)                   // root
+        b(0x00); b(0x01)          // QTYPE=A
+        b(0x00); b(0x01)          // QCLASS=IN
         return body.toByteArray()
     }
 

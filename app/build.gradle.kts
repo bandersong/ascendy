@@ -105,6 +105,16 @@ android {
             isReturnDefaultValues = true        // stub un-shadowed android.* calls instead of throwing
         }
     }
+
+    // Room exports the schema JSON here; MigrationTest reads it from androidTest assets to build
+    // and validate the on-disk schema. Commit app/schemas/ so historical versions stay reproducible.
+    sourceSets {
+        getByName("androidTest").assets.srcDir("$projectDir/schemas")
+    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
@@ -142,6 +152,7 @@ dependencies {
 
     // ── JVM unit tests (fast, no device) — run via :app:testFossDebugUnitTest ──
     testImplementation("junit:junit:4.13.2")
+    testImplementation(kotlin("reflect"))   // VocabTest walks Vocab fields reflectively
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
     testImplementation("org.robolectric:robolectric:4.12.2")
     testImplementation("androidx.test:core-ktx:1.6.1")
@@ -152,6 +163,7 @@ dependencies {
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:rules:1.6.1")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    androidTestImplementation("androidx.room:room-testing:2.6.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 }

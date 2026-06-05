@@ -13,7 +13,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BlockSession::class, SessionLog::class, Schedule::class,
     ],
     version = 6,
-    exportSchema = false
+    exportSchema = true   // schemas/ JSON feeds MigrationTest; commit the generated file on bump
 )
 abstract class AscendyDb : RoomDatabase() {
     abstract fun tagDao(): TagDao

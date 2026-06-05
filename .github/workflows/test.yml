@@ -37,7 +37,9 @@ jobs:
           retention-days: 14
 
   # ── Slow layer: instrumented smoke tests on a real emulator across API levels. ──
+  # Skipped on PRs (expensive); runs on pushes to main and manual dispatch.
   instrumented:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -66,7 +68,9 @@ jobs:
         with:
           api-level: ${{ matrix.api-level }}
           arch: x86_64
+          target: google_apis
           disable-animations: true
+          emulator-options: -no-window -no-snapshot -noaudio -no-boot-anim -gpu swiftshader_indirect
           script: ./gradlew :app:connectedFossDebugAndroidTest --no-daemon --stacktrace
       - name: Upload instrumented report
         if: always()

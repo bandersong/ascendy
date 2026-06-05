@@ -50,7 +50,8 @@ object BlockState {
         if (!_active.value) return false
         val h = host.lowercase().removePrefix("www.")
         val set = _blockedDomains.value
-        val matched = h in set || set.any { d -> h == d || h.endsWith(".$d") }
+        // Exact host or any parent domain (suffix-aware): "old.reddit.com" matches blocked "reddit.com".
+        val matched = set.any { d -> h == d || h.endsWith(".$d") }
         return if (_inverted.value) !matched else matched
     }
 

@@ -78,6 +78,9 @@ class BlockingAccessibilityService : AccessibilityService() {
         val now = SystemClock.uptimeMillis()
         val last = lastBlockedAt[key] ?: 0L
         if (now - last < debounceMs) return
+        // Drop entries past their debounce window so the map stays bounded over a long session
+        // instead of accumulating one row per distinct blocked package/host forever.
+        lastBlockedAt.entries.removeAll { now - it.value >= debounceMs }
         lastBlockedAt[key] = now
 
         performGlobalAction(GLOBAL_ACTION_HOME)

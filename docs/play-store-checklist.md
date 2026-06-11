@@ -2,17 +2,18 @@
 
 Everything you paste into Play Console, plus the steps that need to happen on your phone / in a browser.
 
-> **Status (2026-06-11):** Steps 1–4 are DONE and verified — Pages is live, the four signing
-> secrets are set, and a signed `app-play-release.aab` (R8-minified, CN=bandersong release cert,
-> `jarsigner` verified) builds green via workflow_dispatch. Remaining: steps 5–15 (Play Console
-> account + listing + assets + internal testing), which need a human and $25.
+> **Status (2026-06-11):** Steps 1–5 DONE — Pages live, signing secrets set, signed
+> `app-play-release.aab` (R8-minified, CN=bandersong release cert, `jarsigner` verified) builds
+> green via workflow_dispatch. Play Console account exists (Ascendtech), app is a draft
+> (`io.github.bandersong.ascendy`) with **internal testing active** (build 54 on the track) and
+> Play App Signing ENABLED. Remaining for production: finish store setup (~3 items of 13),
+> listing copy below, screenshots ×6, feature graphic, 512 icon, then promote.
 >
-> ⚠️ **Keystore backup:** the release keystore currently exists ONLY as the
-> `ASCENDY_RELEASE_KEYSTORE_BASE64` GitHub secret — secrets cannot be read back out, and no
-> `.jks` file was found on the Mac. If you don't have `ascendy-release.jks` in 1Password or
-> another backup, REGENERATE the keystore and re-set the four secrets BEFORE the first Play
-> upload (free now; after first upload the key is pinned). With Play App Signing the upload key
-> is rotatable, but don't rely on that as the plan.
+> ⚠️ **Keystore backup:** the upload keystore exists ONLY as the
+> `ASCENDY_RELEASE_KEYSTORE_BASE64` GitHub secret — secrets can't be read back out and no `.jks`
+> was found on the Mac. Play App Signing is on, so a lost upload key is rotatable via Play
+> Console support, but that's a support ticket and days of friction. Back the `.jks` up properly
+> (1Password) or regenerate + re-set the four secrets while it's cheap.
 
 ## 1. Enable GitHub Pages (1 min)
 

@@ -49,10 +49,11 @@ class BlockingAccessibilityService : AccessibilityService() {
         if (!BlockState.isActive()) return
 
         // NH-02: multi-window enforcement. On any window change, a blocked app can be visible in a
-        // second split-screen pane, a freeform window, or a PiP overlay WITHOUT being the event
-        // source (event.packageName is often the other pane, or null for TYPE_WINDOWS_CHANGED). The
+        // second split-screen pane or a freeform/PiP window WITHOUT being the event source
+        // (event.packageName is often the other pane, or null for TYPE_WINDOWS_CHANGED). The
         // single-app paths below would miss it, so enumerate every visible window first. Runs before
-        // the packageName extraction precisely because that value can't be trusted here.
+        // the packageName extraction precisely because that value can't be trusted here. Entering PiP
+        // emits a window change, so a blocked app dropped into PiP is caught at entry.
         if (event.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED ||
             event.eventType == AccessibilityEvent.TYPE_WINDOWS_CHANGED
         ) {
@@ -237,10 +238,11 @@ class BlockingAccessibilityService : AccessibilityService() {
     private var lastWindowScanAt = 0L
 
     /**
-     * NH-02: returns the package of any blocked app currently visible in ANY window — covers a
-     * blocked app sharing the screen in split-screen/freeform or floating in a PiP overlay, which a
-     * single-foreground-app check misses. Throttled (window changes can burst) and exempts the
-     * launcher / system UI / self so allow-list mode never bounces the user off their own home.
+     * NH-02: returns the package of any blocked app currently visible in an application window —
+     * covers a blocked app sharing the screen in split-screen/freeform (and a PiP window, which
+     * reports TYPE_APPLICATION on current Android), which a single-foreground-app check misses.
+     * Throttled (window changes can burst) and exempts the launcher / system UI / self so allow-list
+     * mode never bounces the user off their own home. Only TYPE_APPLICATION windows are considered.
      */
     private fun scanVisibleWindowsForBlocked(): String? {
         val now = SystemClock.uptimeMillis()
@@ -298,7 +300,13 @@ class BlockingAccessibilityService : AccessibilityService() {
             "android",
             "com.google.android.inputmethod.latin",
             "com.android.launcher",
-            "com.android.launcher3"
+            "com.android.launcher3",
+            // The system permission/grant UI. In allow-list mode anything not whitelisted reads as
+            // "blocked", so without these a user granting a permission mid-session (even one of
+            // Ascendy's own) would get bounced off the system dialog. Never something to block.
+            "com.android.permissioncontroller",
+            "com.google.android.permissioncontroller",
+            "com.android.packageinstaller",
         )
 
         private val BROWSER_URL_BAR_IDS = mapOf(

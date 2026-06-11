@@ -8,7 +8,7 @@ import java.util.TimeZone
 
 object Stats {
 
-    /** Local-midnight timestamp for [offsetDays] days before today (today = 0). */
+    /** Local-midnight timestamp for [offsetDays] days before today (today = 0, negative = future). */
     fun localMidnightDaysAgo(offsetDays: Int): Long {
         val c = Calendar.getInstance()
         c.set(Calendar.HOUR_OF_DAY, 0)

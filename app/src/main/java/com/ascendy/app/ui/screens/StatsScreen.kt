@@ -4,16 +4,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
@@ -28,8 +22,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.SessionLog
 import com.ascendy.app.data.Stats
-import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 import java.text.SimpleDateFormat
@@ -45,39 +40,28 @@ fun StatsScreen(
     recent: List<SessionLog>,
     onBack: () -> Unit,
 ) {
-    // Bucket recent logs into the last 7 days (today-back). Each bucket = total focused minutes.
+    // Bucket recent logs into the last 7 local days (index 0 = 6 days ago, 6 = today).
+    // Each log contributes its overlap with each day window, so sessions spanning midnight
+    // split correctly instead of crediting their full length to the start day.
     val weekBuckets = remember(recent) {
-        val startOfToday = Stats.startOfTodayMs()
-        val dayMs = 24 * 60 * 60 * 1000L
-        val out = LongArray(7)
+        // midnights[0..6] = start of each bucket day, midnights[7] = upcoming midnight
+        val midnights = LongArray(8) { Stats.localMidnightDaysAgo(6 - it) }
         val now = System.currentTimeMillis()
+        val out = LongArray(7)
         recent.forEach { log ->
             val end = log.endedAt ?: now
-            val dayStart = startOfToday + 0L  // today
-            // index 0 = 6 days ago, 6 = today
-            val daysAgo = ((startOfToday - (log.startedAt / dayMs * dayMs)) / dayMs).toInt()
-                .coerceIn(-6, 6)
-            val idx = 6 - daysAgo
-            if (idx in 0..6) {
-                out[idx] += (end - log.startedAt).coerceAtLeast(0L)
+            for (i in 0..6) {
+                val overlap = minOf(end, midnights[i + 1]) - maxOf(log.startedAt, midnights[i])
+                if (overlap > 0) out[i] += overlap
             }
         }
         out
     }
-    val insets = WindowInsets.systemBars.asPaddingValues()
-    val scroll = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding(),
-                     start = 16.dp, end = 16.dp)
-    ) {
+    PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
             }
             Text(vocab.statsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
@@ -180,6 +164,8 @@ private fun WeekChart(buckets: LongArray) {
     val highlightColor = palette.Lilac
     val textColor = palette.Smoke
     val labelInk = palette.Ink
+    // Bar corners follow the theme's shape language: Tough is hard-edged, the others soft.
+    val barRadiusCap = if (palette.variant == ThemeVariant.Tough) 3.dp else 12.dp
 
     Column {
         androidx.compose.foundation.Canvas(
@@ -191,23 +177,24 @@ private fun WeekChart(buckets: LongArray) {
             val w = size.width
             val h = size.height
             // One pitch shared with the label row below: 7 equal slots, bar centered in each.
+            // Bar width is capped so wide screens get slim bars with breathing room, not slabs.
             val slotW = w / 7f
-            val barW = slotW * 0.55f
+            val barW = minOf(slotW * 0.55f, 44.dp.toPx())
             for (i in 0..6) {
                 val pct = (buckets[i].toFloat() / maxMs).coerceIn(0f, 1f)
                 val barH = (h * 0.82f) * pct
                 val left = i * slotW + (slotW - barW) / 2f
                 val top = (h * 0.82f) - barH
+                val r = minOf(barW * 0.3f, barRadiusCap.toPx())
                 drawRoundRect(
                     color = if (i == bestIdx && buckets[i] > 0) highlightColor else barColor,
                     topLeft = androidx.compose.ui.geometry.Offset(left, top),
                     size = androidx.compose.ui.geometry.Size(barW, barH.coerceAtLeast(2.dp.toPx())),
-                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(barW * 0.3f, barW * 0.3f)
+                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r)
                 )
             }
         }
         Row(modifier = Modifier.fillMaxWidth()) {
-            val gapDp = 6.dp
             for (i in 0..6) {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text(

@@ -7,14 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Mascot
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
@@ -51,16 +49,9 @@ fun OnboardingScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { 4 })
     val scope = rememberCoroutineScope()
-    val insets = WindowInsets.systemBars.asPaddingValues()
     var safetyMin by remember { mutableIntStateOf(initialSafetyMinutes) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding(),
-                     start = 24.dp, end = 24.dp)
-    ) {
+    PageColumn(scroll = false) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
             TextButton(onClick = { onFinish(safetyMin) }) { Text(vocab.onboardSkip) }
         }

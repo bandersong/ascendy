@@ -94,13 +94,29 @@ interface SessionLogDao {
     @Query("UPDATE session_log SET endedAt = :endedAt WHERE id = :id")
     suspend fun finishLog(id: Long, endedAt: Long)
 
-    @Query("UPDATE session_log SET endedAt = :endedAt WHERE endedAt IS NULL")
-    suspend fun finishAllOpen(endedAt: Long)
+    @Query("UPDATE session_log SET endedAt = :endedAt WHERE endedAt IS NULL AND startedAt = :startedAt")
+    suspend fun finishOpenLogStartedAt(startedAt: Long, endedAt: Long)
+
+    /**
+     * Close every dangling open log, crediting each with at most [maxMs] of focus time.
+     * Closing orphans at "now" instead would retroactively count days of crash-orphaned
+     * time as focus — the source of absurd 100h+ "best day" stats.
+     */
+    @Query("UPDATE session_log SET endedAt = MIN(:nowMs, startedAt + :maxMs) WHERE endedAt IS NULL AND startedAt != :exceptStartedAt")
+    suspend fun closeStaleOpenLogs(nowMs: Long, maxMs: Long, exceptStartedAt: Long)
 
     @Query("SELECT * FROM session_log ORDER BY startedAt DESC LIMIT 1")
     suspend fun latest(): SessionLog?
 
-    @Query("SELECT COALESCE(SUM(COALESCE(endedAt, :nowMs) - startedAt), 0) FROM session_log WHERE startedAt >= :sinceMs")
+    /**
+     * Total focus ms overlapping the window [sinceMs, nowMs]. Overlap attribution (not
+     * started-in-window) so a session crossing midnight credits each day its own slice —
+     * matching how the stats screen's week chart buckets days.
+     */
+    @Query(
+        "SELECT COALESCE(SUM(MAX(0, MIN(COALESCE(endedAt, :nowMs), :nowMs) - MAX(startedAt, :sinceMs))), 0) " +
+        "FROM session_log WHERE COALESCE(endedAt, :nowMs) > :sinceMs"
+    )
     fun observeFocusMsSince(sinceMs: Long, nowMs: Long): Flow<Long>
 
     @Query("SELECT * FROM session_log WHERE startedAt >= :sinceMs ORDER BY startedAt DESC")

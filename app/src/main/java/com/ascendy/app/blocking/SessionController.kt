@@ -84,8 +84,7 @@ class SessionController(
 
         // Safety timer: force every session to have an auto-end. Explicit endsAt (pomodoro,
         // scheduled) wins if shorter; otherwise we use the user's configured max duration.
-        val maxMin = themePrefs.maxSessionMinutes.first().coerceIn(60, 24 * 60)
-        val safetyEndsAt = now + maxMin * 60_000L
+        val safetyEndsAt = now + maxSessionMs()
         val effectiveEndsAt = if (endsAt != null) minOf(endsAt, safetyEndsAt) else safetyEndsAt
 
         // Manual sessions (no anchor) never inherit strict mode — strict is reserved for
@@ -158,14 +157,22 @@ class SessionController(
         if (current?.active == true && current.scheduleId == scheduleId) endSessionLocked()
     }
 
-    private suspend fun endSessionLocked() {
+    /**
+     * [logEndMs] overrides the focus time credited to the session's log — used when the session
+     * actually ended earlier than this call (e.g. it expired while the device was powered off),
+     * so the dead gap is never counted as focus.
+     */
+    private suspend fun endSessionLocked(logEndMs: Long? = null) {
         val current = repo.currentSession() ?: return
         val now = System.currentTimeMillis()
+        val logEnd = (logEndMs ?: now).coerceIn(current.startedAt, now)
         repo.saveSession(current.copy(active = false))
-        // Close every open log, not just the latest — a clobbered start could have left an
-        // older log dangling, which would count as "still focusing" in the stats forever.
-        repo.finishAllOpenLogs(now)
-        val durationMs = now - current.startedAt
+        // Close this session's log at the true end time, then sweep any older dangling logs
+        // with a clamped duration — closing orphans at `now` would credit the whole gap
+        // since their crash as focus time.
+        repo.finishOpenLogStartedAt(current.startedAt, logEnd)
+        repo.closeStaleOpenLogs(now, maxSessionMs())
+        val durationMs = logEnd - current.startedAt
         BlockState.clear()
         stopForegroundService()
         stopVpnService()
@@ -188,6 +195,20 @@ class SessionController(
         return true
     }
 
+    private suspend fun maxSessionMs(): Long =
+        themePrefs.maxSessionMinutes.first().coerceIn(60, 24 * 60) * 60_000L
+
+    /**
+     * Close any session logs left open by a crash or force-stop, crediting each with at most
+     * the safety-timer duration. The active session's own log (if any) is left open — it is
+     * still genuinely running. Called once at app start.
+     */
+    suspend fun reconcileStaleLogs(): Unit = transitionMutex.withLock {
+        val now = System.currentTimeMillis()
+        val activeStartedAt = repo.currentSession()?.takeIf { it.active }?.startedAt ?: -1L
+        repo.closeStaleOpenLogs(now, maxSessionMs(), exceptStartedAt = activeStartedAt)
+    }
+
     suspend fun restoreOnBoot(): Unit = transitionMutex.withLock {
         val current = repo.currentSession() ?: return
         if (!current.active) return
@@ -204,9 +225,10 @@ class SessionController(
         val endsAt = listOfNotNull(current.endsAt, windowEndMs).minOrNull()
 
         // If the end already passed while the device was off, end now instead of resurrecting
-        // a session that should have died hours ago.
+        // a session that should have died hours ago — crediting focus only up to the scheduled
+        // end, not the powered-off gap since.
         if (endsAt != null && now >= endsAt) {
-            endSessionLocked()
+            endSessionLocked(logEndMs = endsAt)
             return
         }
 

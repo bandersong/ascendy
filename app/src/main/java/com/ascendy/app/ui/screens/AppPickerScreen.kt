@@ -8,14 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -50,6 +47,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 import kotlinx.coroutines.Dispatchers
@@ -72,7 +70,6 @@ fun AppPickerScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
-    val insets = WindowInsets.systemBars.asPaddingValues()
 
     var tab by remember { mutableStateOf(0) }     // 0=apps, 1=sites
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
@@ -106,23 +103,15 @@ fun AppPickerScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding())
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 4.dp)
-        ) {
+    PageFrame {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
             }
             Text(listName, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
             TabChip(label = vocab.pickerTabApps, selected = tab == 0, onClick = { tab = 0 }, modifier = Modifier.weight(1f))
             Spacer(Modifier.size(8.dp))
             TabChip(label = vocab.pickerTabSites, selected = tab == 1, onClick = { tab = 1 }, modifier = Modifier.weight(1f))
@@ -136,7 +125,7 @@ fun AppPickerScreen(
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(vertical = 8.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -144,10 +133,10 @@ fun AppPickerScreen(
             )
 
             if (loadingApps) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
-            LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            LazyColumn(modifier = Modifier.fillMaxSize()) {
                 items(filtered, key = { it.packageName }) { app ->
                     AppRow(
                         app = app,
@@ -159,7 +148,7 @@ fun AppPickerScreen(
                 }
             }
         } else {
-            Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = newDomain,
@@ -185,7 +174,6 @@ fun AppPickerScreen(
             Spacer(Modifier.size(4.dp))
             Text(
                 vocab.pickerSitesNote,
-                modifier = Modifier.padding(horizontal = 16.dp),
                 style = MaterialTheme.typography.bodySmall,
                 color = palette.Smoke
             )
@@ -194,12 +182,12 @@ fun AppPickerScreen(
             if (blockedDomains.isEmpty()) {
                 Text(
                     vocab.pickerSitesEmpty,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    modifier = Modifier.padding(vertical = 8.dp),
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.Smoke
                 )
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(blockedDomains, key = { it }) { d ->
                         DomainRow(domain = d, onRemove = { onRemoveDomain(d) })
                         Spacer(Modifier.height(6.dp))

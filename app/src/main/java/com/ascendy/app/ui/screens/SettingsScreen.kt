@@ -1,20 +1,13 @@
 package com.ascendy.app.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -40,6 +33,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.R
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.ThemeVariant
@@ -71,8 +65,6 @@ fun SettingsScreen(
     onOpenPermissions: () -> Unit,
     onBack: () -> Unit,
 ) {
-    val insets = WindowInsets.systemBars.asPaddingValues()
-    val scroll = rememberScrollState()
     var showLockdownConfirm by remember { mutableStateOf(false) }
 
     // Anti-uninstall is consent-gated: turning Lockdown ON requires reading exactly what it does
@@ -96,17 +88,10 @@ fun SettingsScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding(),
-                     start = 16.dp, end = 16.dp)
-    ) {
+    PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
             }
             Text(vocab.settingsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }

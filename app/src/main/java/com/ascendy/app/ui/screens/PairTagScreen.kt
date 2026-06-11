@@ -5,16 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -36,6 +30,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
 import com.ascendy.app.ui.components.Mascot
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
@@ -62,7 +57,6 @@ fun PairTagScreen(
     var nickname by remember { mutableStateOf("") }
     var qrAnchorId by remember { mutableStateOf<String?>(null) }
     var qrNickname by remember { mutableStateOf("") }
-    val insets = WindowInsets.systemBars.asPaddingValues()
 
     // Pairing must not wait forever (e.g. NFC turned off mid-wait, broken antenna) — auto-cancel
     // after 2 minutes so the screen never becomes a dead end.
@@ -73,17 +67,10 @@ fun PairTagScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding(),
-                     start = 16.dp, end = 16.dp)
-    ) {
+    PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
             }
             Text(vocab.tagsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
@@ -91,7 +78,7 @@ fun PairTagScreen(
         Spacer(Modifier.height(8.dp))
 
         SoftCard(modifier = Modifier.fillMaxWidth()) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(110.dp), contentAlignment = Alignment.Center) {
                     Mascot(locked = waiting)
                 }
@@ -217,7 +204,6 @@ fun PairTagScreen(
                 Spacer(Modifier.height(8.dp))
             }
         }
-        Spacer(Modifier.height(24.dp))
     }
 
     val qrIdSnapshot = qrAnchorId

@@ -7,14 +7,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -46,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.Schedule
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
@@ -62,17 +59,21 @@ fun SchedulesScreen(
     onBack: () -> Unit,
 ) {
     var showAdd by remember { mutableStateOf(false) }
-    val insets = WindowInsets.systemBars.asPaddingValues()
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .padding(top = insets.calculateTopPadding(),
-                 bottom = insets.calculateBottomPadding())
+    PageFrame(
+        floating = {
+            FloatingActionButton(
+                onClick = { showAdd = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Rounded.Add, contentDescription = vocab.schedulesNewDialogTitle)
+            }
+        }
     ) {
-        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
                 }
                 Text(vocab.schedulesTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
             }
@@ -97,16 +98,6 @@ fun SchedulesScreen(
                     }
                 }
             }
-        }
-
-        FloatingActionButton(
-            onClick = { showAdd = true },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ) {
-            Icon(Icons.Rounded.Add, contentDescription = vocab.schedulesNewDialogTitle)
-        }
     }
 
     if (showAdd) {

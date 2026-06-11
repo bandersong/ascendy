@@ -53,7 +53,10 @@ class AscendyRepo(context: Context) {
         logs.insert(SessionLog(listId = listId, startedAt = startedAt, endedAt = null, source = source))
 
     suspend fun finishLog(logId: Long, endedAt: Long) = logs.finishLog(logId, endedAt)
-    suspend fun finishAllOpenLogs(endedAt: Long) = logs.finishAllOpen(endedAt)
+    suspend fun finishOpenLogStartedAt(startedAt: Long, endedAt: Long) =
+        logs.finishOpenLogStartedAt(startedAt, endedAt)
+    suspend fun closeStaleOpenLogs(nowMs: Long, maxMs: Long, exceptStartedAt: Long = -1L) =
+        logs.closeStaleOpenLogs(nowMs, maxMs, exceptStartedAt)
     suspend fun latestLog(): SessionLog? = logs.latest()
     fun observeFocusMsSince(sinceMs: Long, nowMs: Long): kotlinx.coroutines.flow.Flow<Long> =
         logs.observeFocusMsSince(sinceMs, nowMs)

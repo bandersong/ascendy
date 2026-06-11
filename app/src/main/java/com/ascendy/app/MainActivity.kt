@@ -298,15 +298,20 @@ private fun AppNav(
     val lists by repo.observeLists().collectAsState(initial = emptyList())
     val pairing by pairingFlow.collectAsState()
     val detected by detectedTagFlow.collectAsState()
-    val onboarded by themePrefs.onboarded.collectAsState(initial = false)
+    // null until DataStore delivers — building the NavHost before then composes the wrong
+    // start destination and flashes the onboarding screen on every cold start.
+    val onboardedOrNull by themePrefs.onboarded.collectAsState(initial = null as Boolean?)
+    val onboarded = onboardedOrNull == true
     val themesIntroSeen by themePrefs.themesIntroSeen.collectAsState(initial = true)
     val lastSeenVersion by themePrefs.lastSeenVersionCode.collectAsState(initial = com.ascendy.app.BuildConfig.VERSION_CODE)
 
     var permissions by remember { mutableStateOf(checkPermissions(context)) }
 
-    // Streak: recompute on resume from session_log distinct dates
+    // Streak: recompute on resume and whenever a session starts/ends — a start logs today's
+    // date immediately, so the streak chip updates live instead of waiting for the next resume.
     var streakDays by remember { mutableStateOf(0) }
-    LaunchedEffect(Unit) {
+    val sessionActiveForStreak by com.ascendy.app.blocking.BlockState.active.collectAsState()
+    LaunchedEffect(sessionActiveForStreak) {
         streakDays = com.ascendy.app.data.Stats.streakDays(repo.distinctSessionDates())
     }
 
@@ -334,6 +339,7 @@ private fun AppNav(
         }
     }
 
+    if (onboardedOrNull == null) return  // one blank frame at most; avoids the onboarding flash
     val startDest = if (onboarded) "home" else "onboarding"
     NavHost(navController = nav, startDestination = startDest) {
         composable("onboarding") {

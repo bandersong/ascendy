@@ -1,16 +1,10 @@
 package com.ascendy.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -30,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
@@ -42,7 +37,6 @@ fun PomodoroScreen(
     onStart: (durationMs: Long, listId: Long) -> Unit,
     onBack: () -> Unit,
 ) {
-    val insets = WindowInsets.systemBars.asPaddingValues()
     val durations = listOf(
         15 to vocab.pomodoro15,
         25 to vocab.pomodoro25,
@@ -53,16 +47,10 @@ fun PomodoroScreen(
     val defaultList = lists.firstOrNull { it.isDefault } ?: lists.firstOrNull()
     var selectedListId by remember { mutableStateOf(defaultList?.id ?: 0L) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding(),
-                     start = 16.dp, end = 16.dp)
-    ) {
+    PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
             }
             Text(vocab.pomodoroTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }

@@ -6,16 +6,9 @@ import android.provider.Settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
@@ -35,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
@@ -58,8 +52,6 @@ fun PermissionsScreen(
     onRequestVpn: () -> Unit,
 ) {
     val context = LocalContext.current
-    val insets = WindowInsets.systemBars.asPaddingValues()
-    val scroll = rememberScrollState()
     var showA11yDisclosure by remember { mutableStateOf(false) }
 
     val openA11ySettings = {
@@ -91,17 +83,10 @@ fun PermissionsScreen(
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(top = insets.calculateTopPadding(),
-                     bottom = insets.calculateBottomPadding(),
-                     start = 16.dp, end = 16.dp)
-    ) {
+    PageColumn {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "back", tint = palette.Ink)
+                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
             }
             Text(vocab.permsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }

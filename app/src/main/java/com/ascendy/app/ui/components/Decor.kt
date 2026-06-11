@@ -11,8 +11,17 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -89,6 +98,87 @@ fun MiniMascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifi
     )
 }
 
+/** Max readable width for a page's content column; wider screens center the column. */
+val PageMaxWidth = 640.dp
+
+/**
+ * Standard page scaffold: fills the screen, pads for system bars, scrolls, and constrains
+ * content to a readable column ([PageMaxWidth]) centered on wide screens. Phones are
+ * unaffected; tablets and landscape stop stretching rows edge-to-edge.
+ */
+@Composable
+fun PageColumn(
+    modifier: Modifier = Modifier,
+    scroll: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val insets = WindowInsets.systemBars.asPaddingValues()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+            .padding(
+                top = 16.dp + insets.calculateTopPadding(),
+                bottom = 24.dp + insets.calculateBottomPadding(),
+            )
+            .then(modifier),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Column(
+            modifier = Modifier
+                .widthIn(max = PageMaxWidth)
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            content = content,
+        )
+    }
+}
+
+/**
+ * Width-constraining frame for screens that manage their own scrolling (LazyColumn).
+ * Same insets, horizontal padding, and centered [PageMaxWidth] column as [PageColumn],
+ * but no scroll of its own and no extra bottom padding (lazy lists bring their own
+ * contentPadding). [floating] is anchored to the bottom-end of the *content column*,
+ * not the screen, so a FAB stays attached to the list it acts on even on tablets.
+ */
+@Composable
+fun PageFrame(
+    modifier: Modifier = Modifier,
+    floating: (@Composable () -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val insets = WindowInsets.systemBars.asPaddingValues()
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(
+                top = 16.dp + insets.calculateTopPadding(),
+                bottom = insets.calculateBottomPadding(),
+            )
+            .then(modifier),
+        contentAlignment = Alignment.TopCenter,
+    ) {
+        Box(
+            modifier = Modifier
+                .widthIn(max = PageMaxWidth)
+                .fillMaxWidth()
+                .fillMaxSize()
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp),
+                content = content,
+            )
+            if (floating != null) {
+                Box(Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 20.dp)) {
+                    floating()
+                }
+            }
+        }
+    }
+}
+
 @Composable
 fun SoftCard(
     modifier: Modifier = Modifier,
@@ -106,7 +196,9 @@ fun SoftCard(
         shadowElevation = if (palette.isDark) 0.dp else 1.dp,
         border = BorderStroke(1.dp, palette.Mist),
     ) {
-        Box(Modifier.padding(20.dp)) { content() }
+        // fillMaxWidth so content lays out against the card's real width — a wrap-content box
+        // here left every centered hero/column hugging the left edge on tablets.
+        Box(Modifier.fillMaxWidth().padding(20.dp)) { content() }
     }
 }
 

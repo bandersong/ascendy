@@ -14,16 +14,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.QrCodeScanner
@@ -54,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.Mascot
+import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
@@ -84,8 +80,6 @@ fun HomeScreen(
     val blockedDomains by BlockState.blockedDomains.collectAsState()
     val emergencyAvailable by BlockState.emergencyAvailable.collectAsState()
     val strict by BlockState.strict.collectAsState()
-    val insets = WindowInsets.systemBars.asPaddingValues()
-    val scroll = rememberScrollState()
     var showFrictionDialog by remember { mutableStateOf(false) }
 
     // re-tick every 30s while active to refresh the elapsed-minutes display
@@ -101,14 +95,7 @@ fun HomeScreen(
 
     val setupAllDone = tagCount > 0 && listCount > 0 && permissionsReady
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scroll)
-            .padding(top = 16.dp + insets.calculateTopPadding(),
-                     bottom = 24.dp + insets.calculateBottomPadding(),
-                     start = 20.dp, end = 20.dp)
-    ) {
+    PageColumn {
         // Header — title + icon actions only
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -134,7 +121,7 @@ fun HomeScreen(
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.animateContentSize()
+                modifier = Modifier.fillMaxWidth().animateContentSize()
             ) {
                 Box(
                     modifier = Modifier

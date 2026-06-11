@@ -36,6 +36,7 @@ class AscendyApp : Application() {
         scope.launch {
             val controller = com.ascendy.app.blocking.SessionController(this@AscendyApp, repo, themePrefs)
             controller.restoreOnBoot()
+            controller.reconcileStaleLogs()
         }
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 data class Vocab(
     // top-level
     val appTitle: String,
+    val backLabel: String,
     val statusReady: String,
     val statusFocusing: String,
     val homeHeroIdle: String,
@@ -326,6 +327,7 @@ data class Vocab(
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
 val KawaiiVocab = Vocab(
     appTitle = "ascendy ♡",
+    backLabel = "back",
     statusReady = "ready",
     statusFocusing = "focusing",
     homeHeroIdle = "tap your tag whenever you're ready ✨",
@@ -602,6 +604,7 @@ val KawaiiVocab = Vocab(
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
 val ToughVocab = Vocab(
     appTitle = "ASCENDY ⛓",
+    backLabel = "BACK",
     statusReady = "READY",
     statusFocusing = "LOCKED IN",
     homeHeroIdle = "TAP THE ANCHOR. GET TO WORK.",
@@ -878,6 +881,7 @@ val ToughVocab = Vocab(
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
 val NeutralVocab = Vocab(
     appTitle = "Ascendy",
+    backLabel = "Back",
     statusReady = "Idle",
     statusFocusing = "Active",
     homeHeroIdle = "Tap your tag to begin a focus session.",

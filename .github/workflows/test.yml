@@ -51,7 +51,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      # No setup-android here: the runner image ships the SDK and emulator-runner installs the
+      # system images it needs. setup-android's package downloads were flaking with corrupt zips.
       - name: Generate gradle wrapper if missing
         run: |
           if [ ! -f gradlew ]; then

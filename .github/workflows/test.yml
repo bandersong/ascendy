@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# GitHub forces JS actions onto Node 24 from 2026-06-16 (Node 20 removed 2026-09-16). Opt in now so
+# any incompatibility surfaces in CI rather than after the cutover. Remove once the pinned action
+# versions natively ship on Node 24.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   # ── Fast layer: pure-JVM + Robolectric unit tests. No emulator, runs on every push. ──
   unit:

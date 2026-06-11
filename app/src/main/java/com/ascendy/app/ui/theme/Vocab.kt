@@ -89,6 +89,13 @@ data class Vocab(
     val permsBadgeMissing: String,
     val permsAapmHeader: String,
     val permsAapmBody: String,
+    // OEM auto-start guidance (NH-04) — only shown on aggressive skins (MIUI/EMUI/ColorOS/…).
+    val permsOemTitle: String,
+    val permsOemBody: String,
+    val permsOemAction: String,
+    // Lockdown discoverability pointer (NH-03) — informational card on the permissions screen.
+    val permsLockdownTitle: String,
+    val permsLockdownBody: String,
 
     // settings screen
     val settingsTitle: String,
@@ -400,6 +407,11 @@ val KawaiiVocab = Vocab(
     permsBadgeMissing = "missing",
     permsAapmHeader = "a heads-up about android 17",
     permsAapmBody = "advanced protection mode disables accessibility services for apps not categorised as accessibility tools. ascendy isn't one — so when aapm is on, only the usage-stats path runs.",
+    permsOemTitle = "keep ascendy awake 🛡️",
+    permsOemBody = "your phone's brand likes to freeze background apps to save battery. add ascendy to its auto-start / protected-apps list so blocking keeps working when the screen's off.",
+    permsOemAction = "open auto-start settings",
+    permsLockdownTitle = "lockdown mode 🔒",
+    permsLockdownBody = "in settings you can turn on lockdown — during a focus session it blocks uninstalling ascendy and bouncing you out of the settings screens that could switch it off. your safety timer always ends the session, so you're never stuck.",
 
     settingsTitle = "settings",
     settingsCurrentLabelFmt = "theme: %s",
@@ -679,6 +691,11 @@ val ToughVocab = Vocab(
     permsBadgeMissing = "OFF",
     permsAapmHeader = "ANDROID 17 HEADS-UP",
     permsAapmBody = "advanced protection mode kills accessibility services for non-accessibility apps. ascendy isn't one — so when aapm is on, only the usage-stats path runs.",
+    permsOemTitle = "STOP THE OS KILLING ASCENDY",
+    permsOemBody = "YOUR PHONE'S SKIN FREEZES BACKGROUND APPS TO SAVE BATTERY. WHITELIST ASCENDY IN AUTO-START / PROTECTED APPS OR BLOCKING DIES WHEN THE SCREEN GOES OFF.",
+    permsOemAction = "OPEN AUTO-START SETTINGS",
+    permsLockdownTitle = "LOCKDOWN MODE",
+    permsLockdownBody = "TURN ON LOCKDOWN IN SETTINGS: DURING A SESSION IT BLOCKS UNINSTALL AND BOUNCES YOU OUT OF THE SETTINGS SCREENS THAT COULD KILL THE BLOCKER. THE SAFETY TIMER STILL ENDS EVERY SESSION — NO PERMANENT TRAP.",
 
     settingsTitle = "SETTINGS",
     settingsCurrentLabelFmt = "theme: %s",
@@ -958,6 +975,11 @@ val NeutralVocab = Vocab(
     permsBadgeMissing = "Missing",
     permsAapmHeader = "Android 17 notice",
     permsAapmBody = "Advanced Protection Mode disables accessibility services for apps not classified as accessibility tools. Ascendy is not. When AAPM is enabled, only the usage-stats path operates.",
+    permsOemTitle = "Keep Ascendy running",
+    permsOemBody = "Your device's manufacturer may freeze background apps to save battery. Add Ascendy to its auto-start / protected-apps list so blocking keeps working while the screen is off.",
+    permsOemAction = "Open auto-start settings",
+    permsLockdownTitle = "Lockdown mode",
+    permsLockdownBody = "In Settings you can enable Lockdown — during a focus session it blocks uninstalling Ascendy and bounces you out of the Settings screens that could disable the blocker. The safety timer always ends the session, so you can never be permanently trapped.",
 
     settingsTitle = "Settings",
     settingsCurrentLabelFmt = "Theme: %s",

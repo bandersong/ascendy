@@ -2,6 +2,18 @@
 
 Everything you paste into Play Console, plus the steps that need to happen on your phone / in a browser.
 
+> **Status (2026-06-11):** Steps 1–4 are DONE and verified — Pages is live, the four signing
+> secrets are set, and a signed `app-play-release.aab` (R8-minified, CN=bandersong release cert,
+> `jarsigner` verified) builds green via workflow_dispatch. Remaining: steps 5–15 (Play Console
+> account + listing + assets + internal testing), which need a human and $25.
+>
+> ⚠️ **Keystore backup:** the release keystore currently exists ONLY as the
+> `ASCENDY_RELEASE_KEYSTORE_BASE64` GitHub secret — secrets cannot be read back out, and no
+> `.jks` file was found on the Mac. If you don't have `ascendy-release.jks` in 1Password or
+> another backup, REGENERATE the keystore and re-set the four secrets BEFORE the first Play
+> upload (free now; after first upload the key is pinned). With Play App Signing the upload key
+> is rotatable, but don't rely on that as the plan.
+
 ## 1. Enable GitHub Pages (1 min)
 
 So the privacy-policy URL works:

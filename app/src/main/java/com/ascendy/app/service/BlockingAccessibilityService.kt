@@ -2,19 +2,47 @@ package com.ascendy.app.service
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.SystemClock
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import com.ascendy.app.AscendyApp
 import com.ascendy.app.R
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.blocking.BlockerActivity
+import com.ascendy.app.blocking.SessionController
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class BlockingAccessibilityService : AccessibilityService() {
 
     private val lastBlockedAt = HashMap<String, Long>()
     private val debounceMs = 1500L
     private val tag = "AscendyA11y"
+
+    // AF-07: per-package throttle for the expensive node walk, so a chatty app firing rapid
+    // content-change events can't run a 400-node scan on every event.
+    private val lastDeepScanAt = HashMap<String, Long>()
+    private val deepScanThrottleMs = 800L
+
+    // AF-01: when the system re-binds this service after a force-stop (the user reopens the app, or
+    // the heartbeat alarm wakes it), re-assert enforcement from the persisted session. restoreOnBoot
+    // honors the safety timer, so this can only heal an active session — never resurrect an expired
+    // one. This is the auto-rebind half of the force-stop self-heal.
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        val app = applicationContext as? AscendyApp ?: return
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                SessionController(applicationContext, app.repo, app.themePrefs).restoreOnBoot()
+            } catch (e: Exception) {
+                Log.w(tag, "onServiceConnected heal failed: ${e.message}")
+            }
+        }
+    }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event == null) return
@@ -50,22 +78,26 @@ class BlockingAccessibilityService : AccessibilityService() {
             }
         }
 
-        // Path 2: URL blocking inside browsers
+        // Path 2: URL blocking inside browsers.
         if (BlockState.blockedDomains.value.isEmpty()) return
-        if (!BROWSER_PACKAGES.contains(pkg)) return
 
-        // Try the known URL-bar resource ID first
-        val knownId = BROWSER_URL_BAR_IDS[pkg]
-        val urlFromKnownId = knownId?.let { findFirstText(rootInActiveWindow, it) }
         val candidates = mutableListOf<String>()
-        if (urlFromKnownId != null) candidates += urlFromKnownId
 
-        // Also walk for any EditText / TextView whose id looks like a url bar — covers newer
-        // browser versions where the resource id changed.
-        candidates += scanForUrlLikeNodes(rootInActiveWindow)
+        // Try the known URL-bar resource ID first (cheap, exact).
+        BROWSER_URL_BAR_IDS[pkg]?.let { findFirstText(rootInActiveWindow, it) }
+            ?.let { candidates += it }
 
-        // Also consider event.text — TYPE_VIEW_TEXT_CHANGED includes the current text directly
+        // event.text is cheap and always present on text-change events — covers in-app webviews /
+        // custom tabs whose host package isn't itself a browser.
         event.text?.forEach { cs -> cs?.toString()?.takeIf { it.isNotBlank() }?.let { candidates += it } }
+
+        // Heuristic node walk for any url-bar-like view. Run it for ANY package the system reports
+        // as a browser — the static list PLUS every app that handles http(s) VIEW intents (Cromite,
+        // Mull, Vivaldi forks, vendor browsers) — not just a hardcoded 18. Throttled per package to
+        // keep the main thread responsive; the visited-node cap inside the walk bounds it further.
+        if (isBrowserPackage(pkg) && shouldDeepScan(pkg)) {
+            candidates += scanForUrlLikeNodes(rootInActiveWindow)
+        }
 
         for (raw in candidates) {
             val host = extractHost(raw) ?: continue
@@ -186,6 +218,37 @@ class BlockingAccessibilityService : AccessibilityService() {
 
     /** Extract a host from a URL bar string. Bars show full URLs, or just hosts, or even search strings. */
     private fun extractHost(raw: String): String? = UrlHost.fromUrlBar(raw)
+
+    /**
+     * Every package the system reports as a web browser: the static list (fast known-id paths) plus
+     * everything that resolves an http(s) VIEW + BROWSABLE intent. Resolved once and cached — covers
+     * unlisted browsers without QUERY_ALL_PACKAGES (the manifest <queries> declares the web intent).
+     */
+    private val dynamicBrowsers: Set<String> by lazy {
+        val out = HashSet<String>(BROWSER_PACKAGES)
+        try {
+            val probe = Intent(Intent.ACTION_VIEW, Uri.parse("http://example.com"))
+                .addCategory(Intent.CATEGORY_BROWSABLE)
+            val resolves = packageManager.queryIntentActivities(probe, PackageManager.MATCH_ALL)
+            resolves.forEach { it.activityInfo?.packageName?.let(out::add) }
+        } catch (e: Exception) {
+            Log.w(tag, "browser enumeration failed: ${e.message}")
+        }
+        out
+    }
+
+    private fun isBrowserPackage(pkg: String): Boolean =
+        pkg in BROWSER_PACKAGES || pkg in dynamicBrowsers
+
+    /** Per-package throttle gate for the node walk. Drops stale entries so the map stays bounded. */
+    private fun shouldDeepScan(pkg: String): Boolean {
+        val now = SystemClock.uptimeMillis()
+        val last = lastDeepScanAt[pkg] ?: 0L
+        if (now - last < deepScanThrottleMs) return false
+        lastDeepScanAt.entries.removeAll { now - it.value >= 60_000L }
+        lastDeepScanAt[pkg] = now
+        return true
+    }
 
     override fun onInterrupt() = Unit
 

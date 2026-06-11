@@ -16,6 +16,16 @@ object BlockState {
     private val _startedAt = MutableStateFlow<Long?>(null)
     val startedAt: StateFlow<Long?> = _startedAt
 
+    /**
+     * The session's auto-end as a MONOTONIC instant (SystemClock.elapsedRealtime() basis). The
+     * always-running foreground service compares elapsedRealtime() against this and ends the
+     * session itself once it passes — a second, clock-jump-proof guarantor of the safety timer
+     * that doesn't depend on the AlarmManager alarm surviving Doze / OEM battery managers. null
+     * for legacy/open-ended sessions with no monotonic anchor.
+     */
+    private val _endsAtElapsed = MutableStateFlow<Long?>(null)
+    val endsAtElapsed: StateFlow<Long?> = _endsAtElapsed
+
     /** True iff the active session is non-strict and still has its single emergency override unused. */
     private val _emergencyAvailable = MutableStateFlow(false)
     val emergencyAvailable: StateFlow<Boolean> = _emergencyAvailable
@@ -40,6 +50,7 @@ object BlockState {
     fun snapshot(): Set<String> = _blocked.value
     fun isActive(): Boolean = _active.value
     fun isLockdown(): Boolean = _lockdown.value
+    fun endsAtElapsed(): Long? = _endsAtElapsed.value
     fun isBlocked(pkg: String): Boolean {
         if (!_active.value) return false
         val inSet = pkg in _blocked.value
@@ -60,6 +71,7 @@ object BlockState {
         blocked: Set<String>,
         blockedDomains: Set<String> = emptySet(),
         startedAt: Long? = null,
+        endsAtElapsed: Long? = null,
         emergencyAvailable: Boolean = false,
         strict: Boolean = false,
         inverted: Boolean = false,
@@ -69,6 +81,7 @@ object BlockState {
         _blocked.value = if (active) blocked else emptySet()
         _blockedDomains.value = if (active) blockedDomains else emptySet()
         _startedAt.value = if (active) startedAt else null
+        _endsAtElapsed.value = if (active) endsAtElapsed else null
         _emergencyAvailable.value = active && emergencyAvailable
         _strict.value = active && strict
         _inverted.value = active && inverted
@@ -80,6 +93,7 @@ object BlockState {
         _blocked.value = emptySet()
         _blockedDomains.value = emptySet()
         _startedAt.value = null
+        _endsAtElapsed.value = null
         _emergencyAvailable.value = false
         _strict.value = false
         _inverted.value = false

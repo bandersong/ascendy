@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.Ascendy" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowBackground">@color/night</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">@color/night</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <!-- Silently ignored on API 26; honored on 27+. -->
+        <item name="android:windowLightNavigationBar" tools:targetApi="27">false</item>
     </style>
 
     <style name="Theme.Ascendy.Blocker" parent="Theme.Ascendy">

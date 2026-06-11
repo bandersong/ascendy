@@ -8,15 +8,19 @@ import android.app.Service
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import android.os.SystemClock
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import com.ascendy.app.AscendyApp
 import com.ascendy.app.MainActivity
 import com.ascendy.app.R
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.blocking.BlockerActivity
+import com.ascendy.app.blocking.SessionController
 import com.ascendy.app.ui.theme.vocabFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,12 +42,43 @@ class BlockingForegroundService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        startForeground(NOTIF_ID, buildNotification())
+        // NH-06: a denied specialUse start / revoked POST_NOTIFICATIONS / missed deadline must not
+        // hard-crash into a START_STICKY restart loop. If foreground promotion fails, the alarm +
+        // accessibility service still carry enforcement and the heartbeat retries the start.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ServiceCompat.startForeground(
+                    this, NOTIF_ID, buildNotification(),
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NOTIF_ID, buildNotification())
+            }
+        } catch (e: Exception) {
+            android.util.Log.w(TAG, "startForeground failed: ${e.message}")
+        }
         startPolling()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         return START_STICKY
+    }
+
+    // AF-01: a recents swipe-away invokes this. While a session is genuinely active, relaunch self
+    // so the poller comes back. stopWithTask=false (manifest) keeps us alive; this is the belt to
+    // that suspenders for OEMs that still deliver onTaskRemoved.
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        if (BlockState.isActive()) {
+            val restart = Intent(applicationContext, BlockingForegroundService::class.java)
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    startForegroundService(restart)
+                } else {
+                    startService(restart)
+                }
+            } catch (_: Exception) {}
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
@@ -71,32 +106,133 @@ class BlockingForegroundService : Service() {
         pollJob = scope.launch {
             val usage = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
             val exempt = exemptPackages()
+            var tick = 0L
             while (isActive) {
-                if (BlockState.isActive() && usage != null) {
-                    val now = System.currentTimeMillis()
-                    val events = try {
-                        usage.queryEvents(now - 5_000L, now)
-                    } catch (_: SecurityException) { null }
+                // One bad tick (an OEM startActivity throw, a notify RemoteException, an unexpected
+                // end-path error) must NEVER tear down this loop: it owns app-reblocking and the
+                // degradation alerts (no redundant path) and is a safety-timer guarantor. Swallow,
+                // log, and keep ticking.
+                try {
+                    // AF-03: the always-running enforcer is also the SAFETY-TIMER guarantor. If the
+                    // AlarmManager END alarm is ever dropped (exact-alarm revoked under Doze, OEM
+                    // battery manager, overwrite race) enforceMonotonicEndIfDue independently ends
+                    // the session at its MONOTONIC deadline — immune to a wall-clock jump in either
+                    // direction. It can only ever END, never extend. When it ends one this tick, skip
+                    // the poll work below (the session is now inactive anyway).
+                    if (BlockState.isActive() && !enforceMonotonicEndIfDue()) {
+                        // AF-10 / AF-11: detect a mid-session loss of either enforcement grant and
+                        // warn loudly (every ~7s) instead of silently doing nothing. Checked before
+                        // the poll so a revoked usage grant is surfaced even though queryEvents no-ops.
+                        if (tick % 10L == 0L) checkEnforcementHealth(usage)
 
-                    if (events != null) {
-                        val event = android.app.usage.UsageEvents.Event()
-                        var latestForeground: String? = null
-                        while (events.hasNextEvent()) {
-                            events.getNextEvent(event)
-                            if (event.eventType == android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED ||
-                                event.eventType == android.app.usage.UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                                latestForeground = event.packageName
+                        if (usage != null) {
+                            val now = System.currentTimeMillis()
+                            val events = try {
+                                usage.queryEvents(now - 5_000L, now)
+                            } catch (_: SecurityException) {
+                                warnUsageAccessRevoked(); null
+                            }
+
+                            if (events != null) {
+                                val event = android.app.usage.UsageEvents.Event()
+                                var latestForeground: String? = null
+                                while (events.hasNextEvent()) {
+                                    events.getNextEvent(event)
+                                    if (event.eventType == android.app.usage.UsageEvents.Event.ACTIVITY_RESUMED ||
+                                        event.eventType == android.app.usage.UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                                        latestForeground = event.packageName
+                                    }
+                                }
+                                if (latestForeground != null && latestForeground !in exempt &&
+                                    BlockState.isBlocked(latestForeground)) {
+                                    tryBlock(latestForeground)
+                                }
                             }
                         }
-                        if (latestForeground != null && latestForeground !in exempt &&
-                            BlockState.isBlocked(latestForeground)) {
-                            tryBlock(latestForeground)
-                        }
                     }
+                } catch (c: kotlinx.coroutines.CancellationException) {
+                    throw c   // never swallow cooperative cancellation
+                } catch (e: Exception) {
+                    android.util.Log.w(TAG, "poll tick error (continuing): ${e.message}")
                 }
+                tick++
                 delay(700L)
             }
         }
+    }
+
+    /**
+     * Ends the active session iff its monotonic deadline has passed. Routed through
+     * SessionController.endSessionIfStartedAt so the ownership guard prevents ending a freshly
+     * started session. Returns true if it ended one.
+     */
+    private suspend fun enforceMonotonicEndIfDue(): Boolean {
+        val deadline = BlockState.endsAtElapsed() ?: return false
+        if (SystemClock.elapsedRealtime() < deadline) return false
+        val startedAt = BlockState.startedAt.value ?: return false
+        val app = application as AscendyApp
+        SessionController(applicationContext, app.repo, app.themePrefs)
+            .endSessionIfStartedAt(startedAt)
+        return true
+    }
+
+    /** AF-10: accessibility (the only URL-blocking path) turned off mid-session. */
+    private fun checkEnforcementHealth(usage: UsageStatsManager?) {
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        if (!EnforcementHealth.isAccessibilityEnabled(this)) {
+            nm.notify(ALERT_A11Y_ID, buildAlert(
+                getString(R.string.alert_a11y_title), getString(R.string.alert_a11y_body),
+                Settings.ACTION_ACCESSIBILITY_SETTINGS,
+            ))
+        } else {
+            nm.cancel(ALERT_A11Y_ID)
+        }
+        if (usage != null && !EnforcementHealth.hasUsageAccess(this)) {
+            warnUsageAccessRevoked()
+        } else {
+            nm.cancel(ALERT_USAGE_ID)
+        }
+    }
+
+    private fun warnUsageAccessRevoked() {
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        nm.notify(ALERT_USAGE_ID, buildAlert(
+            getString(R.string.alert_usage_title), getString(R.string.alert_usage_body),
+            Settings.ACTION_USAGE_ACCESS_SETTINGS,
+        ))
+    }
+
+    /** A loud, persistent diagnostic alert that taps through to the relevant system settings screen. */
+    private fun buildAlert(title: String, body: String, settingsAction: String): Notification {
+        ensureAlertChannel()
+        val tap = PendingIntent.getActivity(
+            this, settingsAction.hashCode(),
+            Intent(settingsAction).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        return NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_logo)
+            .setContentTitle(title)
+            .setContentText(body)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(body))
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_ERROR)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentIntent(tap)
+            .build()
+    }
+
+    private fun ensureAlertChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        if (nm.getNotificationChannel(ALERT_CHANNEL_ID) != null) return
+        nm.createNotificationChannel(
+            NotificationChannel(
+                ALERT_CHANNEL_ID,
+                getString(R.string.alert_channel_name),
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply { description = getString(R.string.alert_channel_desc) }
+        )
     }
 
     private fun tryBlock(pkg: String) {
@@ -162,7 +298,11 @@ class BlockingForegroundService : Service() {
     }
 
     companion object {
+        private const val TAG = "AscendyFgs"
         private const val CHANNEL_ID = "ascendy.focus"
+        private const val ALERT_CHANNEL_ID = "ascendy.alerts"
         private const val NOTIF_ID = 4242
+        private const val ALERT_A11Y_ID = 4244
+        private const val ALERT_USAGE_ID = 4245
     }
 }

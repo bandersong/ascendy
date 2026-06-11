@@ -354,6 +354,11 @@ private fun AppNav(
                     nav.navigate("home") {
                         popUpTo("onboarding") { inclusive = true }
                     }
+                    // AF-05: don't drop a fresh user on Home with a "focusing" UI that blocks
+                    // nothing. If neither enforcement grant is set up yet, walk them to Permissions
+                    // (layered over Home, so Back returns there) the way Brick force-walks enablement.
+                    val ready = checkPermissions(context).let { it.accessibility || it.usageStats }
+                    if (!ready) nav.navigate("perms")
                 }
             )
         }
@@ -364,6 +369,7 @@ private fun AppNav(
             val manualStartMsg = com.ascendy.app.ui.theme.vocab.toastManualStarted
             val manualEndMsg = com.ascendy.app.ui.theme.vocab.toastManualEnded
             val strictBlockedMsg = com.ascendy.app.ui.theme.vocab.strictManualBlockedToast
+            val blockingOffMsg = com.ascendy.app.ui.theme.vocab.toastBlockingOff
             // Re-subscribe every 30s with a fresh "now" so the counter advances live during an
             // active session — observeFocusMsSince uses nowMs for the still-open session's slice,
             // which is otherwise frozen at the moment the screen composed. We hold the last value
@@ -406,6 +412,17 @@ private fun AppNav(
                             com.ascendy.app.blocking.ManualEndResult.NoSession -> manualStartMsg
                         }
                         Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        // AF-05: starting a session while neither enforcement grant is set up would
+                        // show a "focusing" UI that blocks nothing. Surface that honestly and point
+                        // at Permissions instead of letting the user believe they're protected.
+                        if (!wasActive &&
+                            result == com.ascendy.app.blocking.ManualEndResult.NoSession) {
+                            val p = checkPermissions(context)
+                            if (!p.accessibility && !p.usageStats) {
+                                Toast.makeText(context, blockingOffMsg, Toast.LENGTH_LONG).show()
+                                nav.navigate("perms")
+                            }
+                        }
                     }
                 },
                 onEmergencyUnlock = {

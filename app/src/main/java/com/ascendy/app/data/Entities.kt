@@ -79,6 +79,23 @@ data class BlockSession(
     /** Auto-end timestamp for pomodoro / scheduled sessions. null = open-ended (NFC-bound). */
     val endsAt: Long? = null,
     /**
+     * SystemClock.elapsedRealtime() captured when this session's monotonic anchor was set (at
+     * start, or re-anchored on boot). The safety timer is gated against this MONOTONIC clock, not
+     * the wall clock — so winding Settings → Date & time forward can't fire the END early and
+     * shorten a strict session. null on rows written before the anchor existed; elapsedRealtime
+     * resets to ~0 on reboot, so restoreOnBoot detects a reboot (current elapsed < stored) and
+     * re-anchors against the wall-clock window. See SessionController.
+     */
+    val startedAtElapsed: Long? = null,
+    /**
+     * Settings.Global.BOOT_COUNT at the time [startedAtElapsed] was set. The definitive reboot
+     * signal: a magnitude check on elapsedRealtime alone misfires when a session starts moments
+     * after boot (small anchor) and the device reboots (uptime climbs back past the small anchor),
+     * which would over-credit the monotonic window. Comparing the boot count instead is exact.
+     * null on legacy rows / devices that don't expose it (falls back to the elapsed magnitude check).
+     */
+    val startedAtBootCount: Long? = null,
+    /**
      * The [Schedule] that started this session, if any. null for manual/NFC/QR/pomodoro sessions.
      * A schedule's END alarm only ends the session whose scheduleId matches it, so a manual session
      * the user happened to start on the same list is never killed out from under them.

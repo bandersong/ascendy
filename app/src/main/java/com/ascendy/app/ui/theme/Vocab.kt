@@ -102,6 +102,7 @@ data class Vocab(
     val settingsBadgeActive: String,
     val settingsBadgeSelect: String,
     val settingsFooter: String,
+    val settingsSectionMore: String,        // "more" section header (was a hardcoded literal)
 
     // blocker overlay
     val blockerTitle: String,
@@ -114,6 +115,7 @@ data class Vocab(
     val toastWrongTag: String,
     val toastManualStarted: String,
     val toastManualEnded: String,
+    val toastBlockingOff: String,           // session started but no enforcement grant is set up
     val toastLongPressHint: String,
 
     // session timer
@@ -410,6 +412,7 @@ val KawaiiVocab = Vocab(
     settingsBadgeActive = "active",
     settingsBadgeSelect = "tap",
     settingsFooter = "more themes coming soon — drop ideas via the github repo.",
+    settingsSectionMore = "more",
 
     blockerTitle = "shhh… you're focusing ♡",
     blockerBody = "tap your tag to come back",
@@ -420,6 +423,7 @@ val KawaiiVocab = Vocab(
     toastWrongTag = "use the original tag to unlock",
     toastManualStarted = "focusing without a tag ✨",
     toastManualEnded = "welcome back 🌸",
+    toastBlockingOff = "heads up — blocking isn't set up yet, so nothing's actually blocked. let's fix that 🌸",
     toastLongPressHint = "hold the little guy to start without a tag ♡",
 
     timerJustStarted = "just getting started…",
@@ -687,6 +691,7 @@ val ToughVocab = Vocab(
     settingsBadgeActive = "ACTIVE",
     settingsBadgeSelect = "TAP",
     settingsFooter = "more themes coming soon. drop ideas via the github repo.",
+    settingsSectionMore = "MORE",
 
     blockerTitle = "LOCKED IN",
     blockerBody = "TAP YOUR ANCHOR",
@@ -697,6 +702,7 @@ val ToughVocab = Vocab(
     toastWrongTag = "wrong tag. use the original.",
     toastManualStarted = "LOCKED IN. NO ANCHOR — DISCIPLINE ONLY.",
     toastManualEnded = "UNLOCKED.",
+    toastBlockingOff = "NOTHING'S BLOCKED YET — PERMISSIONS AREN'T SET UP. FIX IT NOW.",
     toastLongPressHint = "HOLD THE GUY TO LOCK IN WITHOUT AN ANCHOR.",
 
     timerJustStarted = "JUST STARTED.",
@@ -964,6 +970,7 @@ val NeutralVocab = Vocab(
     settingsBadgeActive = "Active",
     settingsBadgeSelect = "Select",
     settingsFooter = "More themes can be added. Suggestions welcome via the GitHub repo.",
+    settingsSectionMore = "More",
 
     blockerTitle = "Focus session active",
     blockerBody = "Tap your tag to end the session.",
@@ -974,6 +981,7 @@ val NeutralVocab = Vocab(
     toastWrongTag = "Use the original tag to unlock.",
     toastManualStarted = "Manual session started.",
     toastManualEnded = "Session ended.",
+    toastBlockingOff = "Heads up — blocking isn't set up yet, so nothing is actually blocked. Open Permissions to enable it.",
     toastLongPressHint = "Long-press the icon to start a session without a tag.",
 
     timerJustStarted = "Session just started",

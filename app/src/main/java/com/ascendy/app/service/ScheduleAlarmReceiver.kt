@@ -21,6 +21,20 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
             try {
                 val controller = SessionController(context.applicationContext, app.repo, app.themePrefs)
                 when (action) {
+                    ACTION_HEARTBEAT -> {
+                        // Self-heal tick. restoreOnBoot re-asserts enforcement from the DB row (and
+                        // ends an over-due session), so a force-stop / swipe-away / process death is
+                        // healed within one interval. Re-arm the next heartbeat in a finally so that
+                        // even if restoreOnBoot threw, the self-heal watchdog can never be silently
+                        // stopped while a session is still active. It self-cancels once idle.
+                        try {
+                            controller.restoreOnBoot()
+                        } finally {
+                            if (app.repo.currentSession()?.active == true) {
+                                AlarmScheduler.scheduleHeartbeat(context)
+                            }
+                        }
+                    }
                     ACTION_END_SESSION -> {
                         // Only end the session this alarm was armed for; a stale delivery from a
                         // previous session must not kill the current one. Alarms armed by older
@@ -70,6 +84,7 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
         const val ACTION_END_SESSION = "com.ascendy.app.action.END_SESSION"
         const val ACTION_SCHEDULE_START = "com.ascendy.app.action.SCHEDULE_START"
         const val ACTION_SCHEDULE_END = "com.ascendy.app.action.SCHEDULE_END"
+        const val ACTION_HEARTBEAT = "com.ascendy.app.action.HEARTBEAT"
         const val EXTRA_SCHEDULE_ID = "schedule_id"
         const val EXTRA_SESSION_STARTED_AT = "session_started_at"
     }

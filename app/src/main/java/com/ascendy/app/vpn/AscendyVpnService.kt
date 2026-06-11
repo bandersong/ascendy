@@ -87,6 +87,9 @@ class AscendyVpnService : VpnService() {
         val buf = ByteArray(2048)
         while (scope.isActive) {
             val n = try { input.read(buf) } catch (_: Exception) { -1 }
+            // A closed/revoked fd reads -1 repeatedly; break instead of busy-spinning the CPU.
+            // Short reads (0..27 bytes) are too small to be a DNS-bearing IP packet — skip them.
+            if (n < 0) break
             if (n < 28) continue
             try {
                 handle(buf.copyOfRange(0, n), output)
@@ -204,6 +207,68 @@ class AscendyVpnService : VpnService() {
         shutdown()
     }
 
+    /**
+     * AF-06: the system calls this when the user disconnects our VPN, another app takes the VPN
+     * slot, or an always-on VPN displaces us. Without handling it the tunnel silently dies while
+     * BlockState still reports domains blocked. Tear down cleanly and — only while a session is
+     * still active — warn the user that site blocking is off and offer a one-tap reconnect. We
+     * can't silently re-establish: a user-initiated revoke makes VpnService.prepare() non-null
+     * again, so reconnect needs an explicit consent tap.
+     */
+    override fun onRevoke() {
+        if (BlockState.isActive() && BlockState.blockedDomains.value.isNotEmpty()) {
+            warnSiteBlockingDegraded()
+        }
+        shutdown()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
+    }
+
+    // AF-01: a recents swipe-away can deliver this; relaunch if a session still needs the sinkhole.
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        if (BlockState.isActive() && BlockState.blockedDomains.value.isNotEmpty() &&
+            prepare(this) == null
+        ) {
+            try {
+                val restart = Intent(this, AscendyVpnService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(restart)
+                else startService(restart)
+            } catch (_: Exception) {}
+        }
+        super.onTaskRemoved(rootIntent)
+    }
+
+    private fun warnSiteBlockingDegraded() {
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            nm.getNotificationChannel(ALERT_CHANNEL_ID) == null) {
+            nm.createNotificationChannel(
+                NotificationChannel(
+                    ALERT_CHANNEL_ID, getString(R.string.alert_channel_name),
+                    NotificationManager.IMPORTANCE_HIGH,
+                ).apply { description = getString(R.string.alert_channel_desc) }
+            )
+        }
+        // Tapping reopens the app, which re-requests VPN consent and restarts the sinkhole.
+        val tap = PendingIntent.getActivity(
+            this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        nm.notify(
+            ALERT_VPN_ID,
+            NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_logo)
+                .setContentTitle(getString(R.string.alert_vpn_title))
+                .setContentText(getString(R.string.alert_vpn_body))
+                .setStyle(NotificationCompat.BigTextStyle().bigText(getString(R.string.alert_vpn_body)))
+                .setOngoing(true)
+                .setCategory(NotificationCompat.CATEGORY_ERROR)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(tap)
+                .build()
+        )
+    }
+
     private fun shutdown() {
         try { tunnelJob?.cancel() } catch (_: Exception) {}
         try { tun?.close() } catch (_: Exception) {}
@@ -239,13 +304,30 @@ class AscendyVpnService : VpnService() {
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setContentIntent(tap)
             .build()
-        startForeground(NOTIF_ID, notif)
+        // Mirror BlockingForegroundService (NH-06): this start is now reachable from the background
+        // via onTaskRemoved's restart, where a lapsed FGS-eligibility window can make startForeground
+        // throw ForegroundServiceStartNotAllowedException. The DNS sinkhole is the secondary site
+        // path (the a11y URL scanner is primary), so swallow rather than crash the VPN process.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                androidx.core.app.ServiceCompat.startForeground(
+                    this, NOTIF_ID, notif,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NOTIF_ID, notif)
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "vpn startForeground failed: ${e.message}")
+        }
     }
 
     companion object {
         const val ACTION_STOP = "com.ascendy.app.VPN_STOP"
         private const val CHANNEL_ID = "ascendy.vpn"
+        private const val ALERT_CHANNEL_ID = "ascendy.alerts"
         private const val NOTIF_ID = 4243
+        private const val ALERT_VPN_ID = 4246
         private const val DNS_FAKE_SERVER = "10.10.10.10"
         private const val DNS_FAKE_SERVER_V6_ADDR = "fd00:1::1"   // VPN interface IPv6 address
         private const val DNS_FAKE_SERVER_V6 = "fd00:1::10"       // IPv6 fake DNS sink

@@ -78,8 +78,10 @@ class BlockerActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    // Pre-33 devices still route through the legacy path.
-    @Suppress("OVERRIDE_DEPRECATION")
+    // Pre-33 devices still route through the legacy path. We deliberately do NOT call super (that
+    // would finish the activity and dismiss the blocker) and there's nothing to migrate — API 33+
+    // already uses OnBackInvokedDispatcher above. Both lint checks are intentional here.
+    @Suppress("OVERRIDE_DEPRECATION", "MissingSuperCall", "GestureBackNavigation")
     override fun onBackPressed() {
         // swallow back
     }

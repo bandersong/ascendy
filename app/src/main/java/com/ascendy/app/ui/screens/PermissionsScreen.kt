@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.ascendy.app.service.OemBattery
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SoftCard
@@ -182,7 +183,30 @@ fun PermissionsScreen(
             onClick = onRequestVpn
         )
 
+        // NH-04: on aggressive OEM skins the battery exemption alone doesn't stop the OS freezing the
+        // service — point the user to the vendor auto-start / protected-apps screen. Only shown there.
+        if (OemBattery.isAggressiveOem()) {
+            Spacer(Modifier.height(8.dp))
+            ActionCard(
+                title = vocab.permsOemTitle,
+                body = vocab.permsOemBody,
+                actionLabel = vocab.permsOemAction,
+                onClick = { OemBattery.openBestSettings(context) },
+            )
+        }
+
         Spacer(Modifier.height(24.dp))
+
+        // NH-03: surface Lockdown where hardening-minded users will see it (it lives in Settings).
+        SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
+            Column {
+                Text(vocab.permsLockdownTitle, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                Spacer(Modifier.height(6.dp))
+                Text(vocab.permsLockdownBody, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
+            }
+        }
+
+        Spacer(Modifier.height(12.dp))
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Column {
@@ -194,6 +218,24 @@ fun PermissionsScreen(
                     color = palette.Smoke
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ActionCard(
+    title: String,
+    body: String,
+    actionLabel: String,
+    onClick: () -> Unit,
+) {
+    SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
+        Column {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+            Spacer(Modifier.height(6.dp))
+            Text(body, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
+            Spacer(Modifier.height(4.dp))
+            TextButton(onClick = onClick) { Text(actionLabel) }
         }
     }
 }

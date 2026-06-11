@@ -105,9 +105,16 @@ class BlockingForegroundService : Service() {
         pollJob?.cancel()
         pollJob = scope.launch {
             val usage = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+            val power = getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager
             val exempt = exemptPackages()
             var tick = 0L
             while (isActive) {
+                // NH-05: nothing the user can launch happens while the screen is off, and the a11y
+                // service (event-driven, always on) catches the screen-on moment instantly — so back
+                // the poll way off while non-interactive to cut the battery drain aggressive OEMs
+                // cite when they freeze the FGS. The monotonic end check still runs every tick (and
+                // the ELAPSED_REALTIME alarm fires in Doze regardless), so auto-end is unaffected.
+                val interactive = power?.isInteractive ?: true
                 // One bad tick (an OEM startActivity throw, a notify RemoteException, an unexpected
                 // end-path error) must NEVER tear down this loop: it owns app-reblocking and the
                 // degradation alerts (no redundant path) and is a safety-timer guarantor. Swallow,
@@ -119,7 +126,7 @@ class BlockingForegroundService : Service() {
                     // the session at its MONOTONIC deadline — immune to a wall-clock jump in either
                     // direction. It can only ever END, never extend. When it ends one this tick, skip
                     // the poll work below (the session is now inactive anyway).
-                    if (BlockState.isActive() && !enforceMonotonicEndIfDue()) {
+                    if (BlockState.isActive() && !enforceMonotonicEndIfDue() && interactive) {
                         // AF-10 / AF-11: detect a mid-session loss of either enforcement grant and
                         // warn loudly (every ~7s) instead of silently doing nothing. Checked before
                         // the poll so a revoked usage grant is surfaced even though queryEvents no-ops.
@@ -156,7 +163,7 @@ class BlockingForegroundService : Service() {
                     android.util.Log.w(TAG, "poll tick error (continuing): ${e.message}")
                 }
                 tick++
-                delay(700L)
+                delay(if (interactive) POLL_INTERVAL_MS else SCREEN_OFF_POLL_MS)
             }
         }
     }
@@ -299,6 +306,8 @@ class BlockingForegroundService : Service() {
 
     companion object {
         private const val TAG = "AscendyFgs"
+        private const val POLL_INTERVAL_MS = 700L
+        private const val SCREEN_OFF_POLL_MS = 5_000L
         private const val CHANNEL_ID = "ascendy.focus"
         private const val ALERT_CHANNEL_ID = "ascendy.alerts"
         private const val NOTIF_ID = 4242

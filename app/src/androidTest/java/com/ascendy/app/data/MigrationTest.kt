@@ -46,7 +46,7 @@ class MigrationTest {
             AscendyDb::class.java,
             TEST_DB,
         )
-            .addMigrations(AscendyDb.MIGRATION_6_7)
+            .addMigrations(AscendyDb.MIGRATION_6_7, AscendyDb.MIGRATION_7_8)
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
@@ -77,6 +77,27 @@ class MigrationTest {
             assertTrue("seeded row survived migration", c.moveToFirst())
             assertEquals("existing data preserved", 5L, c.getLong(0))
             assertTrue("new scheduleId is null for pre-existing rows", c.isNull(1))
+        }
+        db.close()
+    }
+
+    @Test fun migrate7To8_addsNullableMonotonicColumns_preservingData() {
+        // Seed a v7 block_session (no startedAtElapsed / startedAtBootCount columns yet).
+        helper.createDatabase(TEST_DB, 7).apply {
+            execSQL(
+                "INSERT INTO block_session (id, active, startedAt, listId, tagId, emergencyUnlocksLeft, endsAt, scheduleId) " +
+                    "VALUES (1, 1, 1000, 5, NULL, 1, 9000, NULL)"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 8, true, AscendyDb.MIGRATION_7_8)
+
+        db.query("SELECT endsAt, startedAtElapsed, startedAtBootCount FROM block_session WHERE id = 1").use { c ->
+            assertTrue("seeded row survived migration", c.moveToFirst())
+            assertEquals("existing data preserved", 9000L, c.getLong(0))
+            assertTrue("new startedAtElapsed is null for pre-existing rows", c.isNull(1))
+            assertTrue("new startedAtBootCount is null for pre-existing rows", c.isNull(2))
         }
         db.close()
     }

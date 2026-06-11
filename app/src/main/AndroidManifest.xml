@@ -36,11 +36,23 @@
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.HOME" />
         </intent>
+        <!-- Dynamic browser detection: enumerate every app that handles web links so URL blocking
+             covers unlisted browsers, not just a hardcoded set. Scoped web intent, not QUERY_ALL. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+        </intent>
     </queries>
 
     <application
         android:name=".AscendyApp"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:icon="@mipmap/ic_launcher"
@@ -103,6 +115,7 @@
         <service
             android:name=".service.BlockingForegroundService"
             android:exported="false"
+            android:stopWithTask="false"
             android:foregroundServiceType="specialUse">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
@@ -112,6 +125,7 @@
         <service
             android:name=".vpn.AscendyVpnService"
             android:exported="false"
+            android:stopWithTask="false"
             android:permission="android.permission.BIND_VPN_SERVICE"
             android:foregroundServiceType="specialUse">
             <intent-filter>
@@ -126,9 +140,12 @@
             android:name=".service.BootReceiver"
             android:enabled="true"
             android:exported="true">
+            <!-- BOOT_COMPLETED only: the session/schedule state lives in the credential-encrypted
+                 Room DB, which is unreadable before first unlock, so LOCKED_BOOT_COMPLETED (direct
+                 boot) bought nothing and risked throwing against an unavailable DB. Restore happens
+                 right after unlock; the safety timer re-derives correctly either way. -->
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
-                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
 

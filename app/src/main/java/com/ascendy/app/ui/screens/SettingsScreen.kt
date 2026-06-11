@@ -137,7 +137,7 @@ fun SettingsScreen(
         Spacer(Modifier.height(20.dp))
 
         Text(
-            "more",
+            vocab.settingsSectionMore,
             style = MaterialTheme.typography.titleLarge,
             color = palette.Smoke
         )

@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BoundTag::class, Blocklist::class, BlockedPackage::class, BlockedDomain::class,
         BlockSession::class, SessionLog::class, Schedule::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true   // schemas/ JSON feeds MigrationTest; commit the generated file on bump
 )
 abstract class AscendyDb : RoomDatabase() {
@@ -112,9 +112,22 @@ abstract class AscendyDb : RoomDatabase() {
             }
         }
 
+        /**
+         * v8: BlockSession.startedAtElapsed (monotonic anchor backing the clock-jump-proof safety
+         * timer) + startedAtBootCount (the reboot-identity that disambiguates a same-boot clock jump
+         * from an actual reboot). Both nullable so existing rows migrate without a default; a null
+         * anchor falls back to wall-clock enforcement on the next start/restore.
+         */
+        val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE block_session ADD COLUMN startedAtElapsed INTEGER")
+                db.execSQL("ALTER TABLE block_session ADD COLUMN startedAtBootCount INTEGER")
+            }
+        }
+
         val ALL_MIGRATIONS = arrayOf(
             MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
-            MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
+            MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
         )
 
         fun get(context: Context): AscendyDb {

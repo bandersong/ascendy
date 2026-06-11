@@ -53,4 +53,23 @@ class VocabTest {
     @Test fun appTitle_setForEveryTheme() {
         for ((name, v) in themes) assertTrue("$name appTitle blank", v.appTitle.isNotBlank())
     }
+
+    /**
+     * NH-13: make lockstep enforceable, not just convention. EVERY String field must be non-blank in
+     * EVERY theme — so a new field added to one theme but left empty (or forgotten) in another fails
+     * CI here instead of shipping a blank label. The only documented exception is the `*Emoji` fields,
+     * which the minimalist Neutral theme intentionally leaves empty.
+     */
+    @Test fun everyStringField_isNonBlankInEveryTheme_exceptEmoji() {
+        val emojiAllowlist: (String) -> Boolean = { it.endsWith("Emoji") }
+        for (prop in stringProps()) {
+            if (emojiAllowlist(prop.name)) continue
+            for ((name, v) in themes) {
+                assertTrue(
+                    "${prop.name} is blank in $name — every theme must define it (lockstep)",
+                    value(prop, v).isNotBlank(),
+                )
+            }
+        }
+    }
 }

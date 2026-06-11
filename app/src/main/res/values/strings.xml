@@ -9,4 +9,15 @@
     <string name="device_admin_label">ascendy lockdown</string>
     <string name="device_admin_description">while lockdown is on, ascendy can\'t be uninstalled until you turn lockdown off.</string>
     <string name="device_admin_disable_warning">turning this off removes lockdown protection and lets ascendy be uninstalled. you can\'t do this while a focus session is active.</string>
+
+    <!-- Degradation alerts: a protection path stopped working mid-session. Functional, tone-neutral
+         (not themed vocab) — they must read clearly no matter the cosmetic theme. -->
+    <string name="alert_channel_name">Protection alerts</string>
+    <string name="alert_channel_desc">Warns you when a blocking protection stops working during a session.</string>
+    <string name="alert_a11y_title">app &amp; site blocking is off</string>
+    <string name="alert_a11y_body">accessibility was turned off mid-session — tap to switch it back on so blocking keeps working.</string>
+    <string name="alert_usage_title">app blocking is degraded</string>
+    <string name="alert_usage_body">usage access was revoked — tap to re-grant it so apps keep getting blocked.</string>
+    <string name="alert_vpn_title">site blocking is off</string>
+    <string name="alert_vpn_body">the blocking VPN was disconnected — tap to reconnect and keep sites blocked.</string>
 </resources>

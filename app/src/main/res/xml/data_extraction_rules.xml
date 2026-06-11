@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Belt-and-suspenders for android:allowBackup="false" (which already disables cloud backup and
+  device transfer entirely on every API level). If backup is ever re-enabled, these excludes still
+  keep both the session/lockdown DB AND the DataStore prefs off-device: restoring the a11y
+  prominent-disclosure consent (theme_prefs) onto a fresh install would otherwise skip Google's
+  required disclosure, and restoring the session DB could resurrect a session never started there.
+-->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="database" />
+        <exclude domain="file" path="datastore/" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="database" />
+        <exclude domain="file" path="datastore/" />
     </device-transfer>
 </data-extraction-rules>

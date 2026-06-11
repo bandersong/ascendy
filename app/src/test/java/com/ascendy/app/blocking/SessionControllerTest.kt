@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -221,12 +222,174 @@ class SessionControllerTest {
         val listId = newList(strict = false)
         controller.startTimedSession(durationMs = 25L * 60 * 1000, listId = listId)
         // Simulate reboot after the window expired: backdate the session so endsAt is in the past.
+        // Null the monotonic anchor to model the reboot (elapsedRealtime reset → wall fallback path).
         val s = repo.currentSession()!!
-        repo.saveSession(s.copy(startedAt = s.startedAt - 10 * 60 * 60_000L, endsAt = System.currentTimeMillis() - 1L))
+        repo.saveSession(s.copy(
+            startedAt = s.startedAt - 10 * 60 * 60_000L,
+            endsAt = System.currentTimeMillis() - 1L,
+            startedAtElapsed = null,
+        ))
         BlockState.clear()
 
         controller.restoreOnBoot()
         assertFalse("expired session not resurrected", BlockState.active.value)
         assertFalse("DB row closed too", repo.currentSession()!!.active)
+    }
+
+    // ───────────────────────── Safety-timer invariant regression set (NH-18) ─────────────────────
+
+    @Test fun restoreOnBoot_clampsNullEndsAtToSafetyTimer() = runTest {
+        // AF-04: a pre-safety-timer legacy row can have endsAt == null AND scheduleId == null. The
+        // restore MUST still arm a finite end — never leave an unbounded block with no safety timer.
+        prefs.setMaxSessionMinutes(60)
+        val listId = newList(strict = false)
+        repo.saveSession(BlockSession(
+            id = 1L, active = true, startedAt = System.currentTimeMillis(),
+            listId = listId, tagId = null, emergencyUnlocksLeft = 0,
+            endsAt = null, startedAtElapsed = null, scheduleId = null,
+        ))
+        BlockState.clear()
+
+        controller.restoreOnBoot()
+        assertTrue("recent null-endsAt session restored", BlockState.active.value)
+        val deadline = BlockState.endsAtElapsed.value
+        assertNotNull("a finite monotonic deadline was armed", deadline)
+        // Bounded by the 60-min safety cap (+ a little slack), never open-ended.
+        assertTrue(
+            "deadline within the safety cap",
+            deadline!! <= android.os.SystemClock.elapsedRealtime() + 61 * 60_000L,
+        )
+    }
+
+    @Test fun restoreOnBoot_endsStaleNullEndsAtRow() = runTest {
+        // AF-04 (other half): a null-endsAt row whose startedAt is older than the cap must die
+        // immediately, not get a fresh full window.
+        prefs.setMaxSessionMinutes(60)
+        val listId = newList(strict = false)
+        repo.saveSession(BlockSession(
+            id = 1L, active = true, startedAt = System.currentTimeMillis() - 10 * 60 * 60_000L,
+            listId = listId, tagId = null, emergencyUnlocksLeft = 0,
+            endsAt = null, startedAtElapsed = null, scheduleId = null,
+        ))
+        BlockState.clear()
+
+        controller.restoreOnBoot()
+        assertFalse("stale null-endsAt row not resurrected", BlockState.active.value)
+        assertFalse("DB row closed", repo.currentSession()!!.active)
+    }
+
+    @Test fun restoreOnBoot_clearsStaleBlockStateWithNoDbSession() = runTest {
+        // NH-01: in-memory BlockState must never outlive its DB row. If the row is inactive but
+        // BlockState was left active (partial end / out-of-band end), restore tears it down.
+        BlockState.set(active = true, blocked = setOf("com.app"))
+        assertTrue(BlockState.active.value)
+        // reset() already left the id=1 row inactive.
+        controller.restoreOnBoot()
+        assertFalse("stale in-memory state cleared", BlockState.active.value)
+    }
+
+    @Test fun monotonicTimer_forwardWallClockJump_doesNotEndStrictSessionEarly() = runTest {
+        // AF-02: the crux. Start a 60-min session, then jump ONLY the wall clock forward by 10h
+        // (uptime unchanged, as a real Settings → Date & time change does). The session must survive.
+        prefs.setMaxSessionMinutes(60)
+        var wall = 1_000_000_000_000L
+        var elapsed = 5_000_000L
+        val clk = SessionController(ctx, repo, prefs, wallClock = { wall }, elapsedClock = { elapsed })
+        val listId = newList(strict = true)
+        clk.startSession(listId, tagId = "anchor", source = SessionSource.Nfc)
+        assertTrue(BlockState.active.value)
+
+        wall += 10L * 60 * 60_000L            // wind the clock forward 10 hours
+        clk.restoreOnBoot()                   // the heartbeat path runs this every ~90s
+        assertTrue("forward clock jump did NOT end the session early", BlockState.active.value)
+    }
+
+    @Test fun monotonicTimer_realUptimeElapsed_endsSession() = runTest {
+        // The flip side: once real device uptime passes the duration, the session ends — immune to
+        // the wall clock entirely (here the wall barely moves but uptime crosses the window).
+        prefs.setMaxSessionMinutes(60)
+        var wall = 1_000_000_000_000L
+        var elapsed = 5_000_000L
+        val clk = SessionController(ctx, repo, prefs, wallClock = { wall }, elapsedClock = { elapsed })
+        val listId = newList(strict = true)
+        clk.startSession(listId, tagId = "anchor", source = SessionSource.Nfc)
+
+        elapsed += 61L * 60_000L              // 61 min of real uptime
+        wall += 61L * 60_000L
+        clk.restoreOnBoot()
+        assertFalse("session ends once real uptime passes the window", BlockState.active.value)
+    }
+
+    @Test fun backwardWallClockJump_belowStart_stillEndsWithoutThrowing() = runTest {
+        // Regression for the critical coerceIn(min>max) trap: a wall clock wound BACK below startedAt
+        // must not throw out of endSessionLocked (which would abort every auto-end vector and trap
+        // the user). Uptime passes the window so the session is genuinely due; the backward wall
+        // clock must not stop it ending.
+        prefs.setMaxSessionMinutes(60)
+        var wall = 1_000_000_000_000L
+        var elapsed = 5_000_000L
+        val clk = SessionController(ctx, repo, prefs, wallClock = { wall }, elapsedClock = { elapsed })
+        val listId = newList(strict = true)
+        clk.startSession(listId, tagId = "anchor", source = SessionSource.Nfc)
+
+        elapsed += 61L * 60_000L                       // real uptime passes the 60-min window
+        wall -= 10L * 60 * 60_000L                     // but the wall clock is wound 10h BACKWARD
+        clk.restoreOnBoot()                            // must not throw
+        assertFalse("session ends despite a backward wall clock", BlockState.active.value)
+        assertFalse("DB row closed", repo.currentSession()!!.active)
+        // And the END-alarm path (logEndMs=null) must also be exception-free under the same condition.
+        clk.endSession()
+    }
+
+    @Test fun rebootSoonAfterStart_doesNotOverExtend_usesWallFallback() = runTest {
+        // Regression for the reboot-misdetection: a session started moments after boot1 (small
+        // anchor) then a reboot — where uptime has already climbed back past the small anchor — must
+        // NOT be read as same-boot (which would re-credit nearly the whole window). The boot-count
+        // change forces the wall fallback, so the restored window reflects real remaining time.
+        prefs.setMaxSessionMinutes(120)
+        var wall = 1_000_000_000_000L
+        var elapsed = 1_000L                            // tiny anchor: started ~1s after boot
+        var boot = 7L
+        val clk = SessionController(
+            ctx, repo, prefs,
+            wallClock = { wall }, elapsedClock = { elapsed }, bootCount = { boot },
+        )
+        val listId = newList(strict = true)
+        clk.startSession(listId, tagId = "anchor", source = SessionSource.Nfc)  // 120-min window
+
+        // Simulate: 110 min pass, then reboot. Wall advances 110 min; uptime resets then climbs to
+        // 90s; boot count increments. With only the elapsed check this would look same-boot
+        // (90_000 >= 1_000) and re-credit ~120 min. The boot-count change must force wall fallback.
+        wall += 110L * 60_000L
+        elapsed = 90_000L
+        boot = 8L
+        clk.restoreOnBoot()
+
+        assertTrue("session still active (within the 120-min cap)", BlockState.active.value)
+        val deadline = BlockState.endsAtElapsed.value!!
+        val remainingMin = (deadline - elapsed) / 60_000.0
+        // Wall fallback credits the consumed 110 min, leaving ~10 min — NOT a fresh ~120-min window.
+        assertTrue("remaining reflects real time (~10 min), not a fresh window: $remainingMin",
+            remainingMin in 5.0..20.0)
+    }
+
+    @Test fun scheduleEnd_endsOnlyItsOwnSession() = runTest {
+        // endSessionIfScheduleId must end only the session a schedule started.
+        val listId = newList(strict = false)
+        controller.startSession(listId, tagId = null, source = SessionSource.Scheduled, scheduleId = 7L)
+        assertTrue(BlockState.active.value)
+
+        controller.endSessionIfScheduleId(99L)
+        assertTrue("a different schedule's END leaves it running", BlockState.active.value)
+        controller.endSessionIfScheduleId(7L)
+        assertFalse("its own schedule's END ends it", BlockState.active.value)
+    }
+
+    @Test fun scheduleEnd_ignoresManualSessionOnSameList() = runTest {
+        // A manual session on a list that also has a schedule is unowned — a schedule END can't kill it.
+        val listId = newList(strict = false)
+        controller.startSession(listId, tagId = null, source = SessionSource.Manual)
+        controller.endSessionIfScheduleId(7L)
+        assertTrue("manual session survives a schedule END", BlockState.active.value)
     }
 }

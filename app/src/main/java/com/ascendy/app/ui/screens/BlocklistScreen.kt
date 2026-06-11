@@ -132,6 +132,13 @@ fun BlocklistScreen(
                                 Switch(checked = list.isStrict,
                                     onCheckedChange = { onToggleStrict(list, it) })
                             }
+                            // The tradeoff, BEFORE committing — the toast version only appears once
+                            // a strict session is already running, which is too late to inform.
+                            Text(
+                                vocab.strictToggleHint,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = palette.Smoke
+                            )
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(vocab.allowListToggleLabel,
                                     style = MaterialTheme.typography.bodySmall,

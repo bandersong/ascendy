@@ -12,7 +12,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         BoundTag::class, Blocklist::class, BlockedPackage::class, BlockedDomain::class,
         BlockSession::class, SessionLog::class, Schedule::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true   // schemas/ JSON feeds MigrationTest; commit the generated file on bump
 )
 abstract class AscendyDb : RoomDatabase() {
@@ -125,9 +125,21 @@ abstract class AscendyDb : RoomDatabase() {
             }
         }
 
+        /**
+         * v9: BlockSession.openLogId — the session's open SessionLog row id, so ending a session
+         * closes exactly its own log instead of matching by startedAt (a same-ms collision with a
+         * crash-orphaned open log could mis-close the wrong row). Nullable: legacy rows resolve
+         * their log by startedAt as before.
+         */
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE block_session ADD COLUMN openLogId INTEGER")
+            }
+        }
+
         val ALL_MIGRATIONS = arrayOf(
             MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4,
-            MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8,
+            MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9,
         )
 
         fun get(context: Context): AscendyDb {

@@ -138,6 +138,26 @@ object AlarmScheduler {
         alarmManager(context).cancel(pending(context, req, intent))
     }
 
+    /**
+     * The first instant STRICTLY after [afterMs] whose local time-of-day is [minuteOfDay].
+     * Calendar-based, so a DST transition between [afterMs] and the result shifts the answer with
+     * the wall clock — matching the RTC daily triggers from [nextFiringFrom], unlike fixed-elapsed
+     * arithmetic. Used by SessionController.restoreOnBoot to recompute a scheduled window's end;
+     * day-of-week bits are deliberately NOT consulted — the window already started, its end is
+     * simply the next occurrence of the end time.
+     */
+    fun nextTimeOfDayAfter(minuteOfDay: Int, afterMs: Long): Long {
+        val cand = Calendar.getInstance().apply {
+            timeInMillis = afterMs
+            set(Calendar.HOUR_OF_DAY, minuteOfDay / 60)
+            set(Calendar.MINUTE, minuteOfDay % 60)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        if (cand.timeInMillis <= afterMs) cand.add(Calendar.DAY_OF_YEAR, 1)
+        return cand.timeInMillis
+    }
+
     /** Find the next firing instant for a daily schedule. Returns null if no day is enabled. */
     private fun computeNextFiring(schedule: Schedule, isStart: Boolean): Long? {
         val minutes = if (isStart) schedule.startMinuteOfDay else schedule.endMinuteOfDay

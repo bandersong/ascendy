@@ -46,7 +46,7 @@ class MigrationTest {
             AscendyDb::class.java,
             TEST_DB,
         )
-            .addMigrations(AscendyDb.MIGRATION_6_7, AscendyDb.MIGRATION_7_8)
+            .addMigrations(*AscendyDb.ALL_MIGRATIONS)
             .fallbackToDestructiveMigrationOnDowngrade()
             .build()
 
@@ -98,6 +98,27 @@ class MigrationTest {
             assertEquals("existing data preserved", 9000L, c.getLong(0))
             assertTrue("new startedAtElapsed is null for pre-existing rows", c.isNull(1))
             assertTrue("new startedAtBootCount is null for pre-existing rows", c.isNull(2))
+        }
+        db.close()
+    }
+
+    @Test fun migrate8To9_addsNullableOpenLogId_preservingData() {
+        // Seed a v8 block_session (no openLogId column yet).
+        helper.createDatabase(TEST_DB, 8).apply {
+            execSQL(
+                "INSERT INTO block_session (id, active, startedAt, listId, tagId, emergencyUnlocksLeft, " +
+                    "endsAt, startedAtElapsed, startedAtBootCount, scheduleId) " +
+                    "VALUES (1, 1, 1000, 5, NULL, 1, 9000, 777, 3, NULL)"
+            )
+            close()
+        }
+
+        val db = helper.runMigrationsAndValidate(TEST_DB, 9, true, AscendyDb.MIGRATION_8_9)
+
+        db.query("SELECT startedAtElapsed, openLogId FROM block_session WHERE id = 1").use { c ->
+            assertTrue("seeded row survived migration", c.moveToFirst())
+            assertEquals("existing data preserved", 777L, c.getLong(0))
+            assertTrue("new openLogId is null for pre-existing rows", c.isNull(1))
         }
         db.close()
     }

@@ -147,6 +147,7 @@ data class Vocab(
     val strictBadge: String,
     val strictModeNote: String,         // shown when active session is strict (no emergency UI)
     val strictToggleLabel: String,      // per-list toggle label
+    val strictToggleHint: String,       // tradeoff caption under the toggle — shown BEFORE committing
     val strictManualBlockedToast: String, // when long-press tries to end a strict session
 
     // safety timer (mandatory auto-end)
@@ -456,6 +457,7 @@ val KawaiiVocab = Vocab(
     strictBadge = "strict 🔒",
     strictModeNote = "strict mode — only the tag/qr can end this session ♡",
     strictToggleLabel = "strict mode",
+    strictToggleHint = "no manual end, no emergency exit — only your tag/qr or the safety timer can end a strict session ♡",
     strictManualBlockedToast = "strict mode — tap your tag/qr to end ♡",
 
     safetyTimerTitle = "max session length",
@@ -740,6 +742,7 @@ val ToughVocab = Vocab(
     strictBadge = "STRICT",
     strictModeNote = "STRICT MODE — ONLY THE ANCHOR ENDS THIS. NO OVERRIDE.",
     strictToggleLabel = "STRICT MODE",
+    strictToggleHint = "NO MANUAL END. NO EMERGENCY EXIT. ONLY YOUR ANCHOR OR THE SAFETY TIMER ENDS IT.",
     strictManualBlockedToast = "STRICT — USE YOUR ANCHOR TO END.",
 
     safetyTimerTitle = "MAX SESSION LENGTH",
@@ -1024,6 +1027,7 @@ val NeutralVocab = Vocab(
     strictBadge = "Strict",
     strictModeNote = "Strict mode — only the bound tag/QR can end this session.",
     strictToggleLabel = "Strict mode",
+    strictToggleHint = "Removes manual end and the emergency unlock — only your tag/QR or the safety timer can end a strict session.",
     strictManualBlockedToast = "Strict mode is on — use your tag or QR to end the session.",
 
     safetyTimerTitle = "Maximum session length",

@@ -114,6 +114,10 @@ class SessionController(
         val unlocksLeft = if (isStrict) 0 else 1
         val lockdown = themePrefs.lockdownEnabled.first()
 
+        // Insert the log first so its row id can ride on the session — ending then closes exactly
+        // this log instead of matching by startedAt (a same-ms crash orphan could collide). A crash
+        // between these two writes leaves only an orphaned open log, which the stale sweep caps.
+        val logId = repo.startLog(list.id, now, source.tag)
         val session = BlockSession(
             id = 1L,
             active = true,
@@ -125,9 +129,9 @@ class SessionController(
             startedAtElapsed = nowElapsed,
             startedAtBootCount = bootCount(),
             scheduleId = scheduleId,
+            openLogId = logId,
         )
         repo.saveSession(session)
-        repo.startLog(list.id, now, source.tag)
         BlockState.set(
             active = true,
             blocked = packages,
@@ -200,10 +204,11 @@ class SessionController(
         val now = maxOf(wallClock(), current.startedAt)
         val logEnd = (logEndMs ?: now).coerceIn(current.startedAt, now)
         repo.saveSession(current.copy(active = false))
-        // Close this session's log at the true end time, then sweep any older dangling logs
-        // with a clamped duration — closing orphans at `now` would credit the whole gap
-        // since their crash as focus time.
-        repo.finishOpenLogStartedAt(current.startedAt, logEnd)
+        // Close this session's log (by row id; pre-v9 rows resolve it from startedAt) at the true
+        // end time, then sweep any dangling orphans with a clamped duration — closing orphans at
+        // `now` would credit the whole gap since their crash as focus time.
+        val logId = current.openLogId ?: repo.openLogIdFor(current.startedAt)
+        if (logId != null) repo.finishLog(logId, logEnd)
         repo.closeStaleOpenLogs(now, maxSessionMs())
         val durationMs = logEnd - current.startedAt
         BlockState.clear()
@@ -239,8 +244,9 @@ class SessionController(
      */
     suspend fun reconcileStaleLogs(): Unit = transitionMutex.withLock {
         val now = wallClock()
-        val activeStartedAt = repo.currentSession()?.takeIf { it.active }?.startedAt ?: -1L
-        repo.closeStaleOpenLogs(now, maxSessionMs(), exceptStartedAt = activeStartedAt)
+        val active = repo.currentSession()?.takeIf { it.active }
+        val exceptLogId = active?.let { it.openLogId ?: repo.openLogIdFor(it.startedAt) } ?: -1L
+        repo.closeStaleOpenLogs(now, maxSessionMs(), exceptLogId = exceptLogId)
     }
 
     /**
@@ -271,12 +277,13 @@ class SessionController(
         val cap = maxSessionMs()
 
         // Re-derive the auto-end instant. Schedule-sourced sessions rely on a daily END alarm
-        // that does NOT survive a reboot, so recompute this window's end from the schedule.
+        // that does NOT survive a reboot, so recompute this window's end from the schedule. The
+        // end is a wall-clock-of-day event (the END alarm is RTC at endMinuteOfDay), so resolve
+        // it with Calendar like the alarm does — fixed-elapsed math (startedAt + window minutes)
+        // is off by the DST offset when a transition falls inside the window.
         val schedule = current.scheduleId?.let { repo.scheduleById(it) }
         val windowEndMs = schedule?.let {
-            val windowMin = (it.endMinuteOfDay - it.startMinuteOfDay).mod(1440)
-                .let { m -> if (m == 0) 1440 else m }
-            current.startedAt + windowMin * 60_000L
+            AlarmScheduler.nextTimeOfDayAfter(it.endMinuteOfDay, current.startedAt)
         }
         // AF-04: every restored session MUST end up with a finite armed end. A pre-safety-timer
         // legacy row can have endsAt == null AND scheduleId == null; without this fallback the

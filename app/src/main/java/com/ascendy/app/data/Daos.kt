@@ -94,16 +94,21 @@ interface SessionLogDao {
     @Query("UPDATE session_log SET endedAt = :endedAt WHERE id = :id")
     suspend fun finishLog(id: Long, endedAt: Long)
 
-    @Query("UPDATE session_log SET endedAt = :endedAt WHERE endedAt IS NULL AND startedAt = :startedAt")
-    suspend fun finishOpenLogStartedAt(startedAt: Long, endedAt: Long)
+    /**
+     * Resolve a legacy (pre-v9) session's open log: the NEWEST open log with this startedAt is the
+     * one that session inserted — any older one sharing the millisecond is a crash orphan.
+     */
+    @Query("SELECT id FROM session_log WHERE endedAt IS NULL AND startedAt = :startedAt ORDER BY id DESC LIMIT 1")
+    suspend fun openLogIdFor(startedAt: Long): Long?
 
     /**
      * Close every dangling open log, crediting each with at most [maxMs] of focus time.
      * Closing orphans at "now" instead would retroactively count days of crash-orphaned
-     * time as focus — the source of absurd 100h+ "best day" stats.
+     * time as focus — the source of absurd 100h+ "best day" stats. [exceptId] spares the
+     * active session's own log (identified by row id, so a same-ms orphan is still swept).
      */
-    @Query("UPDATE session_log SET endedAt = MIN(:nowMs, startedAt + :maxMs) WHERE endedAt IS NULL AND startedAt != :exceptStartedAt")
-    suspend fun closeStaleOpenLogs(nowMs: Long, maxMs: Long, exceptStartedAt: Long)
+    @Query("UPDATE session_log SET endedAt = MIN(:nowMs, startedAt + :maxMs) WHERE endedAt IS NULL AND id != :exceptId")
+    suspend fun closeStaleOpenLogs(nowMs: Long, maxMs: Long, exceptId: Long)
 
     @Query("SELECT * FROM session_log ORDER BY startedAt DESC LIMIT 1")
     suspend fun latest(): SessionLog?

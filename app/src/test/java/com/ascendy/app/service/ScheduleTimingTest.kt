@@ -93,4 +93,42 @@ class ScheduleTimingTest {
         assertEquals(Calendar.THURSDAY, c.get(Calendar.DAY_OF_WEEK))
         assertTrue("fires within 3 hours", ms - lateNow.timeInMillis <= 3 * 60 * 60_000L)
     }
+
+    // ── nextTimeOfDayAfter (restoreOnBoot's scheduled-window end recomputation) ──
+
+    @Test fun nextTimeOfDayAfter_laterToday_staysToday() {
+        val after = at(2024, Calendar.JANUARY, 3, 10, 0).timeInMillis
+        val c = cal(AlarmScheduler.nextTimeOfDayAfter(11 * 60, after))
+        assertEquals(3, c.get(Calendar.DAY_OF_MONTH))
+        assertEquals(11, c.get(Calendar.HOUR_OF_DAY))
+        assertEquals(0, c.get(Calendar.MINUTE))
+    }
+
+    @Test fun nextTimeOfDayAfter_timeAlreadyPassed_rollsToTomorrow() {
+        val after = at(2024, Calendar.JANUARY, 3, 10, 0).timeInMillis
+        val c = cal(AlarmScheduler.nextTimeOfDayAfter(9 * 60, after))
+        assertEquals(4, c.get(Calendar.DAY_OF_MONTH))
+        assertEquals(9, c.get(Calendar.HOUR_OF_DAY))
+    }
+
+    @Test fun nextTimeOfDayAfter_exactInstant_isStrictlyAfter() {
+        // end == start minute-of-day expresses a full 24h window, never a zero-length one.
+        val after = at(2024, Calendar.JANUARY, 3, 10, 0).timeInMillis
+        val c = cal(AlarmScheduler.nextTimeOfDayAfter(10 * 60, after))
+        assertEquals(4, c.get(Calendar.DAY_OF_MONTH))
+        assertEquals(10, c.get(Calendar.HOUR_OF_DAY))
+    }
+
+    @Test fun nextTimeOfDayAfter_springForward_tracksWallClockNotElapsed() {
+        val before = java.util.TimeZone.getDefault()
+        java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("America/New_York"))
+        try {
+            // Sat 2026-03-07 22:00 EST → next 06:00 local is 06:00 EDT: 7 REAL hours, not 8.
+            val start = at(2026, Calendar.MARCH, 7, 22, 0).timeInMillis
+            val end = AlarmScheduler.nextTimeOfDayAfter(6 * 60, start)
+            assertEquals("skipped DST hour is not blocked-through", 7 * 3_600_000L, end - start)
+        } finally {
+            java.util.TimeZone.setDefault(before)
+        }
+    }
 }

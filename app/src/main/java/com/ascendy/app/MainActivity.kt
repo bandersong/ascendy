@@ -58,6 +58,17 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_ROUTE = "ascendy_route"
+
+        /**
+         * NH-10: MainActivity is exported (launcher + NFC), so any app can attach this extra.
+         * Only ever navigate to one of these top-level routes — never an arbitrary string, which
+         * could crash navigation mid-session or open argument-carrying internal screens. "updates"
+         * is only reachable on the flavor that actually registers it (see AppNav).
+         */
+        private val ALLOWED_ROUTES = buildSet {
+            addAll(listOf("home", "stats", "perms", "settings"))
+            if (BuildConfig.HAS_INAPP_UPDATER) add("updates")
+        }
     }
 
     private lateinit var controller: SessionController
@@ -237,7 +248,7 @@ class MainActivity : ComponentActivity() {
 
     private fun handleIntent(intent: Intent?) {
         if (intent == null) return
-        intent.getStringExtra(EXTRA_ROUTE)?.let { pendingRoute.value = it }
+        intent.getStringExtra(EXTRA_ROUTE)?.takeIf { it in ALLOWED_ROUTES }?.let { pendingRoute.value = it }
         val action = intent.action ?: return
         val isNfc = action == android.nfc.NfcAdapter.ACTION_NDEF_DISCOVERED ||
             action == android.nfc.NfcAdapter.ACTION_TECH_DISCOVERED ||
@@ -632,8 +643,12 @@ private fun AppNav(
                 onBack = { nav.popBackStack() }
             )
         }
-        composable("updates") {
-            com.ascendy.app.ui.screens.UpdateScreen(onBack = { nav.popBackStack() })
+        // Play flavor ships no in-app installer — don't register the destination at all, so no
+        // navigation path (intent extra, future code) can reach a dead screen there.
+        if (com.ascendy.app.BuildConfig.HAS_INAPP_UPDATER) {
+            composable("updates") {
+                com.ascendy.app.ui.screens.UpdateScreen(onBack = { nav.popBackStack() })
+            }
         }
         composable("about") {
             com.ascendy.app.ui.screens.AboutScreen(onBack = { nav.popBackStack() })

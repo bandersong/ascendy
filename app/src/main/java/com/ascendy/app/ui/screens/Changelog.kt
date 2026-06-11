@@ -10,6 +10,15 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
+        versionCode = 63,
+        title = "fine print ✏️",
+        notes = listOf(
+            "the strict-mode toggle now explains the tradeoff before you commit, not after",
+            "scheduled sessions restored after a reboot now end at the right wall-clock time across DST changes",
+            "focus stats can no longer credit the wrong session log after a crash",
+        )
+    ),
+    ChangelogEntry(
         versionCode = 50,
         title = "stability + speed 🛠️",
         notes = listOf(

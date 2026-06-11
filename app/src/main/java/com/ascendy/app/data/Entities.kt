@@ -101,6 +101,13 @@ data class BlockSession(
      * the user happened to start on the same list is never killed out from under them.
      */
     val scheduleId: Long? = null,
+    /**
+     * Row id of THIS session's open [SessionLog]. Closing the log by id (not by startedAt) means a
+     * crash-orphaned open log that happens to share the same startedAt millisecond can never be
+     * mis-closed as — or mistaken for — this session's log. null on pre-v9 rows; those fall back
+     * to resolving the newest open log with a matching startedAt. Stats integrity only.
+     */
+    val openLogId: Long? = null,
 )
 
 @Entity(tableName = "session_log")

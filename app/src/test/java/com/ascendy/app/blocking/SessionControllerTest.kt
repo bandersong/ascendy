@@ -5,11 +5,15 @@ import com.ascendy.app.data.AscendyRepo
 import com.ascendy.app.data.BlockSession
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
+import com.ascendy.app.data.Schedule
 import com.ascendy.app.data.ThemePrefs
+import java.util.Calendar
+import java.util.TimeZone
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -25,8 +29,14 @@ import org.robolectric.annotation.Config
  * assert the decisions without an emulator. This is where the "trapped in strict" / "manual exit"
  * class of bugs gets caught before it ever ships to a device.
  */
+// application = Application::class: the real AscendyApp.onCreate launches restoreOnBoot() +
+// reconcileStaleLogs() on Dispatchers.IO, and Robolectric instantiates a FRESH application per
+// test method — so every test would race a real-clock restore against its own body. A test that
+// leaves an active session row behind then poisons the NEXT test (the background restore re-arms
+// it over @Before's reset). A plain Application has no such side effects; tests drive the
+// controller explicitly.
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [34])
+@Config(sdk = [34], application = android.app.Application::class)
 class SessionControllerTest {
 
     // Singletons: ThemePrefs wraps a real DataStore whose "one instance per file" guard would trip
@@ -43,6 +53,10 @@ class SessionControllerTest {
         repo.saveSession(BlockSession(id = 1L, active = false, startedAt = 0, listId = 0, tagId = null, emergencyUnlocksLeft = 0))
         BlockState.clear()
         prefs.setMaxSessionMinutes(60)
+        // Loud leak guard: a cross-test contamination here once cost hours to trace (an active
+        // row left by one test being re-armed mid-reset by AscendyApp's background restore).
+        check(repo.currentSession()?.active == false) { "session row still active after reset: ${repo.currentSession()}" }
+        check(!BlockState.isActive()) { "BlockState still active after reset" }
     }
 
     private suspend fun newList(strict: Boolean = false, allow: Boolean = false): Long {
@@ -372,6 +386,145 @@ class SessionControllerTest {
         assertTrue("remaining reflects real time (~10 min), not a fresh window: $remainingMin",
             remainingMin in 5.0..20.0)
     }
+
+    // ─────────────── NH-15: session logs are closed by row id, not by startedAt ───────────────
+
+    @Test fun endSession_recordsOwnLogId_andClosesItDespiteSameMsOrphan() = runTest {
+        val listId = newList()
+        var wall = 1_000_000_000_000L
+        val clk = SessionController(ctx, repo, prefs, wallClock = { wall })
+        // A crash-orphaned open log sharing the EXACT startedAt millisecond.
+        val orphanId = repo.startLog(listId, startedAt = wall, source = "manual")
+
+        clk.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        val ownId = repo.currentSession()!!.openLogId
+        assertNotNull("session records its own open log id", ownId)
+        assertNotEquals("own log is a distinct row from the same-ms orphan", orphanId, ownId)
+
+        wall += 10 * 60_000L
+        clk.endSession()
+        val byId = repo.observeLogsSince(0).first().associateBy { it.id }
+        assertEquals("own log credited exactly its duration", wall, byId.getValue(ownId!!).endedAt)
+        assertNotNull("same-ms orphan swept too", byId.getValue(orphanId).endedAt)
+    }
+
+    @Test fun reconcileStaleLogs_sweepsSameMsOrphan_butSparesOwnOpenLog() = runTest {
+        // Old startedAt-keyed except-clause spared EVERY open log sharing the active session's
+        // startedAt — a same-ms orphan stayed open and later inflated stats. By id, only the
+        // session's own log is spared.
+        val listId = newList()
+        var wall = 1_000_000_000_000L
+        val clk = SessionController(ctx, repo, prefs, wallClock = { wall })
+        val orphanId = repo.startLog(listId, startedAt = wall, source = "manual")
+        clk.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        val ownId = repo.currentSession()!!.openLogId!!
+
+        wall += 5 * 60_000L
+        clk.reconcileStaleLogs()
+        val byId = repo.observeLogsSince(0).first().associateBy { it.id }
+        assertNull("own log still open — the session is genuinely running", byId.getValue(ownId).endedAt)
+        assertNotNull("same-ms orphan closed by the sweep", byId.getValue(orphanId).endedAt)
+    }
+
+    @Test fun endSession_legacyRowWithoutOpenLogId_stillClosesItsNewestLog() = runTest {
+        // Rows written before v9 carry no openLogId — ending must resolve the session's log as the
+        // NEWEST open log with its startedAt (the orphan, inserted earlier, has a lower id).
+        val listId = newList()
+        var wall = 1_000_000_000_000L
+        val clk = SessionController(ctx, repo, prefs, wallClock = { wall })
+        val orphanId = repo.startLog(listId, startedAt = wall, source = "manual")
+        clk.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        val ownId = repo.currentSession()!!.openLogId!!
+        repo.saveSession(repo.currentSession()!!.copy(openLogId = null))   // simulate a pre-v9 row
+
+        wall += 10 * 60_000L
+        clk.endSession()
+        val byId = repo.observeLogsSince(0).first().associateBy { it.id }
+        assertEquals("legacy fallback closed the session's own (newest) log at the end time",
+            wall, byId.getValue(ownId).endedAt)
+        assertTrue("no open log remains", byId.values.none { it.endedAt == null })
+        assertNotNull("orphan also closed", byId.getValue(orphanId).endedAt)
+    }
+
+    // ───────── NH-16: scheduled window end is a wall-clock-of-day event, DST included ─────────
+
+    private fun withTimeZone(id: String, body: () -> Unit) {
+        val before = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone(id))
+        try { body() } finally { TimeZone.setDefault(before) }
+    }
+
+    private fun atLocal(year: Int, month: Int, day: Int, hour: Int, min: Int): Long =
+        Calendar.getInstance().apply {
+            clear()
+            set(year, month, day, hour, min, 0)
+        }.timeInMillis
+
+    @Test fun restoreOnBoot_springForward_endsScheduledWindowAtWallClockEnd() =
+        withTimeZone("America/New_York") {
+            runTest {
+                // Overnight schedule 22:00 → 06:00 started Sat 2026-03-07 22:00 EST. The clock
+                // springs forward at 02:00 → the wall-clock 06:00 EDT end is only 7 REAL hours
+                // after start. Fixed-elapsed math (start + 480min) would keep blocking until
+                // 07:00 EDT — a window the user never scheduled.
+                prefs.setMaxSessionMinutes(600)   // 10h cap, above the window so it isn't what ends it
+                val listId = newList(strict = false)
+                val schedId = repo.upsertSchedule(Schedule(
+                    listId = listId, daysOfWeek = 0x7F,
+                    startMinuteOfDay = 22 * 60, endMinuteOfDay = 6 * 60,
+                ))
+                var wall = atLocal(2026, Calendar.MARCH, 7, 22, 0)
+                var elapsed = 5_000_000L
+                var boot = 1L
+                val clk = SessionController(ctx, repo, prefs,
+                    wallClock = { wall }, elapsedClock = { elapsed }, bootCount = { boot })
+                clk.startSession(listId, tagId = null, source = SessionSource.Scheduled, scheduleId = schedId)
+                assertTrue(BlockState.active.value)
+
+                // Reboot at 06:30 EDT — 30 min PAST the real end, but 30 min BEFORE start+480min.
+                wall = atLocal(2026, Calendar.MARCH, 8, 6, 30)
+                elapsed = 60_000L
+                boot = 2L
+                BlockState.clear()
+                clk.restoreOnBoot()
+                assertFalse("window ended at the wall-clock 06:00, not start+480min", BlockState.active.value)
+                assertFalse("DB row closed", repo.currentSession()!!.active)
+            }
+        }
+
+    @Test fun restoreOnBoot_fallBack_doesNotEndScheduledWindowEarly() =
+        withTimeZone("America/New_York") {
+            runTest {
+                // Same overnight window across the fall-back night (Sun 2026-11-01, 02:00 → 01:00):
+                // 06:00 EST is 9 REAL hours after the 22:00 EDT start. Fixed-elapsed math would
+                // kill the block at 05:00 EST — an hour of scheduled focus silently lost.
+                prefs.setMaxSessionMinutes(600)
+                val listId = newList(strict = false)
+                val schedId = repo.upsertSchedule(Schedule(
+                    listId = listId, daysOfWeek = 0x7F,
+                    startMinuteOfDay = 22 * 60, endMinuteOfDay = 6 * 60,
+                ))
+                var wall = atLocal(2026, Calendar.OCTOBER, 31, 22, 0)
+                var elapsed = 5_000_000L
+                var boot = 1L
+                val clk = SessionController(ctx, repo, prefs,
+                    wallClock = { wall }, elapsedClock = { elapsed }, bootCount = { boot })
+                clk.startSession(listId, tagId = null, source = SessionSource.Scheduled, scheduleId = schedId)
+
+                // Reboot at 05:30 EST — start+510min real, inside the scheduled window's last 30 min.
+                wall = atLocal(2026, Calendar.NOVEMBER, 1, 5, 30)
+                elapsed = 60_000L
+                boot = 2L
+                BlockState.clear()
+                clk.restoreOnBoot()
+                assertTrue("still blocking until the wall-clock 06:00 end", BlockState.active.value)
+                val deadline = BlockState.endsAtElapsed.value!!
+                val remainingMin = (deadline - elapsed) / 60_000.0
+                assertTrue("~30 min remain (got $remainingMin)", remainingMin in 25.0..35.0)
+                // Hygiene: don't leave an active future-dated session for the next test.
+                clk.endSession()
+            }
+        }
 
     @Test fun scheduleEnd_endsOnlyItsOwnSession() = runTest {
         // endSessionIfScheduleId must end only the session a schedule started.

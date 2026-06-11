@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,99 +34,121 @@ data class Palette(
     val Smoke: Color,          // muted text
     val Mist: Color,           // dividers / variant surface
     val Surface: Color,        // card surface
-)
+) {
+    /**
+     * Readable text/icon color to lay over [bg], staying inside the palette.
+     * Picks Ink or Cream — whichever contrasts better with the background.
+     * Works because in dark palettes Cream is the deep bg (reads as "dark text")
+     * and Ink is near-white, while in light palettes the reverse holds.
+     */
+    fun on(bg: Color): Color =
+        if (contrast(bg, Cream) >= contrast(bg, Ink)) Cream else Ink
 
-// ───── Kawaii (Strawberry Milk + Sakura — cool pinks, lavender co-star, plum text) ─────
+    /** Correct content color for a filled [Petal] surface (button/FAB/selected chip). */
+    val onPetal: Color get() = on(Petal)
+}
+
+/** WCAG relative-contrast ratio between two opaque colors. */
+private fun contrast(a: Color, b: Color): Float {
+    val la = a.luminance() + 0.05f
+    val lb = b.luminance() + 0.05f
+    return if (la > lb) la / lb else lb / la
+}
+
+// ───── Kawaii (Orchid Dream - lavender-forward, sakura-pink co-star, plum text) ─────
+// Anchored to the mascot art: a lavender/orchid star with blush-pink cheeks.
 val KawaiiLight = Palette(
     variant = ThemeVariant.Kawaii,
     isDark = false,
-    Cream = Color(0xFFFFF5F7),          // strawberry-milk background
-    Cloud = Color(0xFFFCEAEF),           // soft pink secondary surface
-    Petal = Color(0xFFFF8FB1),           // primary — sakura mochi pink
-    Lilac = Color(0xFFC7B8EA),           // secondary — Kuromi/wisteria lavender
-    Mint = Color(0xFFFFD6A5),            // tertiary — sun-warmed peach
-    Sage = Color(0xFFA8D8B9),            // success — Cinnamoroll mint
-    Ink = Color(0xFF4A2C3D),             // deep plum-maroon
-    Smoke = Color(0xFF9B7A8A),           // dusty mauve for muted text
-    Mist = Color(0xFFF5E1E8),            // pink fog dividers
-    Surface = Color(0xFFFFFDFE),          // off-white with whisper of pink
+    Cream = Color(0xFFFBF7FF),          // lavender-white background
+    Cloud = Color(0xFFF3E9FC),           // soft orchid secondary surface
+    Petal = Color(0xFF9D40CE),           // primary - deep orchid (the mascot's body)
+    Lilac = Color(0xFFFF9EC4),           // secondary - sakura blush pink
+    Mint = Color(0xFFFFC59A),            // tertiary - sun-warmed peach
+    Sage = Color(0xFF8FD0AC),            // success - soft mint
+    Ink = Color(0xFF3D2453),             // deep plum-violet text
+    Smoke = Color(0xFF7C5A82),           // dusty plum for muted text (AA on all surfaces)
+    Mist = Color(0xFFECDDF7),            // lavender fog dividers
+    Surface = Color(0xFFFFFDFF),          // off-white with a whisper of lavender
 )
 
 val KawaiiDark = Palette(
     variant = ThemeVariant.Kawaii,
     isDark = true,
-    Cream = Color(0xFF2A1A24),            // deep plum bg
-    Cloud = Color(0xFF3A2530),
-    Petal = Color(0xFFFFB7CC),            // softer pink for dark
-    Lilac = Color(0xFFC7B8EA),
-    Mint = Color(0xFFFFD6A5),
-    Sage = Color(0xFFA8D8B9),
-    Ink = Color(0xFFFFF5F7),
-    Smoke = Color(0xFFC9A8B5),
-    Mist = Color(0xFF4A2E3C),
-    Surface = Color(0xFF321F2A),
+    Cream = Color(0xFF1E1428),            // deep plum-violet bg
+    Cloud = Color(0xFF2C1E3A),
+    Petal = Color(0xFFDDA8F5),            // luminous soft orchid for dark
+    Lilac = Color(0xFFFFB0CE),            // soft sakura pink
+    Mint = Color(0xFFFFC59A),
+    Sage = Color(0xFF9FD8B6),
+    Ink = Color(0xFFF7EFFB),
+    Smoke = Color(0xFFC4A8D4),
+    Mist = Color(0xFF3D2A4F),
+    Surface = Color(0xFF271934),
 )
 
-// ───── Tough (gritty, monochrome with iron accents) ─────
+// ───── Tough (Ink & Bone - monochrome with iron accents) ─────
+// Anchored to the mascot art: a bone-white star on pure black.
 val ToughLight = Palette(
     variant = ThemeVariant.Tough,
     isDark = false,
-    Cream = Color(0xFFEAE6E0),       // cool stone
-    Cloud = Color(0xFFD8D2C9),       // dusty concrete
-    Petal = Color(0xFF1A1A1C),       // black is the primary accent
-    Lilac = Color(0xFF55504A),       // gunmetal
-    Mint = Color(0xFFB4B5A3),        // olive-tinged gray
-    Sage = Color(0xFF7F8B7A),        // muted moss
-    Ink = Color(0xFF0E0E10),
-    Smoke = Color(0xFF55504A),
-    Mist = Color(0xFFCEC8BE),
-    Surface = Color(0xFFF3EFE9),
+    Cream = Color(0xFFECE9E1),       // warm bone-stone
+    Cloud = Color(0xFFDAD5CB),       // dusty concrete
+    Petal = Color(0xFF15151A),       // near-black is the primary accent
+    Lilac = Color(0xFF52504B),       // gunmetal
+    Mint = Color(0xFFB0B19F),        // olive-tinged gray
+    Sage = Color(0xFF7C8A78),        // muted moss
+    Ink = Color(0xFF0C0C0E),
+    Smoke = Color(0xFF565249),
+    Mist = Color(0xFFCFC9BF),
+    Surface = Color(0xFFF4F1EA),
 )
 
 val ToughDark = Palette(
     variant = ThemeVariant.Tough,
     isDark = true,
-    Cream = Color(0xFF0B0B0D),
-    Cloud = Color(0xFF1A1A1C),
-    Petal = Color(0xFFEDE7DA),       // bone white as primary in dark tough
-    Lilac = Color(0xFF8A8378),       // tarnished brass
-    Mint = Color(0xFF6B7066),
-    Sage = Color(0xFF5C685D),
-    Ink = Color(0xFFEDE7DA),
-    Smoke = Color(0xFF9A938A),
-    Mist = Color(0xFF2A2A2D),
-    Surface = Color(0xFF161618),
+    Cream = Color(0xFF070708),       // pure near-black (matches icon bg)
+    Cloud = Color(0xFF161618),
+    Petal = Color(0xFFF2EFE4),       // bone white as primary in dark tough
+    Lilac = Color(0xFF8B8478),       // tarnished brass
+    Mint = Color(0xFF7A7F71),        // pale olive-gray
+    Sage = Color(0xFF5D695E),
+    Ink = Color(0xFFF2EFE4),
+    Smoke = Color(0xFF9C958A),
+    Mist = Color(0xFF28282B),
+    Surface = Color(0xFF121214),
 )
 
-// ───── Neutral (corporate, professional, restrained) ─────
+// ───── Neutral (Slate Iris - professional, restrained, quietly indigo) ─────
+// Anchored to the mascot art: a muted slate blue-gray robot.
 val NeutralLight = Palette(
     variant = ThemeVariant.Neutral,
     isDark = false,
-    Cream = Color(0xFFF7F8FA),       // crisp paper
-    Cloud = Color(0xFFEDEFF3),       // panel
-    Petal = Color(0xFF2B5BD7),       // corporate blue accent
-    Lilac = Color(0xFF6B7280),       // slate
-    Mint = Color(0xFFDDE5F1),
-    Sage = Color(0xFFCDE5D0),
-    Ink = Color(0xFF111827),         // neutral near-black
-    Smoke = Color(0xFF6B7280),
-    Mist = Color(0xFFE3E6EB),
+    Cream = Color(0xFFF6F7FA),       // crisp cool paper
+    Cloud = Color(0xFFEAECF2),       // panel
+    Petal = Color(0xFF4D5694),       // iris-slate accent (sophisticated, not loud blue)
+    Lilac = Color(0xFF646A7C),       // slate
+    Mint = Color(0xFFDEE2EE),
+    Sage = Color(0xFFBFE0CA),
+    Ink = Color(0xFF15161E),         // slate near-black
+    Smoke = Color(0xFF5C6070),
+    Mist = Color(0xFFE1E4EB),
     Surface = Color(0xFFFFFFFF),
 )
 
 val NeutralDark = Palette(
     variant = ThemeVariant.Neutral,
     isDark = true,
-    Cream = Color(0xFF0F1115),
-    Cloud = Color(0xFF181B22),
-    Petal = Color(0xFF7B97FF),
-    Lilac = Color(0xFF9AA3B2),
-    Mint = Color(0xFF2D3344),
-    Sage = Color(0xFF2D3D33),
-    Ink = Color(0xFFE6E8EC),
-    Smoke = Color(0xFF9AA3B2),
-    Mist = Color(0xFF272B34),
-    Surface = Color(0xFF1A1D24),
+    Cream = Color(0xFF101117),
+    Cloud = Color(0xFF191B23),
+    Petal = Color(0xFF9AA2E0),       // luminous periwinkle-iris
+    Lilac = Color(0xFF9AA0B2),
+    Mint = Color(0xFF2C3344),
+    Sage = Color(0xFF2C3D33),
+    Ink = Color(0xFFE8E9F0),
+    Smoke = Color(0xFF9DA1B2),
+    Mist = Color(0xFF262932),
+    Surface = Color(0xFF1A1C24),
 )
 
 val LocalPalette = staticCompositionLocalOf { NeutralLight }
@@ -138,13 +161,13 @@ val palette: Palette
 private fun colorSchemeFor(p: Palette) = if (p.isDark) {
     darkColorScheme(
         primary = p.Petal,
-        onPrimary = if (p.variant == ThemeVariant.Tough) p.Cream else p.Ink,
+        onPrimary = p.onPetal,
         primaryContainer = p.Cloud,
         onPrimaryContainer = p.Ink,
         secondary = p.Lilac,
-        onSecondary = p.Ink,
+        onSecondary = p.on(p.Lilac),
         tertiary = p.Mint,
-        onTertiary = p.Ink,
+        onTertiary = p.on(p.Mint),
         background = p.Cream,
         onBackground = p.Ink,
         surface = p.Surface,
@@ -152,17 +175,24 @@ private fun colorSchemeFor(p: Palette) = if (p.isDark) {
         surfaceVariant = p.Mist,
         onSurfaceVariant = p.Smoke,
         outline = p.Mist,
+        // surfaceContainer* drive dialogs, menus, bottom sheets — keep them in-palette
+        surfaceContainerLowest = p.Cream,
+        surfaceContainerLow = p.Surface,
+        surfaceContainer = p.Surface,
+        surfaceContainerHigh = p.Cloud,
+        surfaceContainerHighest = p.Cloud,
+        outlineVariant = p.Mist,
     )
 } else {
     lightColorScheme(
         primary = p.Petal,
-        onPrimary = if (p.variant == ThemeVariant.Tough) p.Cream else p.Ink,
+        onPrimary = p.onPetal,
         primaryContainer = p.Cloud,
         onPrimaryContainer = p.Ink,
         secondary = p.Lilac,
-        onSecondary = p.Ink,
+        onSecondary = p.on(p.Lilac),
         tertiary = p.Mint,
-        onTertiary = p.Ink,
+        onTertiary = p.on(p.Mint),
         background = p.Cream,
         onBackground = p.Ink,
         surface = p.Surface,
@@ -170,6 +200,12 @@ private fun colorSchemeFor(p: Palette) = if (p.isDark) {
         surfaceVariant = p.Mist,
         onSurfaceVariant = p.Smoke,
         outline = p.Mist,
+        surfaceContainerLowest = p.Cream,
+        surfaceContainerLow = p.Surface,
+        surfaceContainer = p.Surface,
+        surfaceContainerHigh = p.Cloud,
+        surfaceContainerHighest = p.Cloud,
+        outlineVariant = p.Mist,
     )
 }
 

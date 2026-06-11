@@ -14,7 +14,7 @@
         android:layout_height="wrap_content"
         android:textStyle="bold"
         android:textSize="14sp"
-        android:textColor="#1A1224"
+        android:textColor="@color/widget_text"
         android:text="ascendy" />
 
     <TextView
@@ -22,7 +22,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="18sp"
-        android:textColor="#1A1224"
+        android:textColor="@color/widget_text"
         android:layout_marginTop="2dp"
         android:text="ready" />
 
@@ -31,7 +31,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="12sp"
-        android:textColor="#7A6E80"
+        android:textColor="@color/widget_muted"
         android:layout_marginTop="2dp"
         android:text="" />
 

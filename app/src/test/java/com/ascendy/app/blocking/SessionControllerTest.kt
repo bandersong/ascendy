@@ -6,6 +6,7 @@ import com.ascendy.app.data.BlockSession
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
 import com.ascendy.app.data.ThemePrefs
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -175,5 +176,57 @@ class SessionControllerTest {
 
         controller.restoreOnBoot()
         assertTrue("session restored from DB", BlockState.active.value)
+    }
+
+    @Test fun startSession_neverClobbersActiveSession() = runTest {
+        // A scheduled/pomodoro start during a STRICT session must not overwrite it — that was
+        // an escape hatch out of strict mode and orphaned the prior open log.
+        val strictList = newList(strict = true)
+        repo.saveTag(BoundTag(tagId = "tagS", nickname = "S", createdAt = 0, listId = strictList))
+        controller.handleTagTap("tagS")
+        assertTrue(BlockState.strict.value)
+
+        val weakList = newList(strict = false)
+        val started = controller.startSession(weakList, tagId = null, source = SessionSource.Scheduled)
+        assertFalse("second start refused while a session is active", started)
+        assertTrue("original strict session untouched", BlockState.strict.value)
+        assertEquals("session row still the strict list", strictList, repo.currentSession()!!.listId)
+    }
+
+    @Test fun endSession_closesEveryOpenLog() = runTest {
+        val listId = newList(strict = false)
+        // Orphaned open log from a (pre-fix) clobbered session.
+        repo.startLog(listId, startedAt = 1L, source = "manual")
+        controller.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        controller.endSession()
+
+        val open = repo.observeLogsSince(0).first().filter { it.endedAt == null }
+        assertTrue("no open log remains after endSession, found: $open", open.isEmpty())
+    }
+
+    @Test fun endSessionIfStartedAt_ignoresStaleAlarmIdentity() = runTest {
+        val listId = newList(strict = false)
+        controller.startSession(listId, tagId = null, source = SessionSource.Nfc)
+        val realStart = repo.currentSession()!!.startedAt
+
+        // A delayed END alarm armed for a previous session carries that session's startedAt.
+        controller.endSessionIfStartedAt(realStart - 99_999L)
+        assertTrue("stale alarm ignored", BlockState.active.value)
+
+        controller.endSessionIfStartedAt(realStart)
+        assertFalse("matching alarm ends the session", BlockState.active.value)
+    }
+
+    @Test fun restoreOnBoot_endsSessionWhoseWindowPassed() = runTest {
+        val listId = newList(strict = false)
+        controller.startTimedSession(durationMs = 25L * 60 * 1000, listId = listId)
+        // Simulate reboot after the window expired: backdate the session so endsAt is in the past.
+        val s = repo.currentSession()!!
+        repo.saveSession(s.copy(startedAt = s.startedAt - 10 * 60 * 60_000L, endsAt = System.currentTimeMillis() - 1L))
+        BlockState.clear()
+
+        controller.restoreOnBoot()
+        assertFalse("expired session not resurrected", BlockState.active.value)
+        assertFalse("DB row closed too", repo.currentSession()!!.active)
     }
 }

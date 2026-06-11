@@ -18,6 +18,7 @@ private val MAX_SESSION_KEY = intPreferencesKey("max_session_minutes")
 private val DAILY_GOAL_KEY = intPreferencesKey("daily_goal_minutes")
 private val LAST_SEEN_VERSION_KEY = intPreferencesKey("last_seen_version_code")
 private val LOCKDOWN_KEY = booleanPreferencesKey("lockdown_enabled")
+private val A11Y_DISCLOSURE_KEY = booleanPreferencesKey("a11y_disclosure_accepted")
 const val MAX_SESSION_DEFAULT_MIN = 480   // 8h
 const val DAILY_GOAL_DEFAULT_MIN = 120    // 2h
 
@@ -81,5 +82,17 @@ class ThemePrefs(private val context: Context) {
 
     suspend fun setLockdownEnabled(enabled: Boolean) {
         context.themeStore.edit { it[LOCKDOWN_KEY] = enabled }
+    }
+
+    /**
+     * Play prominent-disclosure consent: the user has read and accepted what the accessibility
+     * service reads (foreground app + browser URL bar) before being sent to enable it.
+     */
+    val a11yDisclosureAccepted: Flow<Boolean> = context.themeStore.data.map { prefs ->
+        prefs[A11Y_DISCLOSURE_KEY] ?: false
+    }
+
+    suspend fun setA11yDisclosureAccepted() {
+        context.themeStore.edit { it[A11Y_DISCLOSURE_KEY] = true }
     }
 }

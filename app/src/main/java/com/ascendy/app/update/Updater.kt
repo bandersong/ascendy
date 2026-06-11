@@ -2,6 +2,9 @@ package com.ascendy.app.update
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageInfo
+import android.content.pm.PackageManager
+import android.content.pm.Signature
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.FileProvider
@@ -14,6 +17,7 @@ import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.security.MessageDigest
 
 /**
  * Lightweight in-app updater that queries the GitHub Releases API and triggers a system install
@@ -132,6 +136,15 @@ object Updater {
                     }
                 }
             }
+            // SECURITY: never hand an unverified APK to the system installer. The release endpoint is
+            // attacker-reachable and the repo's debug keystore is public, so Android's own signature
+            // check is not a sufficient gate. Pin the install to this app's own signing certificate.
+            val rejection = verifyApk(context, outFile)
+            if (rejection != null) {
+                outFile.delete()
+                emit(DownloadProgress.Error("update rejected: $rejection"))
+                return@flow
+            }
             emit(DownloadProgress.Done(outFile))
         } catch (e: Exception) {
             emit(DownloadProgress.Error(e.message ?: "download failed"))
@@ -140,7 +153,14 @@ object Updater {
         }
     }.flowOn(Dispatchers.IO)
 
-    fun launchInstall(context: Context, apk: File) {
+    /**
+     * Launches the system package installer for [apk] — but only after re-verifying it (defense in
+     * depth; the download path already verified before reaching this state). Returns null on success,
+     * or a human-readable rejection reason if the APK failed verification, in which case nothing is
+     * launched.
+     */
+    fun launchInstall(context: Context, apk: File): String? {
+        verifyApk(context, apk)?.let { return "update rejected: $it" }
         val uri: Uri = FileProvider.getUriForFile(
             context, "${context.packageName}.fileprovider", apk
         )
@@ -150,7 +170,81 @@ object Updater {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
+        return null
     }
+
+    /**
+     * Verifies a downloaded APK before it is offered to the system installer.
+     *
+     * A compromised or MITM'd release — or anyone able to publish to the releases endpoint — could
+     * serve an arbitrary APK, and because the debug keystore is committed to this repo, Android's
+     * install-time signature check alone cannot be trusted. We therefore pin the install to this
+     * app's own identity: the APK must declare our package name, be a strictly newer version, and be
+     * signed by exactly the same certificate(s) as the currently-running app.
+     *
+     * @return null when the APK is safe to install, or a human-readable rejection reason otherwise.
+     */
+    fun verifyApk(context: Context, apk: File): String? {
+        if (!apk.isFile || apk.length() == 0L) return "downloaded file is missing or empty"
+        val pm = context.packageManager
+
+        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            PackageManager.GET_SIGNING_CERTIFICATES
+        } else {
+            @Suppress("DEPRECATION") PackageManager.GET_SIGNATURES
+        }
+
+        val apkInfo = pm.getPackageArchiveInfo(apk.absolutePath, flags)
+            ?: return "could not read the downloaded APK"
+
+        if (apkInfo.packageName != context.packageName) {
+            return "package mismatch (${apkInfo.packageName} != ${context.packageName})"
+        }
+
+        // Reject downgrades and replays: a self-update must be strictly newer than what is installed.
+        val apkCode = apkInfo.longVersionCodeCompat()
+        if (apkCode <= BuildConfig.VERSION_CODE.toLong()) {
+            return "version $apkCode is not newer than installed ${BuildConfig.VERSION_CODE}"
+        }
+
+        val installed = try {
+            pm.getPackageInfo(context.packageName, flags)
+        } catch (e: Exception) {
+            return "could not read the installed app signature"
+        }
+
+        val apkSigners = signerSha256(apkInfo)
+        val installedSigners = signerSha256(installed)
+        if (apkSigners.isEmpty() || installedSigners.isEmpty()) {
+            return "APK is unsigned or its signature could not be read"
+        }
+        if (apkSigners != installedSigners) {
+            return "signing certificate does not match this app's key"
+        }
+        return null
+    }
+
+    /** SHA-256 digests (lowercase hex) of the current signing certificate(s) in [info]. */
+    private fun signerSha256(info: PackageInfo): Set<String> {
+        val sigs: Array<Signature>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            info.signingInfo?.apkContentsSigners
+        } else {
+            @Suppress("DEPRECATION") info.signatures
+        }
+        return sigs.orEmpty().mapNotNull { sig ->
+            try {
+                MessageDigest.getInstance("SHA-256")
+                    .digest(sig.toByteArray())
+                    .joinToString("") { "%02x".format(it.toInt() and 0xFF) }
+            } catch (e: Exception) {
+                null
+            }
+        }.toSet()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun PackageInfo.longVersionCodeCompat(): Long =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) longVersionCode else versionCode.toLong()
 
     fun canRequestInstalls(context: Context): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

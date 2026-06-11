@@ -21,9 +21,15 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +51,8 @@ data class PermissionStatus(
 @Composable
 fun PermissionsScreen(
     status: PermissionStatus,
+    a11yDisclosureAccepted: Boolean,
+    onAcceptA11yDisclosure: () -> Unit,
     onBack: () -> Unit,
     onRequestNotifications: () -> Unit,
     onRequestVpn: () -> Unit,
@@ -52,6 +60,36 @@ fun PermissionsScreen(
     val context = LocalContext.current
     val insets = WindowInsets.systemBars.asPaddingValues()
     val scroll = rememberScrollState()
+    var showA11yDisclosure by remember { mutableStateOf(false) }
+
+    val openA11ySettings = {
+        context.startActivity(
+            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    // Play prominent-disclosure: the service reads screen content (foreground app + browser URL
+    // bar), so consent must be collected in-app BEFORE sending the user to enable it.
+    if (showA11yDisclosure) {
+        AlertDialog(
+            onDismissRequest = { showA11yDisclosure = false },
+            title = { Text(vocab.a11yDisclosureTitle) },
+            text = { Text(vocab.a11yDisclosureBody) },
+            confirmButton = {
+                Button(onClick = {
+                    showA11yDisclosure = false
+                    onAcceptA11yDisclosure()
+                    openA11ySettings()
+                }) { Text(vocab.a11yDisclosureAgree) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showA11yDisclosure = false }) {
+                    Text(vocab.a11yDisclosureDecline)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -85,10 +123,8 @@ fun PermissionsScreen(
             granted = status.accessibility,
             actionLabel = vocab.permsOpenSettings,
             onClick = {
-                context.startActivity(
-                    Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+                if (a11yDisclosureAccepted) openA11ySettings()
+                else showA11yDisclosure = true
             }
         )
         Spacer(Modifier.height(8.dp))

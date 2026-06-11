@@ -3,6 +3,7 @@ package com.ascendy.app.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -13,6 +14,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
@@ -88,11 +91,17 @@ fun BlocklistScreen(
                     }
                 }
             } else {
-                lists.forEach { list ->
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(bottom = 96.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                items(lists, key = { it.id }) { list ->
                     Surface(
                         onClick = { onOpenList(list) },
                         color = MaterialTheme.colorScheme.surface,
                         shape = MaterialTheme.shapes.large,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, palette.Mist),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
@@ -133,7 +142,7 @@ fun BlocklistScreen(
                             }
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                }
                 }
             }
         }
@@ -144,9 +153,9 @@ fun BlocklistScreen(
                 .align(Alignment.BottomEnd)
                 .padding(20.dp),
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = palette.Ink
+            contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
-            Icon(Icons.Rounded.Add, contentDescription = "new list")
+            Icon(Icons.Rounded.Add, contentDescription = vocab.listsNewDialogTitle)
         }
     }
 

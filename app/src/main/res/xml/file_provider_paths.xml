@@ -2,4 +2,8 @@
 <paths>
     <cache-path name="updates" path="updates/" />
     <external-files-path name="updates_ext" path="updates/" />
+    <cache-path name="qr" path="qr/" />
+    <!-- API 26-28 legacy gallery saves write here; without this entry getUriForFile throws
+         AFTER the PNG was written and the save is misreported as failed. -->
+    <external-path name="pictures" path="Pictures/Ascendy/" />
 </paths>

@@ -291,6 +291,36 @@ data class Vocab(
     val lockdownLockedNote: String,      // shown while a session is active (can't disable)
     val lockdownNeedsAdmin: String,      // toast if admin activation was declined
     val lockdownAdminExplanation: String, // shown in the system "activate device admin" dialog
+
+    // home — strings that used to be hardcoded in HomeScreen
+    val setupAllDone: String,            // collapsed setup card label
+    val settingsLabel: String,           // a11y contentDescription for the settings icon
+    val homeStreakBadgeFmt: String,      // "%d" streak chip on the hero card
+    val homeAppsSitesFmt: String,        // "%d apps · %d sites" blocked summary
+
+    // pomodoro
+    val pomodoroSelectedFmt: String,     // "%d" selected-duration confirmation
+
+    // accessibility prominent disclosure (Play policy: shown before enabling the service)
+    val a11yDisclosureTitle: String,
+    val a11yDisclosureBody: String,
+    val a11yDisclosureAgree: String,
+    val a11yDisclosureDecline: String,
+
+    // lockdown opt-in confirmation (anti-uninstall is consent-gated)
+    val lockdownConfirmTitle: String,
+    val lockdownConfirmBody: String,
+    val lockdownConfirmYes: String,
+    val lockdownConfirmNo: String,
+
+    // QR anchor export — exporting registers the anchor so the printed copy works
+    val qrDefaultNickname: String,
+    val qrExportNote: String,
+
+    // NFC adapter states on the pairing screen
+    val nfcOffBody: String,
+    val nfcOffAction: String,
+    val nfcUnsupportedBody: String,
 )
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
@@ -418,8 +448,8 @@ val KawaiiVocab = Vocab(
     onboardSkip = "skip",
     onboardNext = "next",
     onboardStart = "let's go ✨",
-    onboardP1Title = "tap a tag, lock distractions ♡",
-    onboardP1Body = "pair a tiny nfc sticker, then keep it somewhere a little inconvenient — the fridge, a drawer, your bag. tap it once to start focusing, tap it again to come back.",
+    onboardP1Title = "lock distractions, your way ♡",
+    onboardP1Body = "tap an nfc sticker or scan a printed qr code to start focusing — keep your anchor somewhere a little inconvenient. no tag? no problem: long-press the little guy for a manual session, or run a quick timer. tap your anchor again to come back.",
     onboardP2Title = "build your focus list 🌸",
     onboardP2Body = "pick the apps you want gone during a session. ascendy will gently bounce you back home if you try to open one.",
     onboardP3Title = "a few permissions ♡",
@@ -543,6 +573,30 @@ val KawaiiVocab = Vocab(
     lockdownLockedNote = "you're focusing — lockdown can't be turned off until this session ends ♡",
     lockdownNeedsAdmin = "lockdown needs device-admin to work — tap allow next time ♡",
     lockdownAdminExplanation = "ascendy uses this only to stop itself being uninstalled while lockdown is on. turn lockdown off anytime there's no active session. ♡",
+
+    setupAllDone = "all set ♡",
+    settingsLabel = "settings",
+    homeStreakBadgeFmt = "🔥 %d",
+    homeAppsSitesFmt = "%d apps · %d sites blocked",
+
+    pomodoroSelectedFmt = "%d min picked ✨",
+
+    a11yDisclosureTitle = "before you enable accessibility ♡",
+    a11yDisclosureBody = "ascendy's accessibility service reads the name of the app in front and your browser's address bar — only while a focus session is active — so it can bounce blocked apps and sites. everything is checked on your phone and immediately forgotten. nothing is stored, logged, or sent anywhere, ever.",
+    a11yDisclosureAgree = "i understand — continue",
+    a11yDisclosureDecline = "not now",
+
+    lockdownConfirmTitle = "turn on lockdown? 🔐",
+    lockdownConfirmBody = "lockdown activates device-admin so ascendy can't be uninstalled, and seals the settings pages that could disable it — but only while a session is running. the safety timer always ends every session, and you can turn lockdown off any time you're not focusing ♡",
+    lockdownConfirmYes = "turn it on",
+    lockdownConfirmNo = "nevermind",
+
+    qrDefaultNickname = "qr anchor",
+    qrExportNote = "saving or sharing registers this code as an anchor, so the printed copy can end sessions ♡",
+
+    nfcOffBody = "nfc is turned off — flip it on to pair ♡",
+    nfcOffAction = "open nfc settings",
+    nfcUnsupportedBody = "this phone doesn't have nfc — use a printed qr anchor instead, it works just as well ♡",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -671,7 +725,7 @@ val ToughVocab = Vocab(
     onboardNext = "NEXT",
     onboardStart = "LET'S WORK",
     onboardP1Title = "ANCHOR. LOCK IN. BREAK.",
-    onboardP1Body = "pair an nfc sticker. stash it somewhere annoying — drawer, glove box, gym bag. tap it once to lock in. tap again to break out.",
+    onboardP1Body = "tap an nfc sticker or scan a printed qr code to lock in. stash your anchor somewhere annoying — drawer, glove box, gym bag. no hardware? long-press the mascot or run a timed lock. tap the anchor again to break out.",
     onboardP2Title = "PICK YOUR NOISE",
     onboardP2Body = "name the apps that steal your time. ascendy slams the door on them the second they try to surface.",
     onboardP3Title = "PERMISSIONS — A FEW",
@@ -795,6 +849,30 @@ val ToughVocab = Vocab(
     lockdownLockedNote = "LOCKED IN — lockdown stays on until this session ends.",
     lockdownNeedsAdmin = "lockdown needs device-admin. allow it next time.",
     lockdownAdminExplanation = "ascendy uses this to block its own uninstall while lockdown is on. deactivate it anytime there's no active session.",
+
+    setupAllDone = "ALL SET.",
+    settingsLabel = "SETTINGS",
+    homeStreakBadgeFmt = "%d ⛓",
+    homeAppsSitesFmt = "%d APPS · %d SITES BLOCKED",
+
+    pomodoroSelectedFmt = "%d MIN. LOCKED.",
+
+    a11yDisclosureTitle = "READ THIS FIRST.",
+    a11yDisclosureBody = "the accessibility service reads the foreground app's name and your browser's address bar — only during an active session — to slam the door on blocked apps and sites. every check runs on-device and is discarded instantly. nothing stored. nothing sent. anywhere.",
+    a11yDisclosureAgree = "UNDERSTOOD — CONTINUE",
+    a11yDisclosureDecline = "NOT NOW",
+
+    lockdownConfirmTitle = "ENGAGE LOCKDOWN?",
+    lockdownConfirmBody = "device-admin blocks the uninstall. the settings pages that could kill ascendy are sealed while a session runs. the safety timer is your only exit mid-session. switch it off any time you're not locked in.",
+    lockdownConfirmYes = "ENGAGE",
+    lockdownConfirmNo = "BACK OFF",
+
+    qrDefaultNickname = "QR ANCHOR",
+    qrExportNote = "saving or sharing registers this code as a working anchor. print it. use it.",
+
+    nfcOffBody = "nfc is off. turn it on to pair.",
+    nfcOffAction = "NFC SETTINGS",
+    nfcUnsupportedBody = "no nfc on this phone. print a qr anchor — same discipline, no chip.",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -922,8 +1000,8 @@ val NeutralVocab = Vocab(
     onboardSkip = "Skip",
     onboardNext = "Next",
     onboardStart = "Get started",
-    onboardP1Title = "Pair an NFC tag",
-    onboardP1Body = "Pair a blank NTAG21x sticker and place it somewhere inconvenient (fridge, drawer, car). Tap it once to begin a focus session, tap it again to end it.",
+    onboardP1Title = "Start a focus session",
+    onboardP1Body = "Begin a session by tapping a paired NFC sticker or scanning a printed QR code — keep the anchor somewhere inconvenient (fridge, drawer, car). No tag? Long-press the mascot for a manual session, or use a timed session. Tap the same anchor again to end it.",
     onboardP2Title = "Build a block list",
     onboardP2Body = "Choose the apps you want unavailable during a focus session. Ascendy returns to the home screen whenever a blocked app is opened.",
     onboardP3Title = "Grant permissions",
@@ -1047,6 +1125,30 @@ val NeutralVocab = Vocab(
     lockdownLockedNote = "A session is active — Lockdown cannot be turned off until it ends.",
     lockdownNeedsAdmin = "Lockdown requires device-admin access to function. Allow it to enable Lockdown.",
     lockdownAdminExplanation = "Ascendy uses this only to prevent its own uninstallation while Lockdown is enabled. You can turn Lockdown off whenever no session is active.",
+
+    setupAllDone = "Setup complete",
+    settingsLabel = "Settings",
+    homeStreakBadgeFmt = "%d-day",
+    homeAppsSitesFmt = "%d apps · %d sites blocked",
+
+    pomodoroSelectedFmt = "Selected: %d min",
+
+    a11yDisclosureTitle = "Accessibility service disclosure",
+    a11yDisclosureBody = "Ascendy's accessibility service reads the name of the foreground app and the browser address bar — only while a focus session is active — to enforce your block list. All processing happens on this device and the data is discarded immediately. Nothing is stored, logged, or transmitted.",
+    a11yDisclosureAgree = "I understand — continue",
+    a11yDisclosureDecline = "Not now",
+
+    lockdownConfirmTitle = "Enable Lockdown?",
+    lockdownConfirmBody = "Lockdown activates device administration so Ascendy cannot be uninstalled, and blocks the Settings screens that could disable it — only while a session is active. The safety timer guarantees every session ends, and Lockdown can be turned off whenever no session is running.",
+    lockdownConfirmYes = "Enable",
+    lockdownConfirmNo = "Cancel",
+
+    qrDefaultNickname = "QR anchor",
+    qrExportNote = "Saving or sharing registers this code as an anchor, so the printed copy can start and end sessions.",
+
+    nfcOffBody = "NFC is turned off. Enable it to pair a tag.",
+    nfcOffAction = "Open NFC settings",
+    nfcUnsupportedBody = "This device does not support NFC. Use a printed QR anchor instead.",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

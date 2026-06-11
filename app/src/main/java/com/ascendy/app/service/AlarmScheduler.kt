@@ -32,17 +32,37 @@ object AlarmScheduler {
         )
     }
 
-    fun scheduleSessionEnd(context: Context, triggerAtMs: Long) {
+    /**
+     * canScheduleExactAlarms() can flip to false between the check and the set (user revokes the
+     * special access mid-flight) — setExactAndAllowWhileIdle then throws SecurityException. An
+     * inexact alarm is always better than crashing after the session row was already marked active.
+     */
+    private fun setAlarm(am: AlarmManager, triggerAtMs: Long, pi: PendingIntent) {
+        if (canScheduleExact(am)) {
+            try {
+                am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
+                return
+            } catch (_: SecurityException) {
+                // fall through to inexact
+            }
+        }
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
+    }
+
+    /**
+     * [sessionStartedAt] identifies the session this alarm is for. The request code is shared
+     * across sessions, so a delayed delivery armed for a PREVIOUS session can still fire after a
+     * new one starts — the receiver compares this extra against the active session and ignores
+     * mismatches instead of ending whatever happens to be running.
+     */
+    fun scheduleSessionEnd(context: Context, triggerAtMs: Long, sessionStartedAt: Long) {
         val am = alarmManager(context)
         val intent = Intent(context, ScheduleAlarmReceiver::class.java).apply {
             action = ScheduleAlarmReceiver.ACTION_END_SESSION
+            putExtra(ScheduleAlarmReceiver.EXTRA_SESSION_STARTED_AT, sessionStartedAt)
         }
         val pi = pending(context, POMODORO_END_REQ, intent)
-        if (canScheduleExact(am)) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
-        } else {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, pi)
-        }
+        setAlarm(am, triggerAtMs, pi)
     }
 
     fun cancelSessionEnd(context: Context) {
@@ -63,11 +83,7 @@ object AlarmScheduler {
         }
         val req = (SCHEDULE_BASE_REQ + schedule.id.toInt() * 2 + if (isStart) 0 else 1)
         val pi = pending(context, req, intent)
-        if (canScheduleExact(am)) {
-            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMs, pi)
-        } else {
-            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMs, pi)
-        }
+        setAlarm(am, nextMs, pi)
     }
 
     fun cancelDailyTrigger(context: Context, scheduleId: Long, isStart: Boolean) {
@@ -82,20 +98,31 @@ object AlarmScheduler {
     /** Find the next firing instant for a daily schedule. Returns null if no day is enabled. */
     private fun computeNextFiring(schedule: Schedule, isStart: Boolean): Long? {
         val minutes = if (isStart) schedule.startMinuteOfDay else schedule.endMinuteOfDay
-        return nextFiringFrom(schedule.daysOfWeek, schedule.enabled, minutes, Calendar.getInstance())
+        // Overnight window (end <= start, e.g. Mon 22:00→02:00): the END fires on the calendar day
+        // AFTER the enabled start day, so its day-bit check must look one day back — otherwise the
+        // Tue-02:00 end only matches if Tue is enabled, and a Mon-only schedule's end lands a week
+        // late (the safety timer was the only thing saving it).
+        val matchDayOffset =
+            if (!isStart && schedule.endMinuteOfDay <= schedule.startMinuteOfDay) 1 else 0
+        return nextFiringFrom(
+            schedule.daysOfWeek, schedule.enabled, minutes, Calendar.getInstance(), matchDayOffset
+        )
     }
 
     /**
      * Pure, deterministic core of [computeNextFiring] — [now] is injected so the day-bitmask /
      * wrap-around math can be unit-tested without depending on the wall clock. Returns the next
-     * instant strictly after [now] whose weekday bit is set in [daysOfWeek] and whose time-of-day
-     * is [minuteOfDay], or null if [daysOfWeek] is empty or the schedule is disabled.
+     * instant strictly after [now] at time-of-day [minuteOfDay] whose weekday — shifted back by
+     * [matchDayOffset] days — has its bit set in [daysOfWeek], or null if [daysOfWeek] is empty or
+     * the schedule is disabled. [matchDayOffset] = 1 expresses "this firing belongs to the window
+     * that STARTED yesterday" (overnight schedule ends).
      */
     internal fun nextFiringFrom(
         daysOfWeek: Int,
         enabled: Boolean,
         minuteOfDay: Int,
         now: Calendar,
+        matchDayOffset: Int = 0,
     ): Long? {
         if (daysOfWeek == 0 || !enabled) return null
         for (offset in 0..7) {
@@ -106,8 +133,9 @@ object AlarmScheduler {
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
             }
+            val matchDay = (cand.clone() as Calendar).apply { add(Calendar.DAY_OF_YEAR, -matchDayOffset) }
             // Calendar.DAY_OF_WEEK: Sun=1, Mon=2, …, Sat=7. Our bit 0 = Sun.
-            val bit = cand.get(Calendar.DAY_OF_WEEK) - 1
+            val bit = matchDay.get(Calendar.DAY_OF_WEEK) - 1
             if ((daysOfWeek shr bit) and 1 == 1 && cand.timeInMillis > now.timeInMillis) {
                 return cand.timeInMillis
             }

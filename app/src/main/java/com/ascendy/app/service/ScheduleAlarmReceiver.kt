@@ -22,7 +22,12 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
                 val controller = SessionController(context.applicationContext, app.repo, app.themePrefs)
                 when (action) {
                     ACTION_END_SESSION -> {
-                        controller.endSession()
+                        // Only end the session this alarm was armed for; a stale delivery from a
+                        // previous session must not kill the current one. Alarms armed by older
+                        // app versions carry no extra — for those, keep the legacy behavior.
+                        val startedAt = intent.getLongExtra(EXTRA_SESSION_STARTED_AT, -1L)
+                        if (startedAt > 0) controller.endSessionIfStartedAt(startedAt)
+                        else controller.endSession()
                     }
                     ACTION_SCHEDULE_START -> {
                         val id = intent.getLongExtra(EXTRA_SCHEDULE_ID, -1L)
@@ -44,11 +49,11 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
                     ACTION_SCHEDULE_END -> {
                         val id = intent.getLongExtra(EXTRA_SCHEDULE_ID, -1L)
                         val schedule = if (id >= 0) app.repo.scheduleById(id) else null
-                        val current = app.repo.currentSession()
                         // Only end the session THIS schedule started — never a manual/other session
-                        // the user happens to be running on the same list.
-                        if (schedule != null && current?.active == true && current.scheduleId == schedule.id) {
-                            controller.endSession()
+                        // the user happens to be running on the same list. The ownership check runs
+                        // inside the controller's transition lock so it can't race a new start.
+                        if (schedule != null) {
+                            controller.endSessionIfScheduleId(schedule.id)
                         }
                         if (schedule != null && schedule.enabled) {
                             AlarmScheduler.scheduleDailyTrigger(context, schedule, isStart = false)
@@ -66,5 +71,6 @@ class ScheduleAlarmReceiver : BroadcastReceiver() {
         const val ACTION_SCHEDULE_START = "com.ascendy.app.action.SCHEDULE_START"
         const val ACTION_SCHEDULE_END = "com.ascendy.app.action.SCHEDULE_END"
         const val EXTRA_SCHEDULE_ID = "schedule_id"
+        const val EXTRA_SESSION_STARTED_AT = "session_started_at"
     }
 }

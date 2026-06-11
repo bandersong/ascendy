@@ -103,6 +103,21 @@ object QrTools {
         } catch (_: Exception) { null }
     }
 
+    /**
+     * Write the QR to the app cache and return a FileProvider URI — for sharing. Needs no storage
+     * permission on any API level, unlike the gallery path.
+     */
+    fun saveToCache(context: Context, bitmap: Bitmap, displayName: String): Uri? {
+        return try {
+            val dir = File(context.cacheDir, "qr").apply { if (!exists()) mkdirs() }
+            val outFile = File(dir, "$displayName.png")
+            FileOutputStream(outFile).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
+            FileProvider.getUriForFile(context, context.packageName + ".fileprovider", outFile)
+        } catch (_: Exception) { null }
+    }
+
     /** Build a share intent for the saved PNG URI. */
     fun buildShareIntent(uri: Uri): Intent {
         return Intent(Intent.ACTION_SEND).apply {

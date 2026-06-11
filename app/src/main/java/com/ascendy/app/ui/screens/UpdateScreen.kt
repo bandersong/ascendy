@@ -169,7 +169,10 @@ fun UpdateScreen(onBack: () -> Unit) {
                                 Text(vocab.updateGrantInstallPerm)
                             }
                         } else {
-                            Button(onClick = { Updater.launchInstall(context, s.file) }) {
+                            Button(onClick = {
+                                val rejection = Updater.launchInstall(context, s.file)
+                                if (rejection != null) state = UpdateState.Error(rejection)
+                            }) {
                                 Text(vocab.updateInstall)
                             }
                         }

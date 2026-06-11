@@ -2,4 +2,12 @@
 <resources>
     <color name="cream">#F7F8FA</color>
     <color name="night">#1F1A24</color>
+
+    <!-- Home-screen widget. Light values here; values-night/colors.xml overrides for dark mode.
+         @color refs inside widget_background.xml resolve per-configuration, so the widget
+         follows the system theme with no drawable-night variant needed. -->
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_stroke">#E1E4EB</color>
+    <color name="widget_text">#15161E</color>
+    <color name="widget_muted">#5C6070</color>
 </resources>

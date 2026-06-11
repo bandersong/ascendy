@@ -94,6 +94,9 @@ interface SessionLogDao {
     @Query("UPDATE session_log SET endedAt = :endedAt WHERE id = :id")
     suspend fun finishLog(id: Long, endedAt: Long)
 
+    @Query("UPDATE session_log SET endedAt = :endedAt WHERE endedAt IS NULL")
+    suspend fun finishAllOpen(endedAt: Long)
+
     @Query("SELECT * FROM session_log ORDER BY startedAt DESC LIMIT 1")
     suspend fun latest(): SessionLog?
 

@@ -190,12 +190,13 @@ private fun WeekChart(buckets: LongArray) {
         ) {
             val w = size.width
             val h = size.height
-            val barW = w / 11f
-            val gap = barW * 0.45f
+            // One pitch shared with the label row below: 7 equal slots, bar centered in each.
+            val slotW = w / 7f
+            val barW = slotW * 0.55f
             for (i in 0..6) {
                 val pct = (buckets[i].toFloat() / maxMs).coerceIn(0f, 1f)
                 val barH = (h * 0.82f) * pct
-                val left = i * (barW + gap) + gap
+                val left = i * slotW + (slotW - barW) / 2f
                 val top = (h * 0.82f) - barH
                 drawRoundRect(
                     color = if (i == bestIdx && buckets[i] > 0) highlightColor else barColor,

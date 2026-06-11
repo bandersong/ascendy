@@ -138,13 +138,14 @@ private fun LinkRow(label: String, url: String, emphasized: Boolean = false) {
         },
         color = if (emphasized) palette.Petal else MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
+        border = if (emphasized) null else androidx.compose.foundation.BorderStroke(1.dp, palette.Mist),
         modifier = Modifier.fillMaxWidth()
     ) {
         Text(
             label,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             style = MaterialTheme.typography.titleMedium,
-            color = palette.Ink
+            color = if (emphasized) palette.onPetal else palette.Ink
         )
     }
 }

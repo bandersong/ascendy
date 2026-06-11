@@ -3,6 +3,8 @@ package com.ascendy.app.blocking
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
+import android.window.OnBackInvokedCallback
+import android.window.OnBackInvokedDispatcher
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -31,8 +33,21 @@ import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
 class BlockerActivity : ComponentActivity() {
+
+    // With enableOnBackInvokedCallback=true the legacy onBackPressed() is never called on
+    // API 33+ — predictive back would dismiss the blocker unless we register here.
+    private var backCallback: OnBackInvokedCallback? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            backCallback = OnBackInvokedCallback { /* swallow back */ }.also {
+                onBackInvokedDispatcher.registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_OVERLAY, it
+                )
+            }
+        }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
@@ -55,6 +70,15 @@ class BlockerActivity : ComponentActivity() {
         }
     }
 
+    override fun onDestroy() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            backCallback?.let { onBackInvokedDispatcher.unregisterOnBackInvokedCallback(it) }
+            backCallback = null
+        }
+        super.onDestroy()
+    }
+
+    // Pre-33 devices still route through the legacy path.
     @Suppress("OVERRIDE_DEPRECATION")
     override fun onBackPressed() {
         // swallow back

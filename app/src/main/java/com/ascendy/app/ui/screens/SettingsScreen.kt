@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,7 +26,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.R
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
@@ -65,6 +73,28 @@ fun SettingsScreen(
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
     val scroll = rememberScrollState()
+    var showLockdownConfirm by remember { mutableStateOf(false) }
+
+    // Anti-uninstall is consent-gated: turning Lockdown ON requires reading exactly what it does
+    // (device-admin + Settings-bounce) and confirming. Turning it OFF stays one tap.
+    if (showLockdownConfirm) {
+        AlertDialog(
+            onDismissRequest = { showLockdownConfirm = false },
+            title = { Text(vocab.lockdownConfirmTitle) },
+            text = { Text(vocab.lockdownConfirmBody) },
+            confirmButton = {
+                Button(onClick = {
+                    showLockdownConfirm = false
+                    onToggleLockdown(true)
+                }) { Text(vocab.lockdownConfirmYes) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLockdownConfirm = false }) {
+                    Text(vocab.lockdownConfirmNo)
+                }
+            }
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -161,21 +191,12 @@ fun SettingsScreen(
                         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
                         for (colIdx in 0 until 3) {
                             val mins = goalChoices[rowIdx * 3 + colIdx]
-                            val sel = dailyGoalMinutes == mins
-                            Surface(
+                            SelectableChip(
+                                label = if (mins % 60 == 0) "${mins / 60}h" else "${mins}m",
+                                selected = dailyGoalMinutes == mins,
                                 onClick = { onPickGoalMinutes(mins) },
-                                color = if (sel) palette.Petal else palette.Mist,
-                                shape = MaterialTheme.shapes.medium,
                                 modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    if (mins % 60 == 0) "${mins / 60}h" else "${mins}m",
-                                    modifier = Modifier.padding(vertical = 10.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = palette.Ink,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
+                            )
                         }
                     }
                     if (rowIdx == 0) Spacer(Modifier.height(6.dp))
@@ -198,21 +219,12 @@ fun SettingsScreen(
                         horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
                         for (colIdx in 0 until 3) {
                             val mins = safetyChoices[rowIdx * 3 + colIdx]
-                            val sel = safetyMinutes == mins
-                            Surface(
+                            SelectableChip(
+                                label = if (mins % 60 == 0) "${mins / 60}h" else "${mins}m",
+                                selected = safetyMinutes == mins,
                                 onClick = { onPickSafetyMinutes(mins) },
-                                color = if (sel) palette.Petal else palette.Mist,
-                                shape = MaterialTheme.shapes.medium,
                                 modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    if (mins % 60 == 0) "${mins / 60}h" else "${mins}m",
-                                    modifier = Modifier.padding(vertical = 10.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = palette.Ink,
-                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                                )
-                            }
+                            )
                         }
                     }
                     if (rowIdx == 0) Spacer(Modifier.height(6.dp))
@@ -235,7 +247,9 @@ fun SettingsScreen(
                     Spacer(Modifier.size(12.dp))
                     Switch(
                         checked = lockdownEnabled,
-                        onCheckedChange = onToggleLockdown,
+                        onCheckedChange = { on ->
+                            if (on) showLockdownConfirm = true else onToggleLockdown(false)
+                        },
                         enabled = !lockdownLocked,
                     )
                 }
@@ -248,7 +262,7 @@ fun SettingsScreen(
         }
 
         Spacer(Modifier.height(24.dp))
-        SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
+        SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
             Text(
                 vocab.settingsFooter,
                 style = MaterialTheme.typography.bodyMedium,

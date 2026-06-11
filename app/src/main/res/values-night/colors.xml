@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark-mode widget palette (mirrors the app's NeutralDark surface/text). -->
+    <color name="widget_bg">#1A1C24</color>
+    <color name="widget_stroke">#262932</color>
+    <color name="widget_text">#E8E9F0</color>
+    <color name="widget_muted">#9DA1B2</color>
+</resources>

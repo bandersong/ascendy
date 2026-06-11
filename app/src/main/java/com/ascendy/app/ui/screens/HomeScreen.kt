@@ -1,5 +1,13 @@
 package com.ascendy.app.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
@@ -113,7 +121,7 @@ fun HomeScreen(
                 Icon(Icons.Rounded.QrCodeScanner, contentDescription = vocab.homeScanLabel, tint = palette.Ink)
             }
             IconButton(onClick = onOpenSettings) {
-                Icon(Icons.Rounded.Settings, contentDescription = "settings", tint = palette.Ink)
+                Icon(Icons.Rounded.Settings, contentDescription = vocab.settingsLabel, tint = palette.Ink)
             }
         }
 
@@ -124,7 +132,10 @@ fun HomeScreen(
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.primaryContainer
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.animateContentSize()
+            ) {
                 Box(
                     modifier = Modifier
                         .size(176.dp)
@@ -148,7 +159,7 @@ fun HomeScreen(
                     }
                     if (streakDays > 0) {
                         Spacer(Modifier.size(6.dp))
-                        Badge(label = "🔥 $streakDays", color = palette.Mint)
+                        Badge(label = vocab.homeStreakBadgeFmt.format(streakDays), color = palette.Mint)
                     }
                 }
                 // Daily goal progress
@@ -163,34 +174,54 @@ fun HomeScreen(
                     )
                 }
                 Spacer(Modifier.height(10.dp))
-                Text(
-                    if (active) vocab.homeHeroActive else vocab.homeHeroIdle,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = palette.Ink,
-                    textAlign = TextAlign.Center
-                )
-                if (active) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        formatElapsed(startedAt, nowMs),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.Smoke
-                    )
-                    if (blockedSet.size + blockedDomains.size > 0) {
-                        Spacer(Modifier.height(2.dp))
-                        Text(
-                            "${blockedSet.size} apps · ${blockedDomains.size} sites blocked",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = palette.Smoke
-                        )
+                // When active, the live timer is the hero: big + Ink, with the prompt demoted
+                // to a quiet caption below it. When idle, the prompt itself is the focal line.
+                AnimatedContent(
+                    targetState = active,
+                    transitionSpec = { fadeIn() togetherWith fadeOut() },
+                    label = "heroBlock"
+                ) { isActive ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        if (isActive) {
+                            Text(
+                                formatElapsed(startedAt, nowMs),
+                                style = MaterialTheme.typography.headlineMedium,
+                                color = palette.Ink,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                vocab.homeHeroActive,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = palette.Smoke,
+                                textAlign = TextAlign.Center
+                            )
+                            if (blockedSet.size + blockedDomains.size > 0) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    vocab.homeAppsSitesFmt.format(blockedSet.size, blockedDomains.size),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.Smoke
+                                )
+                            }
+                        } else {
+                            Text(
+                                vocab.homeHeroIdle,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = palette.Ink,
+                                textAlign = TextAlign.Center
+                            )
+                            if (!setupAllDone) {
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    vocab.toastLongPressHint,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = palette.Smoke,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
-                } else if (!setupAllDone) {
-                    Spacer(Modifier.height(4.dp))
-                    Text(
-                        vocab.toastLongPressHint,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = palette.Smoke
-                    )
                 }
             }
         }
@@ -199,7 +230,14 @@ fun HomeScreen(
 
         // Setup section — single grouped card with check marks; collapses when all done.
         // Stays collapsed during an active session too, so starting a session never expands it.
-        if (setupAllDone) {
+        AnimatedContent(
+            targetState = setupAllDone,
+            transitionSpec = {
+                (fadeIn() + expandVertically()) togetherWith (fadeOut() + shrinkVertically())
+            },
+            label = "setupSection"
+        ) { allDone ->
+        if (allDone) {
             SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -210,13 +248,14 @@ fun HomeScreen(
                     )
                     Spacer(Modifier.size(8.dp))
                     Text(
-                        "all set",
+                        vocab.setupAllDone,
                         style = MaterialTheme.typography.titleMedium,
                         color = palette.Ink
                     )
                 }
             }
         } else {
+            Column {
             Text(
                 vocab.sectionSetup,
                 style = MaterialTheme.typography.titleLarge,
@@ -237,7 +276,7 @@ fun HomeScreen(
                         emoji = vocab.rowFocusListEmoji,
                         title = vocab.rowFocusListLabel,
                         done = listCount > 0,
-                        badge = if (active) "${blockedSet.size} blocked"
+                        badge = if (active) vocab.homeBadgeBlockedFmt.format(blockedSet.size)
                                 else if (listCount > 0) "$listCount"
                                 else vocab.badgeTodo,
                         onClick = onOpenLists
@@ -252,6 +291,8 @@ fun HomeScreen(
                     )
                 }
             }
+            }
+        }
         }
 
         Spacer(Modifier.height(16.dp))
@@ -276,30 +317,43 @@ fun HomeScreen(
             )
         }
 
-        // Strict notice or emergency-override card
-        if (active && strict) {
-            Spacer(Modifier.height(16.dp))
-            SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
-                Text(
-                    vocab.strictModeNote,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = palette.Smoke
-                )
-            }
-        } else if (active && emergencyAvailable) {
-            Spacer(Modifier.height(16.dp))
-            SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
-                Column {
-                    Text(vocab.emergencyTitle, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                    Spacer(Modifier.height(4.dp))
+        // Strict notice or emergency-override card — fades/expands in when a session starts
+        AnimatedVisibility(
+            visible = active && strict,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column {
+                Spacer(Modifier.height(16.dp))
+                SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
                     Text(
-                        vocab.emergencyBody,
-                        style = MaterialTheme.typography.bodySmall,
+                        vocab.strictModeNote,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = palette.Smoke
                     )
-                    Spacer(Modifier.height(4.dp))
-                    TextButton(onClick = { showFrictionDialog = true }) {
-                        Text(vocab.emergencyButton)
+                }
+            }
+        }
+        AnimatedVisibility(
+            visible = active && !strict && emergencyAvailable,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Column {
+                Spacer(Modifier.height(16.dp))
+                SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
+                    Column {
+                        Text(vocab.emergencyTitle, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            vocab.emergencyBody,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = palette.Smoke
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        TextButton(onClick = { showFrictionDialog = true }) {
+                            Text(vocab.emergencyButton)
+                        }
                     }
                 }
             }

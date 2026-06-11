@@ -52,10 +52,25 @@ class BlockingForegroundService : Service() {
         scope.cancel()
     }
 
+    /**
+     * Packages that must never be bounced, no matter what the list says. In allow-list
+     * (inverted) mode everything outside the list counts as blocked — without these exemptions
+     * the blocker itself, the launcher, and system UI get "blocked", which relaunches
+     * BlockerActivity in a loop and bounces the user off their own home screen.
+     */
+    private fun exemptPackages(): Set<String> {
+        val launcher = packageManager.resolveActivity(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
+            android.content.pm.PackageManager.MATCH_DEFAULT_ONLY
+        )?.activityInfo?.packageName
+        return setOfNotNull(packageName, launcher, "com.android.systemui", "android")
+    }
+
     private fun startPolling() {
         pollJob?.cancel()
         pollJob = scope.launch {
             val usage = getSystemService(Context.USAGE_STATS_SERVICE) as? UsageStatsManager
+            val exempt = exemptPackages()
             while (isActive) {
                 if (BlockState.isActive() && usage != null) {
                     val now = System.currentTimeMillis()
@@ -73,7 +88,8 @@ class BlockingForegroundService : Service() {
                                 latestForeground = event.packageName
                             }
                         }
-                        if (latestForeground != null && BlockState.isBlocked(latestForeground)) {
+                        if (latestForeground != null && latestForeground !in exempt &&
+                            BlockState.isBlocked(latestForeground)) {
                             tryBlock(latestForeground)
                         }
                     }

@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
+import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
@@ -78,21 +79,12 @@ fun PomodoroScreen(
         Row(modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             durations.forEach { (min, label) ->
-                val sel = selectedMin == min
-                Surface(
+                SelectableChip(
+                    label = label,
+                    selected = selectedMin == min,
                     onClick = { selectedMin = min },
-                    color = if (sel) palette.Petal else palette.Mist,
-                    shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        label,
-                        modifier = Modifier.padding(vertical = 14.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = palette.Ink,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                    )
-                }
+                )
             }
         }
 
@@ -103,17 +95,11 @@ fun PomodoroScreen(
         Spacer(Modifier.height(6.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             lists.forEach { l ->
-                val sel = selectedListId == l.id
-                Surface(
-                    onClick = { selectedListId = l.id },
-                    color = if (sel) palette.Petal else palette.Mist,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Text(l.name,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = palette.Ink)
-                }
+                SelectableChip(
+                    label = l.name,
+                    selected = selectedListId == l.id,
+                    onClick = { selectedListId = l.id }
+                )
             }
         }
 
@@ -134,7 +120,7 @@ fun PomodoroScreen(
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
             Text(
-                "selected: $selectedMin min",
+                vocab.pomodoroSelectedFmt.format(selectedMin),
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.Smoke
             )

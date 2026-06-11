@@ -72,4 +72,25 @@ class ScheduleTimingTest {
         val ms = AlarmScheduler.nextFiringFrom(0x7F, true, 23 * 60, now)!!
         assertEquals(now.get(Calendar.DAY_OF_YEAR), cal(ms).get(Calendar.DAY_OF_YEAR))
     }
+
+    @Test fun overnightEnd_matchesStartDayBit_notEndDay() {
+        // Wed-only schedule 22:00→02:00: the END fires Thu 02:00. With matchDayOffset = 1 the
+        // Thu candidate is checked against Wednesday's bit, so it fires the very next morning —
+        // not a week later (the old bug: Thu's bit unset → scan rolled to next Wed's 02:00).
+        val wedBit = todayBit   // `now` is a Wednesday
+        val ms = AlarmScheduler.nextFiringFrom(wedBit, true, 2 * 60, now, matchDayOffset = 1)!!
+        val c = cal(ms)
+        assertEquals(Calendar.THURSDAY, c.get(Calendar.DAY_OF_WEEK))
+        assertEquals("the morning right after the Wed window", now.get(Calendar.DAY_OF_YEAR) + 1, c.get(Calendar.DAY_OF_YEAR))
+        assertEquals(2, c.get(Calendar.HOUR_OF_DAY))
+    }
+
+    @Test fun overnightEnd_insideWindow_firesWithinHours() {
+        // It's Wed 23:30, inside the Wed 22:00→02:00 window: the END must be Thu 02:00.
+        val lateNow = at(2024, Calendar.JANUARY, 3, 23, 30)
+        val ms = AlarmScheduler.nextFiringFrom(todayBit, true, 2 * 60, lateNow, matchDayOffset = 1)!!
+        val c = cal(ms)
+        assertEquals(Calendar.THURSDAY, c.get(Calendar.DAY_OF_WEEK))
+        assertTrue("fires within 3 hours", ms - lateNow.timeInMillis <= 3 * 60 * 60_000L)
+    }
 }

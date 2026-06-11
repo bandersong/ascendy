@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Mascot
+import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 import kotlinx.coroutines.launch
@@ -138,9 +139,10 @@ fun OnboardingScreen(
 private fun SafetyTimerPage(selected: Int, onSelect: (Int) -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize().padding(top = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Box(Modifier.size(140.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(160.dp), contentAlignment = Alignment.Center) {
             Mascot(locked = false)
         }
         Spacer(Modifier.height(16.dp))
@@ -159,21 +161,12 @@ private fun SafetyTimerPage(selected: Int, onSelect: (Int) -> Unit) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 for (colIdx in 0 until 3) {
                     val mins = safetyChoices[rowIdx * 3 + colIdx]
-                    val sel = selected == mins
-                    Surface(
+                    SelectableChip(
+                        label = formatMinutesLabel(mins),
+                        selected = selected == mins,
                         onClick = { onSelect(mins) },
-                        color = if (sel) palette.Petal else palette.Mist,
-                        shape = MaterialTheme.shapes.medium,
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            formatMinutesLabel(mins),
-                            modifier = Modifier.padding(vertical = 14.dp),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = palette.Ink,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    )
                 }
             }
             if (rowIdx == 0) Spacer(Modifier.height(8.dp))

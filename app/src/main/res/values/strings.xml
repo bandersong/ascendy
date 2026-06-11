@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">ascendy</string>
     <string name="accessibility_service_label">ascendy app blocking</string>
-    <string name="accessibility_service_description">watches the foreground app and bounces back to home when a blocked app opens during a focus session. tap your nfc tag to start or end the session.</string>
+    <string name="accessibility_service_description">only while a focus session is active: reads the foreground app\'s name and the browser address bar to block the apps and sites on your list. everything is processed on-device and discarded immediately — nothing is stored or sent anywhere.</string>
     <string name="notif_channel_name">Focus session</string>
     <string name="notif_channel_desc">Shown while a focus session is active.</string>
     <string name="widget_description">Ascendy focus status</string>

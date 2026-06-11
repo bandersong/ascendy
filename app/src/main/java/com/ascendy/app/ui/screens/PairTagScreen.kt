@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -44,6 +46,9 @@ fun PairTagScreen(
     detectedTagId: String?,
     knownTags: List<BoundTag>,
     lists: List<Blocklist>,
+    nfcSupported: Boolean,
+    nfcEnabled: Boolean,
+    onOpenNfcSettings: () -> Unit,
     onStartPairing: () -> Unit,
     onCancelPairing: () -> Unit,
     onSavePairing: (nickname: String) -> Unit,
@@ -59,9 +64,19 @@ fun PairTagScreen(
     var qrNickname by remember { mutableStateOf("") }
     val insets = WindowInsets.systemBars.asPaddingValues()
 
+    // Pairing must not wait forever (e.g. NFC turned off mid-wait, broken antenna) — auto-cancel
+    // after 2 minutes so the screen never becomes a dead end.
+    androidx.compose.runtime.LaunchedEffect(waiting) {
+        if (waiting) {
+            kotlinx.coroutines.delay(120_000L)
+            onCancelPairing()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(top = insets.calculateTopPadding(),
                      bottom = insets.calculateBottomPadding(),
                      start = 16.dp, end = 16.dp)
@@ -84,13 +99,15 @@ fun PairTagScreen(
                 when {
                     !waiting && detectedTagId == null -> {
                         Text(
-                            vocab.tagsIntro,
+                            if (nfcSupported) vocab.tagsIntro else vocab.nfcUnsupportedBody,
                             style = MaterialTheme.typography.bodyMedium,
                             color = palette.Smoke
                         )
                         Spacer(Modifier.height(12.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
+                            if (nfcSupported) {
+                                Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
+                            }
                             TextButton(onClick = {
                                 qrAnchorId = java.util.UUID.randomUUID().toString()
                                 qrNickname = ""
@@ -98,11 +115,21 @@ fun PairTagScreen(
                         }
                     }
                     waiting && detectedTagId == null -> {
-                        Text(
-                            vocab.tagsWaiting,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = palette.Ink
-                        )
+                        if (nfcEnabled) {
+                            Text(
+                                vocab.tagsWaiting,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = palette.Ink
+                            )
+                        } else {
+                            Text(
+                                vocab.nfcOffBody,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = palette.Ink
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Button(onClick = onOpenNfcSettings) { Text(vocab.nfcOffAction) }
+                        }
                         Spacer(Modifier.height(8.dp))
                         TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
                     }
@@ -190,6 +217,7 @@ fun PairTagScreen(
                 Spacer(Modifier.height(8.dp))
             }
         }
+        Spacer(Modifier.height(24.dp))
     }
 
     val qrIdSnapshot = qrAnchorId
@@ -223,10 +251,26 @@ fun PairTagScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        TextButton(onClick = { onSaveQrToGallery(qrIdSnapshot) }) { Text(vocab.qrSaveToGallery) }
-                        TextButton(onClick = { onShareQr(qrIdSnapshot) }) { Text(vocab.qrShare) }
+                    // Exporting registers the anchor first — a printed QR that was never saved
+                    // could not end sessions, which defeats the whole point of printing it.
+                    val defaultNickname = vocab.qrDefaultNickname
+                    val registerAnchor = {
+                        onSaveQrAnchor(qrIdSnapshot, qrNickname.trim().ifBlank { defaultNickname })
                     }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextButton(onClick = {
+                            registerAnchor()
+                            onSaveQrToGallery(qrIdSnapshot)
+                        }) { Text(vocab.qrSaveToGallery) }
+                        TextButton(onClick = {
+                            registerAnchor()
+                            onShareQr(qrIdSnapshot)
+                        }) { Text(vocab.qrShare) }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(vocab.qrExportNote,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = palette.Smoke)
                 }
             },
             confirmButton = {
@@ -249,14 +293,15 @@ fun PairTagScreen(
 private fun ListChip(text: String, selected: Boolean, onClick: () -> Unit) {
     androidx.compose.material3.Surface(
         onClick = onClick,
-        color = if (selected) palette.Petal else palette.Mist,
+        color = if (selected) palette.Petal else palette.Cloud,
         shape = MaterialTheme.shapes.small,
+        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.dp, palette.Mist),
     ) {
         Text(
             text,
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
             style = MaterialTheme.typography.bodySmall,
-            color = palette.Ink
+            color = if (selected) palette.onPetal else palette.Ink
         )
     }
 }

@@ -147,14 +147,20 @@ In Play Console → App content → Permissions declaration. For each sensitive 
 
 **Justification**:
 ```
-Ascendy is an opt-in focus / digital-wellbeing app. When the user starts a focus session (by tapping an NFC tag or scanning a QR code they've paired), the accessibility service detects which app is in the foreground and which website is loaded in the URL bar of supported browsers. If either matches a user-configured block list, Ascendy returns the user to the home screen. The service runs only while a session is active and inspects only the currently-active window. It does not log, persist, or transmit any content. This is the same mechanism used by published apps including BlockSite, AppBlock, StayFree, ScreenZen, and One Sec for the same user-initiated digital-wellness purpose.
+Ascendy is an opt-in focus / digital-wellbeing app. When the user starts a focus session (by tapping an NFC tag or scanning a QR code they've paired), the accessibility service detects which app is in the foreground and which website is loaded in the URL bar of supported browsers. If either matches a user-configured block list, Ascendy returns the user to the home screen. The service runs only while a session is active and inspects only the currently-active window. It does not log, persist, or transmit any content. Before the user is directed to enable the service, the app shows a prominent in-app disclosure describing exactly what is read (foreground app name, browser address bar), when (active sessions only), and that nothing is stored or transmitted; the user must explicitly consent. This is the same mechanism used by published apps including BlockSite, AppBlock, StayFree, ScreenZen, and One Sec for the same user-initiated digital-wellness purpose.
 ```
+
+**Prominent disclosure**: implemented in-app — the Permissions screen shows a consent dialog (see `a11yDisclosureBody` in Vocab.kt) before opening Accessibility Settings the first time. Mention this in the declaration's free-text field.
 
 ### QUERY_ALL_PACKAGES
 
-**Justification**:
+**Not requested.** The app enumerates launchable apps via a `<queries>` intent declaration (MAIN/LAUNCHER) instead of broad package visibility, so no QUERY_ALL_PACKAGES declaration is needed. If Play Console still surfaces the form, answer "my app does not request this permission."
+
+### Device admin (Lockdown mode, anti-uninstall)
+
+If the reviewer asks about the device-admin usage (`AscendyDeviceAdminReceiver`), paste:
 ```
-Ascendy lets users build a custom block list of installed apps to block during a focus session. To populate the picker UI, the app must enumerate installed launchable apps via PackageManager.queryIntentActivities. Without this query, users cannot select which apps to block. The query runs only when the user opens the block-list editor; results are not persisted or transmitted.
+Lockdown mode is a strictly opt-in commitment feature for digital wellbeing: while enabled, Ascendy cannot be uninstalled mid-focus-session, closing the obvious bypass of deleting the blocker to reach a blocked app. The user must explicitly enable it in Settings behind a confirmation dialog that explains the device-admin activation, and Android's own device-admin consent screen follows. Device admin is used ONLY to block uninstallation — no other admin policies are used. Lockdown can be disabled by the user at any time when no focus session is active, and every session is guaranteed to end via a mandatory safety timer (max 24h).
 ```
 
 ### SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM

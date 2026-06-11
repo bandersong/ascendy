@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.Schedule
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
@@ -102,9 +103,9 @@ fun SchedulesScreen(
             onClick = { showAdd = true },
             modifier = Modifier.align(Alignment.BottomEnd).padding(20.dp),
             containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = palette.Ink
+            contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
-            Icon(Icons.Rounded.Add, contentDescription = "new")
+            Icon(Icons.Rounded.Add, contentDescription = vocab.schedulesNewDialogTitle)
         }
     }
 
@@ -170,7 +171,7 @@ private fun DayDots(daysOfWeek: Int) {
             ) {
                 Text(label,
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (on) palette.Ink else palette.Smoke)
+                    color = if (on) palette.onPetal else palette.Smoke)
             }
         }
     }
@@ -207,17 +208,11 @@ private fun ScheduleDialog(
                 Text(vocab.schedulesList, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     lists.forEach { l ->
-                        val sel = listId == l.id
-                        Surface(
-                            onClick = { listId = l.id },
-                            color = if (sel) palette.Petal else palette.Mist,
-                            shape = MaterialTheme.shapes.small
-                        ) {
-                            Text(l.name,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = palette.Ink)
-                        }
+                        SelectableChip(
+                            label = l.name,
+                            selected = listId == l.id,
+                            onClick = { listId = l.id }
+                        )
                     }
                 }
                 Spacer(Modifier.height(8.dp))
@@ -237,7 +232,7 @@ private fun ScheduleDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(label, style = MaterialTheme.typography.bodySmall,
-                                color = if (on) palette.Ink else palette.Smoke)
+                                color = if (on) palette.onPetal else palette.Smoke)
                         }
                     }
                 }

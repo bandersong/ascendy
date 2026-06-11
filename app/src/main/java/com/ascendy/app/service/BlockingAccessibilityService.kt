@@ -23,6 +23,9 @@ class BlockingAccessibilityService : AccessibilityService() {
         val pkg = event.packageName?.toString() ?: return
         if (pkg == packageName) return
         if (pkg in IGNORED_PACKAGES) return
+        // The actual default launcher is OEM-specific (Pixel/Samsung/etc. aren't in the static
+        // list) — bouncing it in allow-list mode would throw the user into a home-bounce loop.
+        if (pkg == defaultLauncherPackage) return
 
         // Path 0: Lockdown — bounce out of any Settings screen that shows Ascendy. Those are the
         // only screens that can disable the blocker mid-session: the accessibility-service toggle,
@@ -104,13 +107,34 @@ class BlockingAccessibilityService : AccessibilityService() {
     /** The app's display label, lowercased, used to spot Settings screens that are about Ascendy. */
     private val selfLabel: String by lazy { getString(R.string.app_name).trim().lowercase() }
 
+    private val defaultLauncherPackage: String? by lazy {
+        packageManager.resolveActivity(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME),
+            android.content.pm.PackageManager.MATCH_DEFAULT_ONLY
+        )?.activityInfo?.packageName
+    }
+
+    /** The accessibility-service entry's label in Settings, lowercased. */
+    private val serviceLabel: String by lazy {
+        getString(R.string.accessibility_service_label).trim().lowercase()
+    }
+
+    /** The device-admin entry's label in Settings, lowercased. */
+    private val adminLabel: String by lazy {
+        getString(R.string.device_admin_label).trim().lowercase()
+    }
+
+    // Exact package match only — `contains("settings")` also caught arbitrary third-party apps
+    // with "settings" anywhere in their package name.
     private fun isSettingsPackage(pkg: String): Boolean =
-        pkg == "com.android.settings" || pkg.endsWith(".settings") || pkg.contains("settings")
+        pkg == "com.android.settings" || pkg.endsWith(".settings")
 
     /**
-     * Bounded scan of the active window for any node whose text names Ascendy — by display label or
-     * by package name. True only for the accessibility-toggle, app-info, and device-admin screens
-     * (and the lists that lead to them), keeping the lockdown bounce narrow.
+     * Bounded scan of the active window for a node whose text IS one of Ascendy's labels (app
+     * label, accessibility-service label, device-admin label) — the titles/rows shown on the
+     * screens that can disable the blocker. Exact equality, not contains: incidental mentions in
+     * composite strings (battery usage rows, notification history, search suggestions) must not
+     * bounce the user out of unrelated Settings screens.
      */
     private fun windowMentionsSelf(root: AccessibilityNodeInfo?): Boolean {
         if (root == null) return false
@@ -121,8 +145,10 @@ class BlockingAccessibilityService : AccessibilityService() {
         while (stack.isNotEmpty() && visited < limit) {
             val n = stack.removeFirst()
             visited++
-            val text = n.text?.toString()?.lowercase()
-            if (text != null && (text.contains(selfLabel) || text.contains(packageName))) return true
+            val text = n.text?.toString()?.trim()?.lowercase()
+            if (text != null &&
+                (text == selfLabel || text == serviceLabel || text == adminLabel || text == packageName)
+            ) return true
             for (i in 0 until n.childCount) {
                 n.getChild(i)?.let { stack.addLast(it) }
             }

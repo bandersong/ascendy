@@ -12,6 +12,8 @@ import com.ascendy.app.service.AlarmScheduler
 import com.ascendy.app.service.BlockingForegroundService
 import com.ascendy.app.vpn.AscendyVpnService
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 sealed class TapResult {
     data class Locked(val listName: String) : TapResult()
@@ -32,7 +34,7 @@ class SessionController(
     private val themePrefs: ThemePrefs,
 ) {
 
-    suspend fun handleTagTap(tagId: String): TapResult {
+    suspend fun handleTagTap(tagId: String): TapResult = transitionMutex.withLock {
         val tag = repo.tagById(tagId) ?: return TapResult.UnknownTag(tagId)
         val current = repo.currentSession()
 
@@ -40,25 +42,41 @@ class SessionController(
             if (current.tagId != null && current.tagId != tag.tagId) {
                 TapResult.WrongTag(current.tagId)
             } else {
-                endSession()
+                endSessionLocked()
                 TapResult.Unlocked
             }
         } else {
             val list = tag.listId?.let { repo.list(it) }
                 ?: repo.defaultList()
                 ?: repo.ensureDefaultList()
-            startSession(list.id, tag.tagId, SessionSource.Nfc)
+            startSessionLocked(list.id, tag.tagId, SessionSource.Nfc)
             TapResult.Locked(list.name)
         }
     }
 
+    /** @return true if a session was started; false if an active session already exists. */
     suspend fun startSession(
         listId: Long,
         tagId: String?,
         source: SessionSource = SessionSource.Nfc,
         endsAt: Long? = null,
         scheduleId: Long? = null,
-    ) {
+    ): Boolean = transitionMutex.withLock {
+        startSessionLocked(listId, tagId, source, endsAt, scheduleId)
+    }
+
+    private suspend fun startSessionLocked(
+        listId: Long,
+        tagId: String?,
+        source: SessionSource = SessionSource.Nfc,
+        endsAt: Long? = null,
+        scheduleId: Long? = null,
+    ): Boolean {
+        // Never clobber a running session: a scheduled or pomodoro start while (say) a STRICT
+        // session is active would overwrite session row id=1 with a weaker one — an escape hatch —
+        // and orphan the prior open log, inflating stats.
+        if (repo.currentSession()?.active == true) return false
+
         val list = repo.list(listId) ?: repo.ensureDefaultList()
         val packages = repo.packages(list.id).toSet()
         val domains = repo.domains(list.id).toSet()
@@ -100,7 +118,7 @@ class SessionController(
             lockdown = lockdown,
         )
         startForegroundService()
-        AlarmScheduler.scheduleSessionEnd(context, effectiveEndsAt)
+        AlarmScheduler.scheduleSessionEnd(context, effectiveEndsAt, now)
         // Auto-start VPN sinkhole if user has consented AND any domains are configured
         if (domains.isNotEmpty() && VpnService.prepare(context) == null) {
             startVpnService()
@@ -116,15 +134,37 @@ class SessionController(
                 .putExtra(EXTRA_STRICT, isStrict)
         )
         AscendyWidget.refresh(context)
+        return true
     }
 
-    suspend fun endSession() {
+    suspend fun endSession() = transitionMutex.withLock { endSessionLocked() }
+
+    /**
+     * End the session only if it is the one identified by [startedAt] — used by the END alarm so
+     * a stale delivery armed for a previous session can never kill the current one.
+     */
+    suspend fun endSessionIfStartedAt(startedAt: Long) = transitionMutex.withLock {
+        val current = repo.currentSession()
+        if (current?.active == true && current.startedAt == startedAt) endSessionLocked()
+    }
+
+    /**
+     * End the session only if it was started by schedule [scheduleId]. The ownership check lives
+     * inside the lock: checking in the receiver and then calling endSession() would race a
+     * concurrent transition and could end a session the schedule never owned.
+     */
+    suspend fun endSessionIfScheduleId(scheduleId: Long) = transitionMutex.withLock {
+        val current = repo.currentSession()
+        if (current?.active == true && current.scheduleId == scheduleId) endSessionLocked()
+    }
+
+    private suspend fun endSessionLocked() {
         val current = repo.currentSession() ?: return
         val now = System.currentTimeMillis()
         repo.saveSession(current.copy(active = false))
-        repo.latestLog()?.let { latest ->
-            if (latest.endedAt == null) repo.finishLog(latest.id, now)
-        }
+        // Close every open log, not just the latest — a clobbered start could have left an
+        // older log dangling, which would count as "still focusing" in the stats forever.
+        repo.finishAllOpenLogs(now)
         val durationMs = now - current.startedAt
         BlockState.clear()
         stopForegroundService()
@@ -139,18 +179,37 @@ class SessionController(
         AscendyWidget.refresh(context)
     }
 
-    suspend fun useEmergencyUnlock(): Boolean {
+    suspend fun useEmergencyUnlock(): Boolean = transitionMutex.withLock {
         val current = repo.currentSession() ?: return false
         if (!current.active) return false
         if (current.emergencyUnlocksLeft <= 0) return false
         repo.saveSession(current.copy(emergencyUnlocksLeft = current.emergencyUnlocksLeft - 1))
-        endSession()
+        endSessionLocked()
         return true
     }
 
-    suspend fun restoreOnBoot() {
+    suspend fun restoreOnBoot(): Unit = transitionMutex.withLock {
         val current = repo.currentSession() ?: return
         if (!current.active) return
+        val now = System.currentTimeMillis()
+
+        // Re-derive the auto-end instant. Schedule-sourced sessions rely on a daily END alarm
+        // that does NOT survive a reboot, so recompute this window's end from the schedule.
+        val schedule = current.scheduleId?.let { repo.scheduleById(it) }
+        val windowEndMs = schedule?.let {
+            val windowMin = (it.endMinuteOfDay - it.startMinuteOfDay).mod(1440)
+                .let { m -> if (m == 0) 1440 else m }
+            current.startedAt + windowMin * 60_000L
+        }
+        val endsAt = listOfNotNull(current.endsAt, windowEndMs).minOrNull()
+
+        // If the end already passed while the device was off, end now instead of resurrecting
+        // a session that should have died hours ago.
+        if (endsAt != null && now >= endsAt) {
+            endSessionLocked()
+            return
+        }
+
         val list = repo.list(current.listId)
         val packages = repo.packages(current.listId).toSet()
         val domains = repo.domains(current.listId).toSet()
@@ -165,7 +224,12 @@ class SessionController(
             lockdown = themePrefs.lockdownEnabled.first(),
         )
         startForegroundService()
-        current.endsAt?.let { AlarmScheduler.scheduleSessionEnd(context, it) }
+        endsAt?.let { AlarmScheduler.scheduleSessionEnd(context, it, current.startedAt) }
+        // The VPN tunnel does not survive reboot/process death — restart it or site blocking
+        // is silently off for the rest of the session.
+        if (domains.isNotEmpty() && VpnService.prepare(context) == null) {
+            startVpnService()
+        }
     }
 
     /**
@@ -173,7 +237,7 @@ class SessionController(
      * strict, [ManualEndResult.BlockedStrict] is returned and the session is NOT ended — the user
      * must use the bound tag/QR or wait for the safety timer.
      */
-    suspend fun toggleManual(): ManualEndResult {
+    suspend fun toggleManual(): ManualEndResult = transitionMutex.withLock {
         val current = repo.currentSession()
         return if (current?.active == true) {
             val list = repo.list(current.listId)
@@ -183,20 +247,20 @@ class SessionController(
             if (list?.isStrict == true && current.tagId != null) {
                 ManualEndResult.BlockedStrict
             } else {
-                endSession()
+                endSessionLocked()
                 ManualEndResult.Ended
             }
         } else {
             val list = repo.defaultList() ?: repo.ensureDefaultList()
-            startSession(list.id, tagId = null, source = SessionSource.Manual)
+            startSessionLocked(list.id, tagId = null, source = SessionSource.Manual)
             ManualEndResult.NoSession  // semantically "started fresh"
         }
     }
 
-    suspend fun startTimedSession(durationMs: Long, listId: Long? = null) {
+    suspend fun startTimedSession(durationMs: Long, listId: Long? = null): Boolean = transitionMutex.withLock {
         val list = listId?.let { repo.list(it) } ?: repo.defaultList() ?: repo.ensureDefaultList()
         val endsAt = System.currentTimeMillis() + durationMs
-        startSession(list.id, tagId = null, source = SessionSource.Pomodoro, endsAt = endsAt)
+        startSessionLocked(list.id, tagId = null, source = SessionSource.Pomodoro, endsAt = endsAt)
     }
 
     private fun startForegroundService() {
@@ -229,6 +293,14 @@ class SessionController(
     }
 
     companion object {
+        /**
+         * Controllers are constructed independently in MainActivity, the QS tile, the
+         * notification receiver, the schedule alarm receiver, and the boot receiver — so the
+         * lock that serializes session transitions must be process-wide, not per-instance.
+         * Every public mutating entry point takes it; private *Locked methods assume it's held.
+         */
+        private val transitionMutex = Mutex()
+
         const val ACTION_SESSION_STARTED = "com.ascendy.app.SESSION_STARTED"
         const val ACTION_SESSION_ENDED = "com.ascendy.app.SESSION_ENDED"
         const val EXTRA_LIST_ID = "list_id"

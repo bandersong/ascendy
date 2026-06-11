@@ -3,17 +3,28 @@ import java.util.Base64
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
 }
 
+// Release signing secrets are injected by CI via env vars. Compute their presence once: it decides
+// whether release builds get the real signing config, and the guard at the bottom of this file fails
+// any release packaging that lacks them — so we never silently fall back to the public debug key.
+val releaseStorePwd: String? = System.getenv("ASCENDY_RELEASE_STORE_PASSWORD")
+val releaseKeyPwd: String? = System.getenv("ASCENDY_RELEASE_KEY_PASSWORD")
+val releaseKeyAlias: String? = System.getenv("ASCENDY_RELEASE_KEY_ALIAS")
+val releaseKeystoreB64: String? = System.getenv("ASCENDY_RELEASE_KEYSTORE_BASE64")
+val hasReleaseSigning: Boolean = !releaseStorePwd.isNullOrBlank() && !releaseKeyPwd.isNullOrBlank() &&
+    !releaseKeyAlias.isNullOrBlank() && !releaseKeystoreB64.isNullOrBlank()
+
 android {
     namespace = "com.ascendy.app"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.ascendy.app"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         val envCode = System.getenv("ASCENDY_VERSION_CODE")?.toIntOrNull()
         versionCode = envCode ?: 30
         versionName = "0.3.${versionCode}"
@@ -47,21 +58,20 @@ android {
             keyPassword = "android"
         }
 
-        // Release config — only created when CI has provided the secrets. Locally, releases fall
-        // back to debug signing so `assembleRelease` still produces a working APK for testing.
-        val rsPwd = System.getenv("ASCENDY_RELEASE_STORE_PASSWORD")
-        val rkPwd = System.getenv("ASCENDY_RELEASE_KEY_PASSWORD")
-        val rkAlias = System.getenv("ASCENDY_RELEASE_KEY_ALIAS")
-        val rksB64 = System.getenv("ASCENDY_RELEASE_KEYSTORE_BASE64")
-        if (!rsPwd.isNullOrBlank() && !rkPwd.isNullOrBlank() && !rkAlias.isNullOrBlank() && !rksB64.isNullOrBlank()) {
+        // Release config — created ONLY when CI has provided the real signing secrets. There is
+        // deliberately no debug fallback: the debug keystore is committed to this repo, so a
+        // debug-signed "release" could be impersonated by anyone and the in-app updater's signature
+        // pin would (correctly) reject it. When the secrets are absent, release builds fail (see the
+        // guard at the bottom of this file) rather than producing a publicly-keyed APK.
+        if (hasReleaseSigning) {
             create("release") {
                 val ksFile = layout.buildDirectory.file("generated-keystore/release.keystore").get().asFile
                 ksFile.parentFile.mkdirs()
-                ksFile.writeBytes(Base64.getDecoder().decode(rksB64))
+                ksFile.writeBytes(Base64.getDecoder().decode(releaseKeystoreB64))
                 storeFile = ksFile
-                storePassword = rsPwd
-                keyAlias = rkAlias
-                keyPassword = rkPwd
+                storePassword = releaseStorePwd
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPwd
             }
         }
     }
@@ -71,9 +81,14 @@ android {
             signingConfig = signingConfigs.getByName("debug")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            // Sign release with the real CI key only. If it's missing, leave the build unsigned so the
+            // guard task aborts it — never debug-sign a release (that key is public in the repo).
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 
@@ -89,10 +104,6 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.14"
     }
 
     packaging {
@@ -117,8 +128,32 @@ ksp {
     arg("room.schemaLocation", "$projectDir/schemas")
 }
 
+// Safety net: never emit a release artifact without the real signing key. When the CI secrets are
+// absent, the release buildType has no signingConfig (see above), so AGP would otherwise produce an
+// UNSIGNED release. Abort the packaging/signing tasks instead, with a message pointing at the fix.
+// Debug tasks (incl. `compilePlayDebugKotlin`) are untouched — this only fires for release packaging.
+if (!hasReleaseSigning) {
+    tasks.configureEach {
+        val n = name
+        val isReleaseArtifact = n.contains("Release") && !n.contains("Test") &&
+            (n.startsWith("package") || n.startsWith("sign"))
+        if (isReleaseArtifact) {
+            doFirst {
+                throw GradleException(
+                    "Refusing to build a release without the real signing key. Set " +
+                    "ASCENDY_RELEASE_STORE_PASSWORD, ASCENDY_RELEASE_KEY_PASSWORD, " +
+                    "ASCENDY_RELEASE_KEY_ALIAS and ASCENDY_RELEASE_KEYSTORE_BASE64 (the CI signing " +
+                    "secrets) before assembling a release. The debug keystore is public in this repo " +
+                    "and must never sign a release."
+                )
+            }
+        }
+    }
+}
+
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
+    // 2025.06.01 is the last BOM on the Compose 1.8 line — newer (1.9+) requires Kotlin 2.1.
+    val composeBom = platform("androidx.compose:compose-bom:2025.06.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 

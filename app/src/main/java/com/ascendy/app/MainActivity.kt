@@ -72,6 +72,29 @@ class MainActivity : ComponentActivity() {
         ActivityResultContracts.RequestPermission()
     ) { /* ignored, UI re-checks on resume */ }
 
+    // API 26–28 gallery saves need WRITE_EXTERNAL_STORAGE granted at runtime; the pending action
+    // runs after the user answers the prompt.
+    private var pendingStorageAction: (() -> Unit)? = null
+    private val writeStorageLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) pendingStorageAction?.invoke()
+        pendingStorageAction = null
+    }
+
+    /** Run [action] now if gallery writes are possible, else ask for the legacy permission first. */
+    fun withGalleryWriteAccess(action: () -> Unit) {
+        val needsLegacyPerm = Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) !=
+            PackageManager.PERMISSION_GRANTED
+        if (needsLegacyPerm) {
+            pendingStorageAction = action
+            writeStorageLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        } else {
+            action()
+        }
+    }
+
     private val qrScanLauncher = registerForActivityResult(
         com.journeyapps.barcodescanner.ScanContract()
     ) { result ->
@@ -221,20 +244,25 @@ class MainActivity : ComponentActivity() {
             action == android.nfc.NfcAdapter.ACTION_TAG_DISCOVERED
         if (!isNfc) return
 
-        if (pairingMode.value) {
-            val tagId = NfcManager.pairTag(intent) ?: return
-            pendingPairedTag.value = tagId
-            return
-        }
+        // Tag I/O (NDEF connect/read/write) blocks — run it off the main thread or a slow tag
+        // can ANR the activity.
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            if (pairingMode.value) {
+                val tagId = NfcManager.pairTag(intent) ?: return@launch
+                pendingPairedTag.value = tagId
+                return@launch
+            }
 
-        val tagId = NfcManager.readTagId(intent) ?: return
-        lifecycleScope.launch {
+            val tagId = NfcManager.readTagId(intent) ?: return@launch
             val v = currentVocab
-            when (val result = controller.handleTagTap(tagId)) {
-                is TapResult.Locked -> toast(v.toastLockedFmt.format(result.listName))
-                is TapResult.Unlocked -> toast(v.toastUnlocked)
-                is TapResult.UnknownTag -> toast(v.toastUnknownTag)
-                is TapResult.WrongTag -> toast(v.toastWrongTag)
+            val result = controller.handleTagTap(tagId)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                when (result) {
+                    is TapResult.Locked -> toast(v.toastLockedFmt.format(result.listName))
+                    is TapResult.Unlocked -> toast(v.toastUnlocked)
+                    is TapResult.UnknownTag -> toast(v.toastUnknownTag)
+                    is TapResult.WrongTag -> toast(v.toastWrongTag)
+                }
             }
         }
     }
@@ -386,11 +414,30 @@ private fun AppNav(
             )
         }
         composable("pair") {
+            val nfcAdapter = remember { android.nfc.NfcAdapter.getDefaultAdapter(context) }
+            var nfcEnabled by remember { mutableStateOf(nfcAdapter?.isEnabled == true) }
+            // isEnabled can change while we're in NFC settings — re-check on every resume.
+            DisposableEffect(lifecycleOwner) {
+                val observer = LifecycleEventObserver { _, event ->
+                    if (event == Lifecycle.Event.ON_RESUME) {
+                        nfcEnabled = nfcAdapter?.isEnabled == true
+                    }
+                }
+                lifecycleOwner.lifecycle.addObserver(observer)
+                onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+            }
             PairTagScreen(
                 waiting = pairing,
                 detectedTagId = detected,
                 knownTags = tags,
                 lists = lists,
+                nfcSupported = nfcAdapter != null,
+                nfcEnabled = nfcEnabled,
+                onOpenNfcSettings = {
+                    context.startActivity(
+                        Intent(Settings.ACTION_NFC_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                },
                 onStartPairing = { pairingFlow.value = true },
                 onCancelPairing = {
                     pairingFlow.value = false
@@ -427,23 +474,28 @@ private fun AppNav(
                     }
                 },
                 onSaveQrToGallery = { anchorId ->
-                    val payload = com.ascendy.app.qr.QrTools.PAYLOAD_PREFIX + anchorId
-                    val bmp = com.ascendy.app.qr.QrTools.render(payload, sizePx = 1024)
-                    val uri = com.ascendy.app.qr.QrTools.saveToGallery(
-                        context = context,
-                        bitmap = bmp,
-                        displayName = "ascendy-${anchorId.take(8)}"
-                    )
-                    val msg = if (uri != null)
-                        com.ascendy.app.ui.theme.vocabFor(currentVariant).qrSavedToGallery
-                    else
-                        com.ascendy.app.ui.theme.vocabFor(currentVariant).qrSaveFailed
-                    Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    val doSave = {
+                        val payload = com.ascendy.app.qr.QrTools.PAYLOAD_PREFIX + anchorId
+                        val bmp = com.ascendy.app.qr.QrTools.render(payload, sizePx = 1024)
+                        val uri = com.ascendy.app.qr.QrTools.saveToGallery(
+                            context = context,
+                            bitmap = bmp,
+                            displayName = "ascendy-${anchorId.take(8)}"
+                        )
+                        val msg = if (uri != null)
+                            com.ascendy.app.ui.theme.vocabFor(currentVariant).qrSavedToGallery
+                        else
+                            com.ascendy.app.ui.theme.vocabFor(currentVariant).qrSaveFailed
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
+                    // API 26–28 needs the legacy storage permission at runtime
+                    (context as? MainActivity)?.withGalleryWriteAccess(doSave) ?: doSave()
                 },
                 onShareQr = { anchorId ->
                     val payload = com.ascendy.app.qr.QrTools.PAYLOAD_PREFIX + anchorId
                     val bmp = com.ascendy.app.qr.QrTools.render(payload, sizePx = 1024)
-                    val uri = com.ascendy.app.qr.QrTools.saveToGallery(
+                    // Cache + FileProvider: works on every API level with no storage permission
+                    val uri = com.ascendy.app.qr.QrTools.saveToCache(
                         context = context,
                         bitmap = bmp,
                         displayName = "ascendy-${anchorId.take(8)}"
@@ -508,8 +560,11 @@ private fun AppNav(
         }
         composable("perms") {
             LaunchedEffect(Unit) { permissions = checkPermissions(context) }
+            val a11yAccepted by themePrefs.a11yDisclosureAccepted.collectAsState(initial = false)
             PermissionsScreen(
                 status = permissions,
+                a11yDisclosureAccepted = a11yAccepted,
+                onAcceptA11yDisclosure = { scope.launch { themePrefs.setA11yDisclosureAccepted() } },
                 onBack = { nav.popBackStack() },
                 onRequestNotifications = onRequestNotifications,
                 onRequestVpn = { (context as? MainActivity)?.requestVpnConsent() }

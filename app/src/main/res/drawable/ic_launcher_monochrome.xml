@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 13+ themed-icon layer. Single alpha silhouette of the mascot star; the eye dots are
+     evenOdd cutouts so they stay visible when the system tints the whole glyph one color. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillType="evenOdd"
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M54,28 L60.5,46.5 L80,49 L65,62 L69.5,82 L54,71.5 L38.5,82 L43,62 L28,49 L47.5,46.5 Z M48,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z M60,54 m-2,0 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 Z" />
+</vector>

@@ -215,15 +215,16 @@ fun AppPickerScreen(
 private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Surface(
         onClick = onClick,
-        color = if (selected) palette.Petal else palette.Mist,
+        color = if (selected) palette.Petal else palette.Cloud,
         shape = MaterialTheme.shapes.medium,
+        border = if (selected) null else androidx.compose.foundation.BorderStroke(1.dp, palette.Mist),
         modifier = modifier
     ) {
         Text(
             label,
             modifier = Modifier.padding(vertical = 10.dp),
             style = MaterialTheme.typography.titleMedium,
-            color = palette.Ink,
+            color = if (selected) palette.onPetal else palette.Ink,
             textAlign = TextAlign.Center
         )
     }

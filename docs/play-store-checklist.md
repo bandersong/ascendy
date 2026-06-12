@@ -176,9 +176,15 @@ If the reviewer asks about the device-admin usage (`AscendyDeviceAdminReceiver`)
 Lockdown mode is a strictly opt-in commitment feature for digital wellbeing: while enabled, Ascendy cannot be uninstalled mid-focus-session, closing the obvious bypass of deleting the blocker to reach a blocked app. The user must explicitly enable it in Settings behind a confirmation dialog that explains the device-admin activation, and Android's own device-admin consent screen follows. Device admin is used ONLY to block uninstallation — no other admin policies are used. Lockdown can be disabled by the user at any time when no focus session is active, and every session is guaranteed to end via a mandatory safety timer (max 24h).
 ```
 
-### SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM
+### SCHEDULE_EXACT_ALARM (USE_EXACT_ALARM removed in build 66)
 
-**Justification**:
+Play Console's exact-alarm declaration only allows USE_EXACT_ALARM for apps whose core
+functionality is "alarm clock" or "calendar" — a focus blocker is neither, so the permission was
+removed from the manifest (build 66+). SCHEDULE_EXACT_ALARM remains: the user grants
+"Alarms & reminders" access, and `AlarmScheduler` already falls back to inexact alarms when
+ungranted. No Play declaration form gates SCHEDULE_EXACT_ALARM.
+
+**Justification (if ever asked)**:
 ```
 Ascendy supports user-defined scheduled focus sessions (e.g., "block social media weekdays 9am-12pm") and pomodoro-style timed sessions. Both require precise wall-clock timing to start and end sessions at the exact times the user configured. AlarmManager.setExactAndAllowWhileIdle is the standard API for this; inexact alarms can drift by tens of minutes, which would break the schedule semantics the user relies on.
 ```

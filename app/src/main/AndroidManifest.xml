@@ -20,8 +20,10 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- SCHEDULE_EXACT_ALARM only (user grants "Alarms & reminders" on 14+; AlarmScheduler falls
+         back to inexact when ungranted). USE_EXACT_ALARM is Play-restricted to alarm-clock/calendar
+         core functionality, which a focus blocker is not — shipping it blocks Play review. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.CAMERA" />
     <!-- QR save-to-gallery on API 26–28 only; API 29+ uses scoped MediaStore. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"

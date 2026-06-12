@@ -10,6 +10,15 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
+        versionCode = 64,
+        title = "your dns, your rules 🔏",
+        notes = listOf(
+            "site blocking now forwards dns lookups to your network's own resolver instead of a hardcoded public one (cloudflare only as last-resort fallback)",
+            "new alert when app blocking silently can't show its block screen (accessibility off + overlay permission missing)",
+            "permission screens now explain exactly why the overlay permission matters",
+        )
+    ),
+    ChangelogEntry(
         versionCode = 63,
         title = "fine print ✏️",
         notes = listOf(

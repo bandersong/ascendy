@@ -186,10 +186,11 @@ class BlockingForegroundService : Service() {
     /** AF-10: accessibility (the only URL-blocking path) turned off mid-session. */
     private fun checkEnforcementHealth(usage: UsageStatsManager?) {
         val nm = getSystemService(NotificationManager::class.java) ?: return
-        if (!EnforcementHealth.isAccessibilityEnabled(this)) {
+        val a11yOn = EnforcementHealth.isAccessibilityEnabled(this)
+        if (!a11yOn) {
             nm.notify(ALERT_A11Y_ID, buildAlert(
                 getString(R.string.alert_a11y_title), getString(R.string.alert_a11y_body),
-                Settings.ACTION_ACCESSIBILITY_SETTINGS,
+                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
             ))
         } else {
             nm.cancel(ALERT_A11Y_ID)
@@ -199,22 +200,40 @@ class BlockingForegroundService : Service() {
         } else {
             nm.cancel(ALERT_USAGE_ID)
         }
+        // NH-11: with accessibility off, this poller is the only app-blocking path — and on
+        // API 29+ the OS only lets it start BlockerActivity from the background while the
+        // overlay (SYSTEM_ALERT_WINDOW) grant is held. Both missing means tryBlock() below is
+        // being silently suppressed: detection still runs but nothing visible happens. Warn as
+        // loudly as the other degradations instead of letting the user believe they're blocked.
+        val overlayDead = !a11yOn &&
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !Settings.canDrawOverlays(this)
+        if (overlayDead) {
+            nm.notify(ALERT_OVERLAY_ID, buildAlert(
+                getString(R.string.alert_overlay_title), getString(R.string.alert_overlay_body),
+                Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:$packageName"),
+                ),
+            ))
+        } else {
+            nm.cancel(ALERT_OVERLAY_ID)
+        }
     }
 
     private fun warnUsageAccessRevoked() {
         val nm = getSystemService(NotificationManager::class.java) ?: return
         nm.notify(ALERT_USAGE_ID, buildAlert(
             getString(R.string.alert_usage_title), getString(R.string.alert_usage_body),
-            Settings.ACTION_USAGE_ACCESS_SETTINGS,
+            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
         ))
     }
 
     /** A loud, persistent diagnostic alert that taps through to the relevant system settings screen. */
-    private fun buildAlert(title: String, body: String, settingsAction: String): Notification {
+    private fun buildAlert(title: String, body: String, settingsIntent: Intent): Notification {
         ensureAlertChannel()
         val tap = PendingIntent.getActivity(
-            this, settingsAction.hashCode(),
-            Intent(settingsAction).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            this, settingsIntent.action?.hashCode() ?: 0,
+            settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         return NotificationCompat.Builder(this, ALERT_CHANNEL_ID)
@@ -248,6 +267,9 @@ class BlockingForegroundService : Service() {
         lastBlockedPkg = pkg
         lastBlockedAt = now
 
+        // NH-11: on API 29+ this background start is only honored while the SYSTEM_ALERT_WINDOW
+        // grant is held (or the a11y service is bound, which has its own exemption). When neither
+        // applies the OS suppresses it silently — checkEnforcementHealth raises the alert for that.
         startActivity(
             Intent(this, BlockerActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -313,5 +335,6 @@ class BlockingForegroundService : Service() {
         private const val NOTIF_ID = 4242
         private const val ALERT_A11Y_ID = 4244
         private const val ALERT_USAGE_ID = 4245
+        private const val ALERT_OVERLAY_ID = 4247   // 4246 is the VPN-revoked alert
     }
 }

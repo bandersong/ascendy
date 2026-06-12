@@ -7,7 +7,15 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- NH-11 audit verdict: KEEP. BlockerActivity is a normal activity, but on API 29+ the
+         usage-stats poller (BlockingForegroundService.tryBlock) may only start it from the
+         background while this grant is held — it's one of the documented background-activity-start
+         exemptions. The accessibility path is exempt on its own (system-bound service), so this
+         permission is what keeps app blocking alive when the user declines accessibility. -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <!-- NH-09: read the active network's LinkProperties so forwarded DNS goes to the user's own
+         configured resolvers, not a hardcoded public one. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />

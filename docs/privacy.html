@@ -31,7 +31,7 @@
   <dd>Used to detect which app is in the foreground during a focus session, and to read the URL bar in known browsers to block specified websites. The service inspects only the currently-active window and only while a session is active. It does not log, transmit, or persist any window content.</dd>
 
   <dt>VpnService</dt>
-  <dd>Used during a session to run a local DNS sinkhole — DNS queries for domains you've blocked are answered with NXDOMAIN; all other queries are forwarded to a public upstream resolver (Cloudflare, 1.1.1.1). No traffic is intercepted, logged, or sent to any server we control. The tunnel runs entirely on-device. It is automatically stopped when your focus session ends.</dd>
+  <dd>Used during a session to run a local DNS sinkhole — DNS queries for domains you've blocked are answered with NXDOMAIN; all other queries are forwarded to your network's own configured DNS servers (the same resolvers your device would use without Ascendy). Only when no network resolver is available does Ascendy fall back to a public resolver (Cloudflare, 1.1.1.1). No traffic is intercepted, logged, or sent to any server we control. The tunnel runs entirely on-device. It is automatically stopped when your focus session ends.</dd>
 
   <dt>Device administrator</dt>
   <dd>Optional. Only activated when you enable Lockdown mode in settings. Prevents Ascendy from being uninstalled while a focus session is active. Automatically deactivated when no session is running. You can disable it at any time in Settings &gt; Security &gt; Device admin apps when outside a session.</dd>
@@ -40,7 +40,7 @@
   <dd>Fallback path for foreground-app detection when the accessibility service is unavailable (for example, Android 17 Advanced Protection Mode). Queries are run on-device and not persisted.</dd>
 
   <dt>Display over other apps</dt>
-  <dd>Used to display the "session active" overlay over a blocked app while a session is in progress.</dd>
+  <dd>Used to show the block screen over a blocked app while a session is in progress. On Android 10+ this grant is also what allows the block screen to be launched at all when the accessibility service is not enabled.</dd>
 
   <dt>Notifications</dt>
   <dd>An ongoing notification is shown while a focus session is active, per Android foreground-service requirements.</dd>

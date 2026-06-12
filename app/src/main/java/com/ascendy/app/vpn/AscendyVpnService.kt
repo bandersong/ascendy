@@ -43,6 +43,49 @@ class AscendyVpnService : VpnService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var tunnelJob: Job? = null
 
+    /**
+     * NH-09: the user's network-configured DNS servers, kept fresh by [netCallback]. Forwarded
+     * queries go here first — not to a hardcoded public resolver — so enabling site blocking
+     * never silently reroutes the user's DNS away from the resolver they chose. Empty until the
+     * first callback (or when there's no network); then the public fallbacks carry the day.
+     */
+    @Volatile
+    private var systemDns: List<InetAddress> = emptyList()
+
+    @Volatile
+    private var dnsSourceNetwork: android.net.Network? = null
+
+    // Our own package is excluded from the tunnel (addDisallowedApplication below), so THIS app's
+    // default network is the real underlying network, not the VPN — its LinkProperties carry the
+    // DNS servers the user's device would use without us. If the exclusion ever failed and we read
+    // our own tunnel instead, the sinkhole addresses are filtered out in upstreamCandidates().
+    private val netCallback = object : android.net.ConnectivityManager.NetworkCallback() {
+        override fun onLinkPropertiesChanged(network: android.net.Network, lp: android.net.LinkProperties) {
+            dnsSourceNetwork = network
+            systemDns = lp.dnsServers
+        }
+        override fun onLost(network: android.net.Network) {
+            // Only clear when the network we sourced DNS from is the one going away — on a
+            // wifi→cell handover the old network's onLost can arrive AFTER the new default's
+            // onLinkPropertiesChanged, and must not wipe the fresh resolver list.
+            if (network == dnsSourceNetwork) {
+                dnsSourceNetwork = null
+                systemDns = emptyList()
+            }
+        }
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        try {
+            val cm = getSystemService(android.content.Context.CONNECTIVITY_SERVICE)
+                as? android.net.ConnectivityManager
+            cm?.registerDefaultNetworkCallback(netCallback)
+        } catch (e: Exception) {
+            Log.w(TAG, "default-network callback unavailable, using fallback DNS: ${e.message}")
+        }
+    }
+
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == ACTION_STOP) {
             shutdown()
@@ -124,9 +167,9 @@ class AscendyVpnService : VpnService() {
         val isBlocked = BlockState.isDomainBlocked(qname)
         Log.d(TAG, "dns q=$qname blocked=$isBlocked")
 
-        // forwardUpstream() blocks on a socket (up to ~4s across the v4→v6 fallback). Run it off
-        // the single tunnel read loop so one slow lookup can't serialize every other DNS query in
-        // the session. srcIp/dstIp/dns are already private copies, safe to hand to the coroutine.
+        // forwardUpstream() blocks on a socket (up to ~6s across the ≤3 upstream candidates). Run
+        // it off the single tunnel read loop so one slow lookup can't serialize every other DNS
+        // query in the session. srcIp/dstIp/dns are already private copies, safe for the coroutine.
         scope.launch {
             val response = if (isBlocked) DnsTools.nxdomainResponse(dns) else forwardUpstream(dns) ?: return@launch
             val replyPacket = DnsTools.buildIpv4UdpPacket(
@@ -174,13 +217,18 @@ class AscendyVpnService : VpnService() {
         }
     }
 
-    // Try IPv4 upstream first; fall back to IPv6 (needed on IPv6-only 5G networks).
-    private fun forwardUpstream(query: ByteArray): ByteArray? =
-        tryForward(query, UPSTREAM_DNS) ?: tryForward(query, UPSTREAM_DNS_V6)
+    // The user's own network DNS first (see systemDns), then the public fallbacks — the v6
+    // fallback matters on IPv6-only networks where the v4 literal is unreachable.
+    private fun forwardUpstream(query: ByteArray): ByteArray? {
+        for (upstream in DnsTools.upstreamCandidates(systemDns, FALLBACK_DNS, SINKHOLE_ADDRS)) {
+            val reply = tryForward(query, upstream)
+            if (reply != null) return reply
+        }
+        return null
+    }
 
-    private fun tryForward(query: ByteArray, host: String): ByteArray? {
+    private fun tryForward(query: ByteArray, upstream: InetAddress): ByteArray? {
         return try {
-            val upstream = InetAddress.getByName(host)
             val wildcard = if (upstream is java.net.Inet6Address) "::" else "0.0.0.0"
             val socket = DatagramSocket(null).also {
                 it.bind(java.net.InetSocketAddress(InetAddress.getByName(wildcard), 0))
@@ -197,13 +245,18 @@ class AscendyVpnService : VpnService() {
                 socket.close()
             }
         } catch (e: Exception) {
-            Log.w(TAG, "upstream $host failed: ${e.message}")
+            Log.w(TAG, "upstream ${upstream.hostAddress} failed: ${e.message}")
             null
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            val cm = getSystemService(android.content.Context.CONNECTIVITY_SERVICE)
+                as? android.net.ConnectivityManager
+            cm?.unregisterNetworkCallback(netCallback)
+        } catch (_: Exception) {}
         shutdown()
     }
 
@@ -334,5 +387,15 @@ class AscendyVpnService : VpnService() {
         private const val UPSTREAM_DNS = "1.1.1.1"
         private const val UPSTREAM_DNS_V6 = "2606:4700:4700::1111"
         private const val TAG = "AscendyVpn"
+
+        // getByName on address LITERALS parses without any network lookup — safe to init eagerly.
+        /** Public last-resort upstreams (Cloudflare v4 + v6), used only when [systemDns] is empty/dead. */
+        private val FALLBACK_DNS: List<InetAddress> by lazy {
+            listOf(InetAddress.getByName(UPSTREAM_DNS), InetAddress.getByName(UPSTREAM_DNS_V6))
+        }
+        /** The tunnel's own sink addresses — never valid upstreams (a forward there would loop). */
+        private val SINKHOLE_ADDRS: Set<InetAddress> by lazy {
+            setOf(InetAddress.getByName(DNS_FAKE_SERVER), InetAddress.getByName(DNS_FAKE_SERVER_V6))
+        }
     }
 }

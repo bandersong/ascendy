@@ -130,4 +130,47 @@ class DnsToolsTest {
         if (i < end) { sum += (buf[i].toInt() and 0xFF) shl 8; sum = (sum and 0xFFFF) + (sum ushr 16) }
         return sum and 0xFFFF
     }
+
+    // ── NH-09: upstream resolver selection (system DNS first, public fallback last) ──
+
+    private fun addr(s: String): java.net.InetAddress = java.net.InetAddress.getByName(s)
+    private val fallbacks = listOf(addr("1.1.1.1"), addr("2606:4700:4700::1111"))
+    private val sinkholes = setOf(addr("10.10.10.10"), addr("fd00:1::10"))
+
+    @Test fun upstreamCandidates_systemDnsComesFirst() {
+        val out = DnsTools.upstreamCandidates(listOf(addr("192.168.1.1")), fallbacks, sinkholes)
+        assertEquals(listOf(addr("192.168.1.1"), addr("1.1.1.1"), addr("2606:4700:4700::1111")), out)
+    }
+
+    @Test fun upstreamCandidates_emptySystemList_isFallbackOnly() {
+        assertEquals(fallbacks, DnsTools.upstreamCandidates(emptyList(), fallbacks, sinkholes))
+    }
+
+    @Test fun upstreamCandidates_neverPicksOwnSinkhole() {
+        // If the VPN-exclusion of our package failed, the "system" DNS is our own fake server —
+        // forwarding there would loop the query into ourselves forever.
+        val out = DnsTools.upstreamCandidates(
+            listOf(addr("10.10.10.10"), addr("fd00:1::10")), fallbacks, sinkholes,
+        )
+        assertEquals(fallbacks, out)
+    }
+
+    @Test fun upstreamCandidates_dropsLoopbackAndWildcard() {
+        val out = DnsTools.upstreamCandidates(
+            listOf(addr("127.0.0.1"), addr("0.0.0.0"), addr("9.9.9.9")), fallbacks, sinkholes,
+        )
+        assertEquals(addr("9.9.9.9"), out.first())
+        assertTrue("no loopback", out.none { it.isLoopbackAddress })
+    }
+
+    @Test fun upstreamCandidates_capsAtThreeAndDedups() {
+        val out = DnsTools.upstreamCandidates(
+            listOf(addr("1.1.1.1"), addr("8.8.8.8"), addr("8.8.4.4"), addr("9.9.9.9")),
+            fallbacks, sinkholes,
+        )
+        assertEquals("cap bounds the worst-case sequential timeout", 3, out.size)
+        assertEquals("dedup: 1.1.1.1 appears once", 1, out.count { it == addr("1.1.1.1") })
+        // take(2) of system list, then fallbacks fill the remainder
+        assertEquals(listOf(addr("1.1.1.1"), addr("8.8.8.8"), addr("2606:4700:4700::1111")), out)
+    }
 }

@@ -6,6 +6,29 @@ package com.ascendy.app.vpn
  */
 object DnsTools {
 
+    /**
+     * NH-09: pick the upstream resolvers for forwarded (non-blocked) queries — the user's own
+     * network-configured DNS first, public [fallbacks] only when none are usable. Forwarding
+     * everything to a hardcoded public resolver would silently reroute the user's DNS away from
+     * the resolver they (or their network) chose, which a privacy-respecting blocker must not do.
+     *
+     * [avoid] is the tunnel's own sinkhole addresses: if the system list ever contains them
+     * (e.g. the VPN-exclusion of our package failed and we read our own tunnel's DNS), forwarding
+     * there would loop the query back into ourselves. Loopback/wildcard entries are dropped for
+     * the same unreachable-from-our-socket reason. Capped at 3 candidates so the worst-case
+     * sequential timeout stays bounded (~6s at 2s each).
+     */
+    fun upstreamCandidates(
+        systemDns: List<java.net.InetAddress>,
+        fallbacks: List<java.net.InetAddress>,
+        avoid: Set<java.net.InetAddress>,
+    ): List<java.net.InetAddress> {
+        val system = systemDns.filter {
+            it !in avoid && !it.isLoopbackAddress && !it.isAnyLocalAddress
+        }
+        return (system.take(2) + fallbacks).distinct().take(3)
+    }
+
     /** Parse the QNAME (lowercased, no trailing dot) out of a DNS query message. */
     fun parseQName(dns: ByteArray): String? {
         if (dns.size < 13) return null

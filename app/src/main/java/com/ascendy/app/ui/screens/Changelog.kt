@@ -10,6 +10,14 @@ data class ChangelogEntry(val versionCode: Int, val title: String, val notes: Li
 
 val Changelog: List<ChangelogEntry> = listOf(
     ChangelogEntry(
+        versionCode = 69,
+        title = "neutral got a glow-up ✨",
+        notes = listOf(
+            "the neutral mascot has a fresh new face — a slate star that matches the kawaii and tough crew",
+            "same deadpan energy, new look",
+        )
+    ),
+    ChangelogEntry(
         versionCode = 64,
         title = "your dns, your rules 🔏",
         notes = listOf(

@@ -3,6 +3,7 @@ package com.ascendy.app.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -176,7 +177,10 @@ fun PairTagScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = palette.Smoke)
                             VSpace(Space.xs)
-                            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(Space.sm),
+                                verticalArrangement = Arrangement.spacedBy(Space.sm),
+                            ) {
                                 ListChip(
                                     text = vocab.tagListPickerDefault,
                                     selected = tag.listId == null,

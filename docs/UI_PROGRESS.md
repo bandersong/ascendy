@@ -10,6 +10,18 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 8 (screen-by-screen polish from the renders)
+- Reviewed all 11 rendered screens. Most are solid (Settings, Permissions, Onboarding,
+  Schedules, About all clean). Two real flaws fixed:
+  - [x] **PairTag chip-wrap bug** — long list names ("Evening Wind-down") squished into a
+        mangled 3-line chip because the assign-list row didn't wrap. Now `FlowRow` → chips
+        wrap to a clean second line as full pills.
+  - [x] **Pomodoro sparse void** — short form clinging to the top over a huge empty bottom.
+        Now `PageColumn(centerWhenShort=true)` (reuses iter-8 infra) → centered "pick & go"
+        panel. List chips also moved to `FlowRow` for future-proof wrapping.
+- Verified by render (both) + verifyRoborazziFossDebug green; only pairtag + pomodoro
+  goldens changed.
+
 ### 2026-06-25 — Iter 7 (real-screen renders + honest audit)
 - Added `ScreenGalleryTest` — renders the **11 real screens** (not just primitives) with
   fabricated data, animations frozen (`mainClock.autoAdvance = false`). 13 PNGs in

@@ -1,6 +1,7 @@
 package com.ascendy.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -46,7 +47,7 @@ fun PomodoroScreen(
     val defaultList = lists.firstOrNull { it.isDefault } ?: lists.firstOrNull()
     var selectedListId by remember { mutableStateOf(defaultList?.id ?: 0L) }
 
-    PageColumn {
+    PageColumn(centerWhenShort = true) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
@@ -80,7 +81,10 @@ fun PomodoroScreen(
         // list picker
         Text(vocab.schedulesList, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
         VSpace(Space.sm)
-        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(Space.sm),
+            verticalArrangement = Arrangement.spacedBy(Space.sm),
+        ) {
             lists.forEach { l ->
                 SelectableChip(
                     label = l.name,

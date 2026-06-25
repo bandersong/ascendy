@@ -10,6 +10,25 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 6 (hero goal progress ring)
+- New `GoalRing(progress, show, content)` in `Decor.kt`: a halo around the hero mascot —
+  faint Mist track (seamless `drawCircle`) + a Petal arc sweeping from 12 o'clock,
+  turning Sage once the goal is met. Static (deterministic for snapshots).
+- Wired into `HomeScreen` hero (wraps the Mascot, `show = dailyGoalMinutes > 0`,
+  `progress = today / goal`). Complements the existing goal text (which carries TalkBack).
+- Snapshotted 66% + done states across 3 themes; arc swaps per theme (orchid/bone/slate),
+  done-ring goes Sage. Eyeballed Kawaii + Neutral.
+- **Red-team (glm-5.2 + codex):**
+  - glm "geometry double-counts padding → clips/off-center" → **REJECTED by render**
+    (ring is centered + unclipped; the `d = minDim − stroke` keeps the centered stroke
+    inside the inset canvas — glm's proposed `d = minDimension` would actually clip).
+  - glm "severe mascot overlap" → **REJECTED by render** (clear halo; mascot PNG has
+    transparent margins + the hero Mascot adds 8dp padding).
+  - glm valid catch → track Round-cap seam at 12 o'clock fixed via seamless `drawCircle`.
+  - a11y/contrast: Petal arc meets WCAG 1.4.11 (3:1 non-text) in all themes (worst
+    KawaiiLight 4.4; computed). Faint Mist track is decorative (info is the filled arc).
+- Verified: record + verify green.
+
 ### 2026-06-25 — Iter 5 (unified empty-states)
 - New `EmptyState(text)` in `Decor.kt` = `SoftCard` + static `MiniMascot(40dp)` +
   muted `bodyMedium`. Replaced **5 ad-hoc per-screen treatments** (Blocklist, Stats,
@@ -118,7 +137,10 @@ then update this file (mark done + add newly found items).
       mid-scroll). Add a `compact` variant or plain `Text`.
 - [ ] Consider an `EmptyState` compact (card-less) variant for small inline contexts.
 - [ ] Stats: real data-viz for daily/weekly focus (currently flat numbers)
-- [ ] Hero card: progress ring around mascot for daily goal
+- [x] Hero card: progress ring around mascot for daily goal → `GoalRing` (track +
+      Petal arc → Sage on complete); wired in HomeScreen hero; snapshotted 66%/done ×
+      3 themes; arc WCAG 1.4.11 pass. TODO: animate fill in v2 (kept static for snapshots);
+      eyeball the 176dp hero fit on a real device.
 - [ ] Consistent screen-title header component (back + title + actions)
 - [ ] Haptics on toggle / session start-stop
 - [ ] Reduce-motion respect (no stable Compose API yet — track via host

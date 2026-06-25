@@ -36,7 +36,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
@@ -330,3 +334,43 @@ fun EmptyState(text: String, modifier: Modifier = Modifier) {
 }
 
 private val EmptyStateMascotSize = 40.dp
+
+/**
+ * Daily-goal halo for the hero mascot. Draws a faint full track and a [palette.Petal]
+ * progress arc — turning [palette.Sage] once the goal is met — sweeping clockwise from
+ * 12 o'clock around its [content]. Decorative only; [content] (the mascot) sits centered
+ * inside. With [show] false it renders just the content (no goal set). Static, so it
+ * stays deterministic in snapshots.
+ */
+@Composable
+fun GoalRing(
+    progress: Float,
+    modifier: Modifier = Modifier,
+    show: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val p = progress.coerceIn(0f, 1f)
+    val arcColor = if (p >= 1f) palette.Sage else palette.Petal
+    val trackColor = palette.Mist
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        if (show) {
+            Canvas(modifier = Modifier.matchParentSize().padding(GoalRingInset)) {
+                val stroke = GoalRingStroke.toPx()
+                val d = size.minDimension - stroke
+                val tl = Offset((size.width - d) / 2f, (size.height - d) / 2f)
+                val arcSize = Size(d, d)
+                // Track as a full circle (not a 360° arc) so there is no Round-cap seam
+                // at 12 o'clock; the progress arc keeps rounded ends.
+                drawCircle(trackColor, radius = d / 2f, center = center, style = Stroke(width = stroke))
+                if (p > 0f) {
+                    drawArc(arcColor, -90f, p * 360f, useCenter = false, topLeft = tl, size = arcSize,
+                        style = Stroke(width = stroke, cap = StrokeCap.Round))
+                }
+            }
+        }
+        content()
+    }
+}
+
+private val GoalRingStroke = 6.dp
+private val GoalRingInset = 2.dp

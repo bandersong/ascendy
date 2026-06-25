@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.GoalRing
 import com.ascendy.app.ui.components.HairlineDivider
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
@@ -138,7 +139,15 @@ fun HomeScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Mascot(locked = active, streakDays = streakDays)
+                    // Daily-goal halo around the mascot — shows only when a goal is set.
+                    GoalRing(
+                        progress = if (dailyGoalMinutes > 0)
+                            todayFocusedMinutes.toFloat() / dailyGoalMinutes else 0f,
+                        show = dailyGoalMinutes > 0,
+                        modifier = Modifier.matchParentSize(),
+                    ) {
+                        Mascot(locked = active, streakDays = streakDays)
+                    }
                 }
                 VSpace(Space.sm)
                 Row(verticalAlignment = Alignment.CenterVertically) {

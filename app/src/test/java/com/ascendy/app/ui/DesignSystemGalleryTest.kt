@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +18,9 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.EmptyState
+import com.ascendy.app.ui.components.GoalRing
 import com.ascendy.app.ui.components.HairlineDivider
+import com.ascendy.app.ui.components.MiniMascot
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
@@ -130,5 +133,17 @@ private fun Gallery() {
         }
         VSpace(Space.lg)
         EmptyState("No lists yet — tap + to start")
+        VSpace(Space.lg)
+        SectionLabel("Goal ring · 66% / done")
+        VSpace(Space.sm)
+        Row {
+            GoalRing(progress = 0.66f, modifier = Modifier.size(120.dp)) {
+                MiniMascot(locked = false, modifier = Modifier.size(72.dp))
+            }
+            HSpace(Space.lg)
+            GoalRing(progress = 1f, modifier = Modifier.size(120.dp)) {
+                MiniMascot(locked = false, modifier = Modifier.size(72.dp))
+            }
+        }
     }
 }

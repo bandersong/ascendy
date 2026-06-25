@@ -165,7 +165,8 @@ class ScreenGalleryTest {
         PomodoroScreen(lists = lists, onStart = { _, _ -> }, onBack = {})
     }
 
-    @Test fun onboarding() = snap("onboarding") {
+    // First run always renders in Kawaii (see MainActivity) — the cute mascot stars the welcome.
+    @Test fun onboarding() = snap("onboarding", ThemeVariant.Kawaii) {
         OnboardingScreen(initialSafetyMinutes = 480, onFinish = {})
     }
 

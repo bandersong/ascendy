@@ -355,6 +355,15 @@ private fun AppNav(
     NavHost(navController = nav, startDestination = startDest) {
         composable("onboarding") {
             val initialSafety by themePrefs.maxSessionMinutes.collectAsState(initial = com.ascendy.app.data.MAX_SESSION_DEFAULT_MIN)
+            // First run always stars the Kawaii mascot — the warmest, friendliest face — no
+            // matter the (default Neutral) app theme. A cute welcome; the user picks their real
+            // theme right after, via the themes-intro on Home. Own Surface so the lavender
+            // background comes along, not just the mascot.
+            AscendyTheme(variant = com.ascendy.app.ui.theme.ThemeVariant.Kawaii) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
             com.ascendy.app.ui.screens.OnboardingScreen(
                 initialSafetyMinutes = initialSafety,
                 onFinish = { safetyMin ->
@@ -372,6 +381,8 @@ private fun AppNav(
                     if (!ready) nav.navigate("perms")
                 }
             )
+                }
+            }
         }
         composable("home") {
             LaunchedEffect(Unit) { permissions = checkPermissions(context) }

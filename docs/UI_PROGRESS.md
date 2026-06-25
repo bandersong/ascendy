@@ -10,6 +10,14 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 9 (Kawaii stars the first run)
+- First-time onboarding now always renders in the **Kawaii** theme regardless of the
+  app's (default Neutral) theme — the cute orchid mascot + lavender warmth + soft
+  lowercase copy lead the welcome. Wrapped the `onboarding` nav destination in
+  `AscendyTheme(Kawaii)` + a matching-background `Surface` in MainActivity. The user
+  picks their real theme right after (themes-intro on Home), so it's a warm intro, not a
+  lock-in. Render-verified (kawaii) + both flavors compile + verify green.
+
 ### 2026-06-25 — Iter 8 (screen-by-screen polish from the renders)
 - Reviewed all 11 rendered screens. Most are solid (Settings, Permissions, Onboarding,
   Schedules, About all clean). Two real flaws fixed:

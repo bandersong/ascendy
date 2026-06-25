@@ -4,9 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -31,7 +29,11 @@ import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -75,14 +77,14 @@ fun PairTagScreen(
             Text(vocab.tagsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         SoftCard(modifier = Modifier.fillMaxWidth()) {
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(Modifier.size(110.dp), contentAlignment = Alignment.Center) {
                     Mascot(locked = waiting)
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 when {
                     !waiting && detectedTagId == null -> {
                         Text(
@@ -90,8 +92,8 @@ fun PairTagScreen(
                             style = MaterialTheme.typography.bodyMedium,
                             color = palette.Smoke
                         )
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        VSpace(Space.md)
+                        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
                             if (nfcSupported) {
                                 Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
                             }
@@ -114,15 +116,15 @@ fun PairTagScreen(
                                 style = MaterialTheme.typography.titleMedium,
                                 color = palette.Ink
                             )
-                            Spacer(Modifier.height(8.dp))
+                            VSpace(Space.sm)
                             Button(onClick = onOpenNfcSettings) { Text(vocab.nfcOffAction) }
                         }
-                        Spacer(Modifier.height(8.dp))
+                        VSpace(Space.sm)
                         TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
                     }
                     detectedTagId != null -> {
                         Text(vocab.tagsFound, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                        Spacer(Modifier.height(12.dp))
+                        VSpace(Space.md)
                         OutlinedTextField(
                             value = nickname,
                             onValueChange = { nickname = it },
@@ -130,8 +132,8 @@ fun PairTagScreen(
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        VSpace(Space.md)
+                        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
                             TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
                             Button(
                                 onClick = { if (nickname.isNotBlank()) onSavePairing(nickname.trim()) }
@@ -142,10 +144,10 @@ fun PairTagScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
-        Text(vocab.tagsListHeader, style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
-        Spacer(Modifier.height(8.dp))
+        SectionLabel(vocab.tagsListHeader)
+        VSpace(Space.sm)
 
         if (knownTags.isEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -153,7 +155,7 @@ fun PairTagScreen(
                     locked = false,
                     modifier = Modifier.size(36.dp)
                 )
-                Spacer(Modifier.size(10.dp))
+                HSpace(Space.md)
                 Text(
                     vocab.tagsEmpty,
                     style = MaterialTheme.typography.bodyMedium,
@@ -179,12 +181,12 @@ fun PairTagScreen(
                             TextButton(onClick = { onDeleteTag(tag) }) { Text(vocab.tagsRemove) }
                         }
                         if (lists.size > 1 || tag.listId != null) {
-                            Spacer(Modifier.height(6.dp))
+                            VSpace(Space.sm)
                             Text(vocab.tagListPickerLabel,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = palette.Smoke)
-                            Spacer(Modifier.height(4.dp))
-                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            VSpace(Space.xs)
+                            Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
                                 ListChip(
                                     text = vocab.tagListPickerDefault,
                                     selected = tag.listId == null,
@@ -201,7 +203,7 @@ fun PairTagScreen(
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
             }
         }
     }
@@ -224,11 +226,11 @@ fun PairTagScreen(
                         contentDescription = vocab.qrGeneratedTitle,
                         modifier = Modifier.size(220.dp)
                     )
-                    Spacer(Modifier.height(8.dp))
+                    VSpace(Space.sm)
                     Text(vocab.qrInstructions,
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.Smoke)
-                    Spacer(Modifier.height(8.dp))
+                    VSpace(Space.sm)
                     OutlinedTextField(
                         value = qrNickname,
                         onValueChange = { qrNickname = it },
@@ -236,14 +238,14 @@ fun PairTagScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    Spacer(Modifier.height(8.dp))
+                    VSpace(Space.sm)
                     // Exporting registers the anchor first — a printed QR that was never saved
                     // could not end sessions, which defeats the whole point of printing it.
                     val defaultNickname = vocab.qrDefaultNickname
                     val registerAnchor = {
                         onSaveQrAnchor(qrIdSnapshot, qrNickname.trim().ifBlank { defaultNickname })
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
                         TextButton(onClick = {
                             registerAnchor()
                             onSaveQrToGallery(qrIdSnapshot)
@@ -253,7 +255,7 @@ fun PairTagScreen(
                             onShareQr(qrIdSnapshot)
                         }) { Text(vocab.qrShare) }
                     }
-                    Spacer(Modifier.height(4.dp))
+                    VSpace(Space.xs)
                     Text(vocab.qrExportNote,
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.Smoke)
@@ -285,7 +287,7 @@ private fun ListChip(text: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             text,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = Space.md, vertical = Space.sm),
             style = MaterialTheme.typography.bodySmall,
             color = if (selected) palette.onPetal else palette.Ink
         )

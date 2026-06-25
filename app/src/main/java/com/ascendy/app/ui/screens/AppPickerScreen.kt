@@ -7,10 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -48,6 +46,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.ascendy.app.ui.components.PageFrame
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 import kotlinx.coroutines.Dispatchers
@@ -111,9 +112,9 @@ fun AppPickerScreen(
             Text(listName, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().padding(vertical = Space.xs)) {
             TabChip(label = vocab.pickerTabApps, selected = tab == 0, onClick = { tab = 0 }, modifier = Modifier.weight(1f))
-            Spacer(Modifier.size(8.dp))
+            HSpace(Space.sm)
             TabChip(label = vocab.pickerTabSites, selected = tab == 1, onClick = { tab = 1 }, modifier = Modifier.weight(1f))
         }
 
@@ -125,7 +126,7 @@ fun AppPickerScreen(
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = Space.sm),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -144,11 +145,11 @@ fun AppPickerScreen(
                         checked = app.packageName in blockedPackages,
                         onCheckedChange = { onTogglePackage(app.packageName, it) }
                     )
-                    Spacer(Modifier.height(6.dp))
+                    VSpace(Space.sm)
                 }
             }
         } else {
-            Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+            Row(modifier = Modifier.fillMaxWidth().padding(vertical = Space.sm),
                 verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(
                     value = newDomain,
@@ -161,7 +162,7 @@ fun AppPickerScreen(
                         unfocusedContainerColor = MaterialTheme.colorScheme.surface
                     )
                 )
-                Spacer(Modifier.size(8.dp))
+                HSpace(Space.sm)
                 Button(onClick = {
                     val cleaned = newDomain.trim()
                     if (cleaned.isNotEmpty() && '.' in cleaned) {
@@ -171,18 +172,18 @@ fun AppPickerScreen(
                 }) { Text(vocab.pickerSitesAdd) }
             }
 
-            Spacer(Modifier.size(4.dp))
+            VSpace(Space.xs)
             Text(
                 vocab.pickerSitesNote,
                 style = MaterialTheme.typography.bodySmall,
                 color = palette.Smoke
             )
-            Spacer(Modifier.size(8.dp))
+            VSpace(Space.sm)
 
             if (blockedDomains.isEmpty()) {
                 Text(
                     vocab.pickerSitesEmpty,
-                    modifier = Modifier.padding(vertical = 8.dp),
+                    modifier = Modifier.padding(vertical = Space.sm),
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.Smoke
                 )
@@ -190,7 +191,7 @@ fun AppPickerScreen(
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(blockedDomains, key = { it }) { d ->
                         DomainRow(domain = d, onRemove = { onRemoveDomain(d) })
-                        Spacer(Modifier.height(6.dp))
+                        VSpace(Space.sm)
                     }
                 }
             }
@@ -210,7 +211,7 @@ private fun TabChip(label: String, selected: Boolean, onClick: () -> Unit, modif
     ) {
         Text(
             label,
-            modifier = Modifier.padding(vertical = 10.dp),
+            modifier = Modifier.padding(vertical = Space.md),
             style = MaterialTheme.typography.titleMedium,
             color = if (selected) palette.onPetal else palette.Ink,
             textAlign = TextAlign.Center
@@ -228,7 +229,7 @@ private fun DomainRow(domain: String, onRemove: () -> Unit) {
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = Space.lg, vertical = Space.lg)
         ) {
             Text(domain, style = MaterialTheme.typography.titleMedium, color = palette.Ink,
                 modifier = Modifier.weight(1f))
@@ -250,7 +251,7 @@ private fun AppRow(app: AppInfo, icon: Painter?, checked: Boolean, onCheckedChan
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
+            modifier = Modifier.padding(horizontal = Space.lg, vertical = Space.lg)
         ) {
             if (icon != null) {
                 Image(painter = icon, contentDescription = null, modifier = Modifier.size(36.dp))
@@ -270,7 +271,7 @@ private fun AppRow(app: AppInfo, icon: Painter?, checked: Boolean, onCheckedChan
                     )
                 }
             }
-            Spacer(Modifier.size(12.dp))
+            HSpace(Space.md)
             Column(Modifier.weight(1f)) {
                 Text(app.label, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Text(app.packageName, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)

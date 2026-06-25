@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,6 +38,10 @@ import com.ascendy.app.data.Blocklist
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.Elev
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -73,7 +76,7 @@ fun BlocklistScreen(
                 }
                 Text(vocab.listsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
             }
-            Spacer(Modifier.height(8.dp))
+            VSpace(Space.sm)
 
             if (lists.isEmpty()) {
                 SoftCard(modifier = Modifier.fillMaxWidth()) {
@@ -82,7 +85,7 @@ fun BlocklistScreen(
                             locked = false,
                             modifier = Modifier.size(40.dp)
                         )
-                        Spacer(Modifier.size(12.dp))
+                        HSpace(Space.md)
                         Text(
                             vocab.listsEmpty,
                             style = MaterialTheme.typography.bodyMedium,
@@ -93,24 +96,24 @@ fun BlocklistScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(bottom = Space.mega + Space.xxxl),
+                    verticalArrangement = Arrangement.spacedBy(Space.sm)
                 ) {
                 items(lists, key = { it.id }) { list ->
                     Surface(
                         onClick = { onOpenList(list) },
                         color = MaterialTheme.colorScheme.surface,
                         shape = MaterialTheme.shapes.large,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, palette.Mist),
+                        border = androidx.compose.foundation.BorderStroke(Elev.hairline, palette.Mist),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.lg)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(list.name, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                                         if (list.isStrict) {
-                                            Spacer(Modifier.size(8.dp))
+                                            HSpace(Space.sm)
                                             Badge(label = vocab.strictBadge, color = palette.Petal)
                                         }
                                     }
@@ -123,7 +126,7 @@ fun BlocklistScreen(
                                 if (list.isDefault) Badge(label = vocab.listsBadgeDefault, color = palette.Mint)
                                 else TextButton(onClick = { onDeleteList(list) }) { Text(vocab.tagsRemove) }
                             }
-                            Spacer(Modifier.height(4.dp))
+                            VSpace(Space.xs)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(vocab.strictToggleLabel,
                                     style = MaterialTheme.typography.bodySmall,

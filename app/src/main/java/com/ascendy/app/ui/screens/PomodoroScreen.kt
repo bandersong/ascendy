@@ -2,9 +2,7 @@ package com.ascendy.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
@@ -22,11 +20,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -54,18 +53,18 @@ fun PomodoroScreen(
             }
             Text(vocab.pomodoroTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         Text(
             vocab.pomodoroIntro,
             style = MaterialTheme.typography.bodyMedium,
             color = palette.Smoke
         )
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         // duration chips
         Row(modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
             durations.forEach { (min, label) ->
                 SelectableChip(
                     label = label,
@@ -76,12 +75,12 @@ fun PomodoroScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         // list picker
         Text(vocab.schedulesList, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-        Spacer(Modifier.height(6.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        VSpace(Space.sm)
+        Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
             lists.forEach { l ->
                 SelectableChip(
                     label = l.name,
@@ -91,7 +90,7 @@ fun PomodoroScreen(
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        VSpace(Space.xxl)
 
         Button(
             onClick = {
@@ -104,7 +103,7 @@ fun PomodoroScreen(
             Text(vocab.pomodoroStart)
         }
 
-        Spacer(Modifier.height(12.dp))
+        VSpace(Space.md)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
             Text(

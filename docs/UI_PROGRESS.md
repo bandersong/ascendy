@@ -10,6 +10,17 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 2 (screen sweep)
+- Migrated the remaining **11 UI screens** onto the token layer via a parallel,
+  adversarially-verified workflow (one agent per screen + one verifier each).
+- `Changelog.kt` is a **data file** (ChangelogEntry list), not UI — no migration
+  needed; correctly left untouched.
+- Cleaned a pre-existing dead `Badge` import in `SchedulesScreen.kt`.
+- Off-grid snaps (transparent): 6→8, 10→12, list-row vertical →16 (≥48 tap target).
+  Only remaining raw `.dp` are genuine sizes (icons, the Stats chart `height(120.dp)`).
+- Verified: `:app:compilePlayDebugKotlin` + `:app:compileFossDebugKotlin` both green.
+- All Space.* references validated in-vocabulary (zero out-of-scale names).
+
 ### 2026-06-25 — Iter 1 (foundation)
 - Built `theme/Tokens.kt`: `Space` (4pt grid, xxs→mega), `VSpace`/`HSpace`, `Motion`, `Elev`.
 - Added `HairlineDivider` + `SectionLabel` to `Decor.kt`; fixed `Dot` px→Dp density bug.
@@ -29,18 +40,20 @@ then update this file (mark done + add newly found items).
 - [x] `theme/Tokens.kt` foundation (Space / Motion / Elev / helpers)
 - [x] `components/Decor.kt` — HairlineDivider, SectionLabel, token cleanup
 - [x] `screens/HomeScreen.kt`
-- [ ] `screens/SettingsScreen.kt` (326 LOC — biggest remaining)
-- [ ] `screens/AppPickerScreen.kt` (310)
-- [ ] `screens/PairTagScreen.kt` (293)
-- [ ] `screens/SchedulesScreen.kt` (280)
-- [ ] `screens/PermissionsScreen.kt` (274)
-- [ ] `screens/StatsScreen.kt` (229)
-- [ ] `screens/UpdateScreen.kt` (198)
-- [ ] `screens/BlocklistScreen.kt` (198)
-- [ ] `screens/OnboardingScreen.kt` (169)
-- [ ] `screens/AboutScreen.kt` (137)
-- [ ] `screens/PomodoroScreen.kt` (117)
-- [ ] `screens/Changelog.kt` (101)
+- [x] `screens/SettingsScreen.kt` (326 LOC)
+- [x] `screens/AppPickerScreen.kt` (310)
+- [x] `screens/PairTagScreen.kt` (293)
+- [x] `screens/SchedulesScreen.kt` (280)
+- [x] `screens/PermissionsScreen.kt` (274)
+- [x] `screens/StatsScreen.kt` (229)
+- [x] `screens/UpdateScreen.kt` (198)
+- [x] `screens/BlocklistScreen.kt` (198)
+- [x] `screens/OnboardingScreen.kt` (169)
+- [x] `screens/AboutScreen.kt` (137)
+- [x] `screens/PomodoroScreen.kt` (117)
+- [x] `screens/Changelog.kt` — N/A, data file (no UI/spacing)
+
+**Token migration COMPLETE across all screens.** Polish backlog below is next.
 
 ## Polish backlog (after token migration)
 

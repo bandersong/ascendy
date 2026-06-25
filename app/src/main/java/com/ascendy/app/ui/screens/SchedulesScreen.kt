@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -41,10 +40,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.Schedule
-import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -77,7 +78,7 @@ fun SchedulesScreen(
                 }
                 Text(vocab.schedulesTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
             }
-            Spacer(Modifier.height(8.dp))
+            VSpace(Space.sm)
 
             if (schedules.isEmpty()) {
                 SoftCard(modifier = Modifier.fillMaxWidth()) {
@@ -94,7 +95,7 @@ fun SchedulesScreen(
                             onToggle = { en -> onToggle(s, en) },
                             onDelete = { onDelete(s) }
                         )
-                        Spacer(Modifier.height(8.dp))
+                        VSpace(Space.sm)
                     }
                 }
             }
@@ -136,9 +137,9 @@ private fun ScheduleCard(
                 }
                 Switch(checked = schedule.enabled, onCheckedChange = onToggle)
             }
-            Spacer(Modifier.height(6.dp))
+            VSpace(Space.sm)
             DayDots(daysOfWeek = schedule.daysOfWeek)
-            Spacer(Modifier.height(6.dp))
+            VSpace(Space.sm)
             Row {
                 Spacer(Modifier.weight(1f))
                 TextButton(onClick = onDelete) { Text(vocab.schedulesDelete) }
@@ -155,7 +156,7 @@ private fun DayDots(daysOfWeek: Int) {
             Box(
                 modifier = Modifier
                     .size(28.dp)
-                    .padding(end = 4.dp)
+                    .padding(end = Space.xs)
                     .clip(CircleShape)
                     .background(if (on) palette.Petal else palette.Mist),
                 contentAlignment = Alignment.Center
@@ -195,9 +196,9 @@ private fun ScheduleDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Text(vocab.schedulesList, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
                     lists.forEach { l ->
                         SelectableChip(
                             label = l.name,
@@ -206,7 +207,7 @@ private fun ScheduleDialog(
                         )
                     }
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Text(vocab.schedulesDays, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Row {
                     vocab.daysShort.forEachIndexed { i, label ->
@@ -214,7 +215,7 @@ private fun ScheduleDialog(
                         Box(
                             modifier = Modifier
                                 .size(34.dp)
-                                .padding(end = 4.dp)
+                                .padding(end = Space.xs)
                                 .clip(CircleShape)
                                 .background(if (on) palette.Petal else palette.Mist)
                                 .clickable {
@@ -227,13 +228,13 @@ private fun ScheduleDialog(
                         }
                     }
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TimeAdjustField(label = vocab.schedulesStartTime, value = startMin, onChange = { startMin = it }, modifier = Modifier.weight(1f))
-                    Spacer(Modifier.size(8.dp))
+                    HSpace(Space.sm)
                     TimeAdjustField(label = vocab.schedulesEndTime, value = endMin, onChange = { endMin = it }, modifier = Modifier.weight(1f))
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(vocab.schedulesEnabled, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                     Spacer(Modifier.weight(1f))

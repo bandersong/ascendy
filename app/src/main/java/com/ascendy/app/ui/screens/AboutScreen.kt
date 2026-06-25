@@ -5,9 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -28,6 +26,8 @@ import com.ascendy.app.BuildConfig
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -44,7 +44,7 @@ fun AboutScreen(onBack: () -> Unit) {
             Text(vocab.aboutTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
             Column(horizontalAlignment = Alignment.CenterHorizontally,
@@ -52,21 +52,21 @@ fun AboutScreen(onBack: () -> Unit) {
                 Box(Modifier.size(120.dp), contentAlignment = Alignment.Center) {
                     Mascot(locked = false)
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Text(
                     vocab.appTitle,
                     style = MaterialTheme.typography.headlineMedium,
                     color = palette.Ink,
                     textAlign = TextAlign.Center
                 )
-                Spacer(Modifier.height(4.dp))
+                VSpace(Space.xs)
                 Text(
                     vocab.aboutVersionFmt.format(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.Smoke,
                     textAlign = TextAlign.Center
                 )
-                Spacer(Modifier.height(12.dp))
+                VSpace(Space.md)
                 Text(
                     vocab.aboutTagline,
                     style = MaterialTheme.typography.bodyMedium,
@@ -76,30 +76,30 @@ fun AboutScreen(onBack: () -> Unit) {
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         LinkRow(
             label = vocab.aboutLinkDonate,
             url = "https://ko-fi.com/bandersong",
             emphasized = true
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         LinkRow(
             label = vocab.aboutLinkSource,
             url = "https://github.com/bandersong/ascendy"
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         LinkRow(
             label = vocab.aboutLinkPrivacy,
             url = "https://bandersong.github.io/ascendy/privacy.html"
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         LinkRow(
             label = vocab.aboutLinkReleases,
             url = "https://github.com/bandersong/ascendy/releases"
         )
 
-        Spacer(Modifier.height(24.dp))
+        VSpace(Space.xxl)
 
         Text(
             vocab.aboutMadeWith,
@@ -129,7 +129,7 @@ private fun LinkRow(label: String, url: String, emphasized: Boolean = false) {
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+            modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.lg),
             style = MaterialTheme.typography.titleMedium,
             color = if (emphasized) palette.onPetal else palette.Ink
         )

@@ -3,11 +3,9 @@ package com.ascendy.app.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Icon
@@ -23,8 +21,12 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.SessionLog
 import com.ascendy.app.data.Stats
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 import java.text.SimpleDateFormat
@@ -66,7 +68,7 @@ fun StatsScreen(
             Text(vocab.statsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
         }
 
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
             Column(horizontalAlignment = Alignment.CenterHorizontally,
@@ -77,7 +79,7 @@ fun StatsScreen(
                     color = palette.Ink,
                     textAlign = TextAlign.Center
                 )
-                Spacer(Modifier.height(4.dp))
+                VSpace(Space.xs)
                 val achievement = when {
                     streakDays >= 100 -> vocab.statsAchievement100
                     streakDays >= 30 -> vocab.statsAchievement30
@@ -93,29 +95,29 @@ fun StatsScreen(
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        VSpace(Space.md)
 
         Row(modifier = Modifier.fillMaxWidth()) {
             StatTile(vocab.statsToday, Stats.formatMinutes(Stats.msToMinutes(todayMs)), Modifier.weight(1f))
-            Spacer(Modifier.size(8.dp))
+            HSpace(Space.sm)
             StatTile(vocab.statsWeek, Stats.formatMinutes(Stats.msToMinutes(weekMs)), Modifier.weight(1f))
-            Spacer(Modifier.size(8.dp))
+            HSpace(Space.sm)
             StatTile(vocab.statsAllTime, Stats.formatMinutes(Stats.msToMinutes(allTimeMs)), Modifier.weight(1f))
         }
 
-        Spacer(Modifier.height(20.dp))
+        VSpace(Space.xl)
 
         // 7-day bar chart
-        Text(vocab.statsChartLabel, style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
-        Spacer(Modifier.height(8.dp))
+        SectionLabel(vocab.statsChartLabel)
+        VSpace(Space.sm)
         SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Surface) {
             WeekChart(weekBuckets)
         }
 
-        Spacer(Modifier.height(20.dp))
+        VSpace(Space.xl)
 
-        Text(vocab.statsRecent, style = MaterialTheme.typography.titleLarge, color = palette.Smoke)
-        Spacer(Modifier.height(8.dp))
+        SectionLabel(vocab.statsRecent)
+        VSpace(Space.sm)
 
         if (recent.isEmpty()) {
             SoftCard(modifier = Modifier.fillMaxWidth()) {
@@ -137,7 +139,7 @@ fun StatsScreen(
                         }
                     }
                 }
-                Spacer(Modifier.height(6.dp))
+                VSpace(Space.sm)
             }
         }
     }
@@ -172,7 +174,7 @@ private fun WeekChart(buckets: LongArray) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(120.dp)
-                .padding(vertical = 4.dp)
+                .padding(vertical = Space.xs)
         ) {
             val w = size.width
             val h = size.height
@@ -206,7 +208,7 @@ private fun WeekChart(buckets: LongArray) {
             }
         }
         if (bestIdx >= 0 && buckets[bestIdx] > 0) {
-            Spacer(Modifier.height(6.dp))
+            VSpace(Space.sm)
             Text(
                 "${vocab.statsBestDay}: ${dayLabels[bestIdx]} · ${Stats.formatMinutes(Stats.msToMinutes(buckets[bestIdx]))}",
                 style = MaterialTheme.typography.bodySmall,
@@ -222,7 +224,7 @@ private fun StatTile(label: String, value: String, modifier: Modifier = Modifier
         Column(horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()) {
             Text(value, style = MaterialTheme.typography.titleLarge, color = palette.Ink)
-            Spacer(Modifier.height(2.dp))
+            VSpace(Space.xxs)
             Text(label, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
         }
     }

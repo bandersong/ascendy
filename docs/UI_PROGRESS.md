@@ -10,6 +10,26 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 7 (real-screen renders + honest audit)
+- Added `ScreenGalleryTest` — renders the **11 real screens** (not just primitives) with
+  fabricated data, animations frozen (`mainClock.autoAdvance = false`). 13 PNGs in
+  `src/test/snapshots/screens/` (Home ×3 themes). First time the composed screens have
+  actually been *seen*.
+- **What the renders revealed** (invisible from the primitive gallery):
+  - ★ The 3-theme identity engine is genuinely strong — Kawaii / Tough / Neutral read as
+    three different apps (mascot + color + type + full copy swap). The real moat.
+  - Settings & Permissions are the most polished (cards, previews, status badges).
+  - **NEW issues, now visible:**
+    - [ ] Home: ~40% empty bottom on tall screens — sparse / top-heavy. Balance it.
+    - [ ] Stats "Last 7 days" chart is weak (thin flat dashes, reads near-empty) —
+          confirms the data-viz item; bump priority.
+    - [ ] Blocklist: strict-mode explanation paragraph repeats verbatim on every card —
+          show once / on-toggle, not per row.
+    - [ ] Neutral mascot art is plainer than Kawaii/Tough.
+- Honest verdict: system consistency + theme identity are masterpiece-tier; several
+  individual screens (Home balance, Stats chart, Blocklist redundancy) are not. ~7.5/10,
+  with specific visible targets now instead of vibes.
+
 ### 2026-06-25 — Iter 6 (hero goal progress ring)
 - New `GoalRing(progress, show, content)` in `Decor.kt`: a halo around the hero mascot —
   faint Mist track (seamless `drawCircle`) + a Petal arc sweeping from 12 o'clock,

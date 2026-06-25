@@ -25,6 +25,10 @@ then update this file (mark done + add newly found items).
   before setContent). glm's real catch (cross-env font AA) → CI `screenshot` job is
   **non-gating** (continue-on-error + diff artifacts) until goldens are re-recorded on CI.
 - 1% compare tolerance (`changeThreshold=0.01`) to absorb sub-pixel AA.
+- **CI cross-env verified:** the macOS/JBR goldens passed `verifyRoborazziFossDebug`
+  on ubuntu/temurin17 (BUILD SUCCESSFUL, step conclusion `success` — checked the real
+  step, not the rolled-up status). Drift concern didn't manifest → flipped the
+  `screenshot` job to **GATING** (removed continue-on-error). Visual gate now enforced.
 
 ### 2026-06-25 — Iter 3 (tactile polish)
 - Added `theme/Interaction.kt` → `Modifier.pressScale(interactionSource)`: pressables
@@ -88,10 +92,9 @@ then update this file (mark done + add newly found items).
 - [x] Press-scale feedback (`Elev.pressedScale`) — `Modifier.pressScale`; on chips
       (app-wide) + Home tiles/rows. TODO: extend to SoftCard-when-clickable + buttons.
 - [x] **Screenshot regression harness.** Roborazzi (JVM, no emulator) — gallery of
-      token primitives × 3 themes × light/dark = 6 goldens. CI job non-gating until a
-      CI-recorded baseline lands. TODO next: (a) re-record goldens ON CI + flip the
-      `screenshot` job to gating; (b) extend snapshots from the gallery to real
-      screens (HomeScreen first — needs fake BlockState/params).
+      token primitives × 3 themes × light/dark = 6 goldens. **CI gate ENFORCED**
+      (cross-env verified green). TODO next: extend snapshots from the gallery to real
+      screens (HomeScreen first — needs fake BlockState/params), one screen per fire.
 - [ ] Unified empty-states (Blocklist / Stats / Schedules) — mascot + one-line CTA
 - [ ] Stats: real data-viz for daily/weekly focus (currently flat numbers)
 - [ ] Hero card: progress ring around mascot for daily goal

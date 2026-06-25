@@ -24,13 +24,13 @@ jobs:
       - name: Design-token guardrail
         run: bash tools/check-design-tokens.sh
 
-  # ── Screenshot regression (Roborazzi on Robolectric, no emulator). ──
-  # NON-GATING for now: goldens were recorded on macOS/JBR; ubuntu/temurin font AA may
-  # diff slightly. Diffs upload as artifacts. Promote to gating after a CI re-record
-  # (run recordRoborazziFossDebug on this image, commit those goldens). See UI_PROGRESS.md.
+  # ── Screenshot regression (Roborazzi on Robolectric, no emulator). GATING. ──
+  # macOS/JBR-recorded goldens verified green on ubuntu/temurin within the 1% AA
+  # tolerance (BUILD SUCCESSFUL, cross-env parity holds), so this gates PRs. A failure
+  # means a primitive's look changed — eyeball the uploaded diff, then re-record via
+  # `./gradlew :app:recordRoborazziFossDebug` and commit the new goldens.
   screenshot:
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

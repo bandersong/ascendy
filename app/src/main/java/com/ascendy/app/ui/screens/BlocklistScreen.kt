@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.Elev
@@ -79,20 +80,7 @@ fun BlocklistScreen(
             VSpace(Space.sm)
 
             if (lists.isEmpty()) {
-                SoftCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        com.ascendy.app.ui.components.MiniMascot(
-                            locked = false,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        HSpace(Space.md)
-                        Text(
-                            vocab.listsEmpty,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = palette.Smoke
-                        )
-                    }
-                }
+                EmptyState(vocab.listsEmpty)
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),

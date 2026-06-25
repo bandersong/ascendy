@@ -40,6 +40,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.Schedule
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
@@ -81,11 +82,7 @@ fun SchedulesScreen(
             VSpace(Space.sm)
 
             if (schedules.isEmpty()) {
-                SoftCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(vocab.schedulesEmpty,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = palette.Smoke)
-                }
+                EmptyState(vocab.schedulesEmpty)
             } else {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     items(schedules, key = { it.id }) { s ->

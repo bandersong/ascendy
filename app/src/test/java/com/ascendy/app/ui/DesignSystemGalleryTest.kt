@@ -16,6 +16,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.HairlineDivider
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SelectableChip
@@ -127,5 +128,7 @@ private fun Gallery() {
             HSpace(Space.sm)
             TextButton(onClick = {}) { Text("Text") }
         }
+        VSpace(Space.lg)
+        EmptyState("No lists yet — tap + to start")
     }
 }

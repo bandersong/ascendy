@@ -10,6 +10,22 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 5 (unified empty-states)
+- New `EmptyState(text)` in `Decor.kt` = `SoftCard` + static `MiniMascot(40dp)` +
+  muted `bodyMedium`. Replaced **5 ad-hoc per-screen treatments** (Blocklist, Stats,
+  Schedules, PairTag, AppPicker-sites — previously mascot-40 / mascot-36 / bare-text /
+  bare-text-in-card / bare-text). One deliberate look in all 3 themes.
+- Snapshotted in the gallery → mascot swaps per theme (orchid / bone / slate);
+  eyeballed all 3, lockstep confirmed.
+- **Red-team (glm-5.2 + codex):**
+  - glm "Kawaii pastels likely fail WCAG" → **DISPROVEN by computation**: Smoke-on-card
+    worst case KawaiiLight = 4.91 ≥ 4.5 (AA body); all 6 theme/mode combos pass on both
+    Cloud and Surface. (ratios computed, not eyeballed.)
+  - glm valid catch → added `Modifier.weight(1f)` so long/localized strings wrap instead
+    of shoving the mascot. Re-recorded goldens.
+  - glm "too heavy for inline AppPicker-sites" → noted as a possible compact variant (below).
+- Verified: record + verify green; goldens refreshed.
+
 ### 2026-06-25 — Iter 4 (screenshot regression harness)
 - Stood up **Roborazzi 1.43.1** (Robolectric/JVM, no emulator) — the visual review
   gate the campaign lacked. `DesignSystemGalleryTest` renders the token primitives
@@ -95,7 +111,12 @@ then update this file (mark done + add newly found items).
       token primitives × 3 themes × light/dark = 6 goldens. **CI gate ENFORCED**
       (cross-env verified green). TODO next: extend snapshots from the gallery to real
       screens (HomeScreen first — needs fake BlockState/params), one screen per fire.
-- [ ] Unified empty-states (Blocklist / Stats / Schedules) — mascot + one-line CTA
+- [x] Unified empty-states → `EmptyState` component; 5 screens routed; WCAG-checked
+      (Smoke worst case 4.91, AA pass); snapshotted across 3 themes.
+- [ ] AppPicker **apps-tab** "no search results" inline state (NEW, found in red-team) —
+      lightweight/card-less inline text, NOT the full `EmptyState` card (would be too heavy
+      mid-scroll). Add a `compact` variant or plain `Text`.
+- [ ] Consider an `EmptyState` compact (card-less) variant for small inline contexts.
 - [ ] Stats: real data-viz for daily/weekly focus (currently flat numbers)
 - [ ] Hero card: progress ring around mascot for daily goal
 - [ ] Consistent screen-title header component (back + title + actions)

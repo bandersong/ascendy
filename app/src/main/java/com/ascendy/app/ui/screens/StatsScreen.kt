@@ -20,6 +20,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.SessionLog
 import com.ascendy.app.data.Stats
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
@@ -120,9 +121,7 @@ fun StatsScreen(
         VSpace(Space.sm)
 
         if (recent.isEmpty()) {
-            SoftCard(modifier = Modifier.fillMaxWidth()) {
-                Text(vocab.statsEmpty, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
-            }
+            EmptyState(vocab.statsEmpty)
         } else {
             val fmt = SimpleDateFormat("EEE MMM d, HH:mm", Locale.getDefault())
             recent.take(20).forEach { log ->

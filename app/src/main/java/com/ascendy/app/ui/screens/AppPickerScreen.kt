@@ -45,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageFrame
 import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
@@ -181,12 +182,7 @@ fun AppPickerScreen(
             VSpace(Space.sm)
 
             if (blockedDomains.isEmpty()) {
-                Text(
-                    vocab.pickerSitesEmpty,
-                    modifier = Modifier.padding(vertical = Space.sm),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = palette.Smoke
-                )
+                EmptyState(vocab.pickerSitesEmpty)
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     items(blockedDomains, key = { it }) { d ->

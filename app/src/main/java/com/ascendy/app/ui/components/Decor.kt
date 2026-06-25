@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.R
 import com.ascendy.app.ui.theme.Elev
+import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Motion
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
@@ -302,3 +304,29 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
         modifier = modifier,
     )
 }
+
+/**
+ * One look for every "nothing here yet" state — a static [MiniMascot] beside a muted
+ * line, in a [SoftCard]. Replaces five ad-hoc per-screen treatments so an empty list
+ * reads as intentional, not broken, in all three themes. [text] is the screen's vocab
+ * empty string. Static mascot (no animation) keeps it deterministic for snapshots.
+ */
+@Composable
+fun EmptyState(text: String, modifier: Modifier = Modifier) {
+    SoftCard(modifier = modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            MiniMascot(locked = false, modifier = Modifier.size(EmptyStateMascotSize))
+            HSpace(Space.md)
+            Text(
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.Smoke,
+                // weight so a long / localized string wraps in the remaining width
+                // instead of shoving the mascot or clipping.
+                modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+private val EmptyStateMascotSize = 40.dp

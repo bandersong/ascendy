@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.asImageBitmap
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SectionLabel
@@ -150,18 +151,7 @@ fun PairTagScreen(
         VSpace(Space.sm)
 
         if (knownTags.isEmpty()) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                com.ascendy.app.ui.components.MiniMascot(
-                    locked = false,
-                    modifier = Modifier.size(36.dp)
-                )
-                HSpace(Space.md)
-                Text(
-                    vocab.tagsEmpty,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = palette.Smoke
-                )
-            }
+            EmptyState(vocab.tagsEmpty)
         } else {
             knownTags.forEach { tag ->
                 SoftCard(

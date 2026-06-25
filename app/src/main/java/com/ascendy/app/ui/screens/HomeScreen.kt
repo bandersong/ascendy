@@ -10,6 +10,7 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -56,6 +57,7 @@ import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.pressScale
 import com.ascendy.app.ui.theme.vocab
 import kotlinx.coroutines.delay
 
@@ -380,12 +382,14 @@ private fun HomeTile(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         enabled = enabled,
         color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
-        modifier = modifier
+        interactionSource = interaction,
+        modifier = modifier.pressScale(interaction)
     ) {
         Column(modifier = Modifier.padding(Space.lg).alpha(if (enabled) 1f else Elev.disabledAlpha)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
@@ -398,10 +402,12 @@ private fun HomeTile(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SetupRow(emoji: String, title: String, done: Boolean, badge: String, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         color = androidx.compose.ui.graphics.Color.Transparent,
-        modifier = Modifier.fillMaxWidth()
+        interactionSource = interaction,
+        modifier = Modifier.fillMaxWidth().pressScale(interaction)
     ) {
         Row(
             modifier = Modifier.padding(horizontal = Space.xs, vertical = Space.lg),

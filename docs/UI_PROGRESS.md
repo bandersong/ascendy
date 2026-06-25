@@ -10,6 +10,14 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 3 (tactile polish)
+- Added `theme/Interaction.kt` → `Modifier.pressScale(interactionSource)`: pressables
+  scale to `Elev.pressedScale` (0.97) while held, `Motion.quick` spring-back. Purely
+  visual (graphicsLayer) — no layout/hit-area change.
+- Wired into `SelectableChip` (app-wide), Home `HomeTile` + `SetupRow`.
+- GLM's #1 "missing masterpiece lever" (UI that breathes on touch) — addressed.
+- Verified: `:app:compilePlayDebugKotlin` green.
+
 ### 2026-06-25 — Iter 2 (screen sweep)
 - Migrated the remaining **11 UI screens** onto the token layer via a parallel,
   adversarially-verified workflow (one agent per screen + one verifier each).
@@ -57,7 +65,8 @@ then update this file (mark done + add newly found items).
 
 ## Polish backlog (after token migration)
 
-- [ ] Press-scale feedback (`Elev.pressedScale`) on tiles/chips/cards
+- [x] Press-scale feedback (`Elev.pressedScale`) — `Modifier.pressScale`; on chips
+      (app-wide) + Home tiles/rows. TODO: extend to SoftCard-when-clickable + buttons.
 - [ ] Unified empty-states (Blocklist / Stats / Schedules) — mascot + one-line CTA
 - [ ] Stats: real data-viz for daily/weekly focus (currently flat numbers)
 - [ ] Hero card: progress ring around mascot for daily goal

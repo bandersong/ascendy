@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -31,6 +32,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,6 +50,7 @@ import com.ascendy.app.ui.theme.Motion
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.pressScale
 
 /** Picks the hand-drawn mascot art for the active theme and locked/unlocked state. */
 private fun mascotRes(variant: ThemeVariant, locked: Boolean): Int = when (variant) {
@@ -246,13 +249,15 @@ fun SelectableChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         color = if (selected) palette.Petal else palette.Cloud,
         contentColor = if (selected) palette.onPetal else palette.Ink,
         shape = MaterialTheme.shapes.medium,
-        border = if (selected) null else BorderStroke(1.dp, palette.Mist),
-        modifier = modifier,
+        border = if (selected) null else BorderStroke(Elev.hairline, palette.Mist),
+        interactionSource = interaction,
+        modifier = modifier.pressScale(interaction),
     ) {
         Text(
             label,

@@ -80,7 +80,10 @@ shadow in light, `0dp` + `palette.Mist` hairline border in dark. Don't hand-roll
 
 ## 6. Component states
 
-- pressed: scale `Elev.pressedScale` (0.97)
+- pressed: scale `Elev.pressedScale` (0.97) via `Modifier.pressScale(interactionSource)`
+  (theme/Interaction.kt). Hoist a `MutableInteractionSource`, hand it to the
+  clickable/Surface AND to `pressScale` so the scale tracks real press state. Wired
+  into `SelectableChip` (app-wide) + Home tiles/setup rows; extend to new pressables.
 - disabled: alpha `Elev.disabledAlpha` (0.4)
 - selected: `SelectableChip` only (correct contrast in all 3 variants)
 - touch targets ≥ 48dp; icon buttons keep default 48dp box.

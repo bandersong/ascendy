@@ -77,4 +77,7 @@ then update this file (mark done + add newly found items).
 
 ## Guardrails added this campaign
 
-- [ ] CI lint: fail PR if a screen introduces a raw spacing `.dp` literal
+- [x] CI lint: fail PR on raw spacing `.dp` in screens/components —
+      `tools/check-design-tokens.sh` + `design-lint` job in `.github/workflows/test.yml`.
+      Flags only unambiguous spacing (Spacer height/width/size, spacedBy); sizes pass.
+      Validated to fire on violations and not false-positive on sizes/tokens.

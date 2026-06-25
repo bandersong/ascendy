@@ -16,6 +16,14 @@ env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
+  # ── Design-system guardrail: no raw spacing .dp in UI code. Pure grep, ~seconds. ──
+  design-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Design-token guardrail
+        run: bash tools/check-design-tokens.sh
+
   # ── Fast layer: pure-JVM + Robolectric unit tests. No emulator, runs on every push. ──
   unit:
     runs-on: ubuntu-latest

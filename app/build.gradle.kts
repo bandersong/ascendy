@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
+    id("io.github.takahirom.roborazzi")
 }
 
 // Release signing secrets are injected by CI via env vars. Compute their presence once: it decides
@@ -192,6 +193,16 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.12.2")
     testImplementation("androidx.test:core-ktx:1.6.1")
     testImplementation("androidx.test.ext:junit-ktx:1.2.1")
+
+    // ── Screenshot tests (Roborazzi on Robolectric, no emulator) ──
+    // Record/verify the design-system gallery across 3 themes x light/dark:
+    //   ./gradlew :app:recordRoborazziFossDebug   (writes goldens)
+    //   ./gradlew :app:verifyRoborazziFossDebug    (CI gate vs goldens)
+    testImplementation(composeBom)
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi:1.43.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-compose:1.43.1")
+    testImplementation("io.github.takahirom.roborazzi:roborazzi-junit-rule:1.43.1")
 
     // ── Instrumented tests (emulator) — run via :app:connectedFossDebugAndroidTest ──
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

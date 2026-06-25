@@ -10,6 +10,22 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 4 (screenshot regression harness)
+- Stood up **Roborazzi 1.43.1** (Robolectric/JVM, no emulator) — the visual review
+  gate the campaign lacked. `DesignSystemGalleryTest` renders the token primitives
+  across **3 themes × light/dark = 6 PNG goldens** in `app/src/test/snapshots/`.
+  - `./gradlew :app:recordRoborazziFossDebug` (write) · `verifyRoborazziFossDebug` (gate).
+  - Chose Roborazzi over Paparazzi (Paparazzi lags AGP; we're on AGP 8.13.2 + the
+    project already runs Robolectric). GLM-5.2-consulted on version pins vs Kotlin 2.0.21.
+- **Verified vs ground truth:** all 6 goldens render correctly; eyeballed Kawaii
+  light↔dark + Tough dark — lockstep + dark-mode (night qualifier) confirmed. Local
+  `verifyRoborazziFossDebug` green (self-verify).
+- **Red-team:** glm flagged `setQualifiers('+night')` as possibly applying too late →
+  DISPROVEN by ground truth (kawaii_dark renders deep-plum, not lavender; qualifier set
+  before setContent). glm's real catch (cross-env font AA) → CI `screenshot` job is
+  **non-gating** (continue-on-error + diff artifacts) until goldens are re-recorded on CI.
+- 1% compare tolerance (`changeThreshold=0.01`) to absorb sub-pixel AA.
+
 ### 2026-06-25 — Iter 3 (tactile polish)
 - Added `theme/Interaction.kt` → `Modifier.pressScale(interactionSource)`: pressables
   scale to `Elev.pressedScale` (0.97) while held, `Motion.quick` spring-back. Purely
@@ -71,9 +87,11 @@ then update this file (mark done + add newly found items).
 
 - [x] Press-scale feedback (`Elev.pressedScale`) — `Modifier.pressScale`; on chips
       (app-wide) + Home tiles/rows. TODO: extend to SoftCard-when-clickable + buttons.
-- [ ] **Screenshot regression harness (do this first).** Paparazzi (JVM, no
-      emulator) renders every screen × 3 themes × light/dark to PNG in CI — the
-      visual review gate the campaign currently lacks. Verify deps build green.
+- [x] **Screenshot regression harness.** Roborazzi (JVM, no emulator) — gallery of
+      token primitives × 3 themes × light/dark = 6 goldens. CI job non-gating until a
+      CI-recorded baseline lands. TODO next: (a) re-record goldens ON CI + flip the
+      `screenshot` job to gating; (b) extend snapshots from the gallery to real
+      screens (HomeScreen first — needs fake BlockState/params).
 - [ ] Unified empty-states (Blocklist / Stats / Schedules) — mascot + one-line CTA
 - [ ] Stats: real data-viz for daily/weekly focus (currently flat numbers)
 - [ ] Hero card: progress ring around mascot for daily goal

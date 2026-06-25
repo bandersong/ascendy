@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -17,7 +18,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -37,8 +40,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.R
+import com.ascendy.app.ui.theme.Elev
+import com.ascendy.app.ui.theme.Motion
+import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
 
@@ -62,7 +69,7 @@ fun Mascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier.f
         initialValue = -8f,
         targetValue = 8f,
         animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = LinearEasing),
+            animation = tween(durationMillis = Motion.mascotBob, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "bob"
@@ -71,7 +78,7 @@ fun Mascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier.f
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Crossfade(
             targetState = locked,
-            animationSpec = tween(durationMillis = 350),
+            animationSpec = tween(durationMillis = Motion.emphasized, easing = Motion.emphasizedEasing),
             label = "mascotArt"
         ) { isLocked ->
             Image(
@@ -80,7 +87,7 @@ fun Mascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier.f
                 contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(8.dp)
+                    .padding(Space.sm)
                     .graphicsLayer { translationY = bob }
             )
         }
@@ -118,8 +125,8 @@ fun PageColumn(
             .fillMaxSize()
             .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
             .padding(
-                top = 16.dp + insets.calculateTopPadding(),
-                bottom = 24.dp + insets.calculateBottomPadding(),
+                top = Space.lg + insets.calculateTopPadding(),
+                bottom = Space.xxl + insets.calculateBottomPadding(),
             )
             .then(modifier),
         contentAlignment = Alignment.TopCenter,
@@ -128,7 +135,7 @@ fun PageColumn(
             modifier = Modifier
                 .widthIn(max = PageMaxWidth)
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp),
+                .padding(horizontal = Space.xl),
             content = content,
         )
     }
@@ -152,7 +159,7 @@ fun PageFrame(
         modifier = Modifier
             .fillMaxSize()
             .padding(
-                top = 16.dp + insets.calculateTopPadding(),
+                top = Space.lg + insets.calculateTopPadding(),
                 bottom = insets.calculateBottomPadding(),
             )
             .then(modifier),
@@ -167,11 +174,11 @@ fun PageFrame(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp),
+                    .padding(horizontal = Space.xl),
                 content = content,
             )
             if (floating != null) {
-                Box(Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 20.dp)) {
+                Box(Modifier.align(Alignment.BottomEnd).padding(end = Space.xl, bottom = Space.xl)) {
                     floating()
                 }
             }
@@ -193,12 +200,12 @@ fun SoftCard(
         color = color,
         shape = MaterialTheme.shapes.large,
         tonalElevation = 0.dp,
-        shadowElevation = if (palette.isDark) 0.dp else 1.dp,
-        border = BorderStroke(1.dp, palette.Mist),
+        shadowElevation = if (palette.isDark) Elev.cardRestDark else Elev.cardRestLight,
+        border = BorderStroke(Elev.hairline, palette.Mist),
     ) {
         // fillMaxWidth so content lays out against the card's real width — a wrap-content box
         // here left every centered hero/column hugging the left edge on tablets.
-        Box(Modifier.fillMaxWidth().padding(20.dp)) { content() }
+        Box(Modifier.fillMaxWidth().padding(Space.xl)) { content() }
     }
 }
 
@@ -218,7 +225,7 @@ fun Badge(label: String, color: Color = MaterialTheme.colorScheme.tertiary) {
     ) {
         Text(
             text = label,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            modifier = Modifier.padding(horizontal = Space.md, vertical = Space.sm),
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
             color = onChip(color)
         )
@@ -258,8 +265,35 @@ fun SelectableChip(
 }
 
 @Composable
-fun Dot(color: Color, sizeDp: Int = 8) {
-    Canvas(modifier = Modifier.padding(0.dp)) {
-        drawCircle(color, radius = sizeDp.toFloat())
+fun Dot(color: Color, size: Dp = Space.sm) {
+    // Density-correct: radius derived in px from a Dp size, not a raw float px literal.
+    Canvas(modifier = Modifier.size(size)) {
+        drawCircle(color, radius = size.toPx() / 2f)
     }
+}
+
+/**
+ * The one divider primitive — a 1dp [palette.Mist] hairline. Replaces every
+ * hand-rolled Box+Surface divider. [inset] keeps the line clear of card edges.
+ */
+@Composable
+fun HairlineDivider(modifier: Modifier = Modifier, inset: Dp = Space.xs) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = inset)
+            .height(Elev.hairline)
+            .background(palette.Mist)
+    )
+}
+
+/** Section header label — muted titleLarge. One look for every "Setup"/"Tools" heading. */
+@Composable
+fun SectionLabel(text: String, modifier: Modifier = Modifier) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.titleLarge,
+        color = palette.Smoke,
+        modifier = modifier,
+    )
 }

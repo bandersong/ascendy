@@ -19,16 +19,22 @@ then update this file (mark done + add newly found items).
   - ★ The 3-theme identity engine is genuinely strong — Kawaii / Tough / Neutral read as
     three different apps (mascot + color + type + full copy swap). The real moat.
   - Settings & Permissions are the most polished (cards, previews, status badges).
-  - **NEW issues, now visible:**
-    - [ ] Home: ~40% empty bottom on tall screens — sparse / top-heavy. Balance it.
-    - [ ] Stats "Last 7 days" chart is weak (thin flat dashes, reads near-empty) —
-          confirms the data-viz item; bump priority.
-    - [ ] Blocklist: strict-mode explanation paragraph repeats verbatim on every card —
-          show once / on-toggle, not per row.
-    - [ ] Neutral mascot art is plainer than Kawaii/Tough.
-- Honest verdict: system consistency + theme identity are masterpiece-tier; several
-  individual screens (Home balance, Stats chart, Blocklist redundancy) are not. ~7.5/10,
-  with specific visible targets now instead of vibes.
+  - **Issues found, then fixed same iteration:**
+    - [x] Home: ~40% empty bottom → **fixed**. `PageColumn(centerWhenShort=true)`
+          (BoxWithConstraints + `heightIn(min)` + `Arrangement.Center`) sits short content
+          in the optical center; tall content still scrolls. Only Home opts in; other
+          screens byte-identical (verified). Owns the empty space (calm brand) per glm.
+    - [x] Blocklist: strict-mode paragraph repeated per card → **fixed**. Now shown only
+          when that list `isStrict` (contextual), not under every card.
+    - [~] **Stats "weak chart" — RETRACTED.** Red-teamed my own claim: the chart code is
+          actually solid (proper `drawRoundRect` bars ∝ per-day minutes, best-day Lilac
+          highlight, theme-aware corner radius, labels). It only rendered flat because the
+          test's fake `SessionLog`s were dated 2023 → empty last-7-days buckets. Not a real
+          flaw; populating it deterministically would need clock-freezing (skipped).
+    - [ ] Neutral mascot art is plainer than Kawaii/Tough (art asset, not code).
+- Honest verdict: system consistency + theme identity are masterpiece-tier. Of the 3
+  screen-level flaws spotted by rendering, 2 were real (now fixed) and 1 was a test-data
+  mirage. ~8/10 now — with a render gate so it's measured, not vibes.
 
 ### 2026-06-25 — Iter 6 (hero goal progress ring)
 - New `GoalRing(progress, show, content)` in `Decor.kt`: a halo around the hero mascot —

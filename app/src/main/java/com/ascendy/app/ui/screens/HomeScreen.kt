@@ -102,7 +102,7 @@ fun HomeScreen(
 
     val setupAllDone = tagCount > 0 && listCount > 0 && permissionsReady
 
-    PageColumn {
+    PageColumn(centerWhenShort = true) {
         // Header — title + icon actions only
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(

@@ -12,8 +12,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -126,27 +129,35 @@ val PageMaxWidth = 640.dp
 fun PageColumn(
     modifier: Modifier = Modifier,
     scroll: Boolean = true,
+    centerWhenShort: Boolean = false,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val insets = WindowInsets.systemBars.asPaddingValues()
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-            .padding(
-                top = Space.lg + insets.calculateTopPadding(),
-                bottom = Space.xxl + insets.calculateBottomPadding(),
-            )
-            .then(modifier),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(
+    val topPad = Space.lg + insets.calculateTopPadding()
+    val botPad = Space.xxl + insets.calculateBottomPadding()
+    // BoxWithConstraints exposes the viewport height so [centerWhenShort] screens can sit
+    // in the optical center when their content is shorter than the screen, while taller
+    // content still grows past it and scrolls. A calm screen owns its empty space instead
+    // of clinging to the top edge.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize().then(modifier)) {
+        val minContentHeight = (maxHeight - topPad - botPad).coerceAtLeast(0.dp)
+        Box(
             modifier = Modifier
-                .widthIn(max = PageMaxWidth)
-                .fillMaxWidth()
-                .padding(horizontal = Space.xl),
-            content = content,
-        )
+                .fillMaxSize()
+                .then(if (scroll) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .padding(top = topPad, bottom = botPad),
+            contentAlignment = Alignment.TopCenter,
+        ) {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = PageMaxWidth)
+                    .fillMaxWidth()
+                    .then(if (centerWhenShort) Modifier.heightIn(min = minContentHeight) else Modifier)
+                    .padding(horizontal = Space.xl),
+                verticalArrangement = if (centerWhenShort) Arrangement.Center else Arrangement.Top,
+                content = content,
+            )
+        }
     }
 }
 

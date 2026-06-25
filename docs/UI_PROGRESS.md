@@ -65,15 +65,22 @@ then update this file (mark done + add newly found items).
 
 ## Polish backlog (after token migration)
 
+> **NEXT PRIORITY — enabling infra.** Everything below is *visual* design and must
+> not be changed blind (no emulator in the headless loop). Stand up a screenshot
+> harness FIRST so each change has a real review gate, then do the visual items.
+
 - [x] Press-scale feedback (`Elev.pressedScale`) — `Modifier.pressScale`; on chips
       (app-wide) + Home tiles/rows. TODO: extend to SoftCard-when-clickable + buttons.
+- [ ] **Screenshot regression harness (do this first).** Paparazzi (JVM, no
+      emulator) renders every screen × 3 themes × light/dark to PNG in CI — the
+      visual review gate the campaign currently lacks. Verify deps build green.
 - [ ] Unified empty-states (Blocklist / Stats / Schedules) — mascot + one-line CTA
 - [ ] Stats: real data-viz for daily/weekly focus (currently flat numbers)
 - [ ] Hero card: progress ring around mascot for daily goal
 - [ ] Consistent screen-title header component (back + title + actions)
 - [ ] Haptics on toggle / session start-stop
-- [ ] Per-variant screenshot set (3×2) checked in for regression eyeballing
-- [ ] Reduce-motion respect (disable mascot bob when system setting on)
+- [ ] Reduce-motion respect (no stable Compose API yet — track via host
+      Accessibility hook if needed; don't fake it)
 
 ## Guardrails added this campaign
 

@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +18,7 @@ import com.ascendy.app.data.SessionLog
 import com.ascendy.app.data.Stats
 import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.HSpace
@@ -62,12 +59,7 @@ fun StatsScreen(
     }
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.statsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.statsTitle, onBack = onBack)
 
         VSpace(Space.sm)
 

@@ -3,11 +3,7 @@ package com.ascendy.app.ui.screens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -24,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.ascendy.app.BuildConfig
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.VSpace
@@ -58,12 +55,7 @@ fun UpdateScreen(onBack: () -> Unit) {
     }
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.updateTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.updateTitle, onBack = onBack)
         VSpace(Space.sm)
         Text(
             vocab.updateCurrentFmt.format(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE),

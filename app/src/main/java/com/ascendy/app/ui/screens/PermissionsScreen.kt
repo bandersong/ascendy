@@ -7,10 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -27,6 +23,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.ascendy.app.service.OemBattery
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
@@ -85,12 +82,7 @@ fun PermissionsScreen(
     }
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.permsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.permsTitle, onBack = onBack)
 
         VSpace(Space.sm)
 

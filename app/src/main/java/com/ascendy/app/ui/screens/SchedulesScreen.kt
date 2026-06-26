@@ -14,14 +14,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -42,6 +40,7 @@ import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.Schedule
 import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageFrame
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.HSpace
@@ -73,12 +72,7 @@ fun SchedulesScreen(
             }
         }
     ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-                }
-                Text(vocab.schedulesTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-            }
+            ScreenHeader(title = vocab.schedulesTitle, onBack = onBack)
             VSpace(Space.sm)
 
             if (schedules.isEmpty()) {

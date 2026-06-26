@@ -10,6 +10,34 @@ then update this file (mark done + add newly found items).
 
 ## Iteration log
 
+### 2026-06-25 — Iter 10 (one screen-title header)
+- New `ScreenHeader(title, onBack, actions)` in `Decor.kt` — back chevron + `headlineMedium`
+  title + an optional trailing `actions` (`RowScope`) slot. Replaced the hand-rolled
+  `Row { IconButton(back) + Text(title) }` **copy-pasted across all 10 sub-screens** (Home
+  uses a hero, not a back header, so it's exempt). ~50 LOC of duplication gone; the back
+  hit-target, title style, and alignment are now identical everywhere by construction.
+- Two latent wins from centralizing: (a) `Modifier.weight(1f)` lets a long/localized title
+  wrap within the column instead of shoving past the edge (AppPicker shows a user list name);
+  (b) one `semantics { heading() }` makes every screen's title announce as a heading to
+  TalkBack — was missing app-wide before, now fixed in one place.
+- Dropped the now-orphaned icon imports per screen (zero-use checked; Schedules/Blocklist
+  kept `Icon`/`Icons` — still used by their FAB/edit icons).
+- Added `ScreenHeader` (with an `actions` Badge) to the primitive gallery so the actions
+  path is itself regression-gated (no screen uses it yet). Re-recorded the 6 gallery goldens;
+  eyeballed kawaii-light — header + right-pushed action badge render correctly.
+- **Red-team (glm-4.6 + codex/gpt-5.5):**
+  - glm "`fillMaxWidth` + `weight` will CRASH in an unbounded parent" → **REFUTED** by codex
+    **and** ground truth: every header is the first child of a width-bounded `Column`, and the
+    byte-identical goldens prove all 10 actually composed (a composition crash can't render).
+  - glm "`actions?.invoke(this)` passes the wrong scope" → **REFUTED** (self-contradictory —
+    its own "fix" was identical to the code). `this` inside the `Row {}` content lambda *is*
+    the `RowScope`; the compiler accepted it and codex concurred it's the correct idiom.
+  - glm valid catch → `semantics { heading() }`, applied above.
+- Verified: both flavors compile clean (zero warnings); `verifyRoborazziFossDebug` green — the
+  10 screen goldens stayed **byte-identical** (pure refactor), only the 6 gallery goldens
+  changed (new primitive added). Lockstep holds: `palette.Ink` + `MaterialTheme.typography`
+  are theme-driven, confirmed across the 3-theme gallery.
+
 ### 2026-06-25 — Iter 9 (Kawaii stars the first run)
 - First-time onboarding now always renders in the **Kawaii** theme regardless of the
   app's (default Neutral) theme — the cute orchid mascot + lavender warmth + soft
@@ -187,7 +215,9 @@ then update this file (mark done + add newly found items).
       Petal arc → Sage on complete); wired in HomeScreen hero; snapshotted 66%/done ×
       3 themes; arc WCAG 1.4.11 pass. TODO: animate fill in v2 (kept static for snapshots);
       eyeball the 176dp hero fit on a real device.
-- [ ] Consistent screen-title header component (back + title + actions)
+- [x] Consistent screen-title header component (back + title + actions) → `ScreenHeader`;
+      migrated all 10 sub-screens, `heading()` a11y added app-wide, gallery-gated incl. the
+      actions slot. Long titles now wrap instead of overflowing.
 - [ ] Haptics on toggle / session start-stop
 - [ ] Reduce-motion respect (no stable Compose API yet — track via host
       Accessibility hook if needed; don't fake it)

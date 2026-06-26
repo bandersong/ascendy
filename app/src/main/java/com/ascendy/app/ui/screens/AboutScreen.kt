@@ -8,11 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.BuildConfig
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.VSpace
@@ -37,12 +34,7 @@ fun AboutScreen(onBack: () -> Unit) {
     val context = LocalContext.current
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.aboutTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.aboutTitle, onBack = onBack)
 
         VSpace(Space.lg)
 

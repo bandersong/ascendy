@@ -14,12 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageFrame
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.VSpace
@@ -106,12 +103,7 @@ fun AppPickerScreen(
     }
 
     PageFrame {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(listName, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = listName, onBack = onBack)
 
         Row(modifier = Modifier.fillMaxWidth().padding(vertical = Space.xs)) {
             TabChip(label = vocab.pickerTabApps, selected = tab == 0, onClick = { tab = 0 }, modifier = Modifier.weight(1f))

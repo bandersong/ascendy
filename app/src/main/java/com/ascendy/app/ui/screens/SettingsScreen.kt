@@ -6,13 +6,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -32,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.R
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
@@ -91,12 +88,7 @@ fun SettingsScreen(
     }
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.settingsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.settingsTitle, onBack = onBack)
 
         VSpace(Space.sm)
 

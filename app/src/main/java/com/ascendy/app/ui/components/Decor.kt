@@ -24,13 +24,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -48,6 +53,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -60,6 +67,7 @@ import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.pressScale
+import com.ascendy.app.ui.theme.vocab
 
 /** Picks the hand-drawn mascot art for the active theme and locked/unlocked state. */
 private fun mascotRes(variant: ThemeVariant, locked: Boolean): Int = when (variant) {
@@ -318,6 +326,44 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
         color = palette.Smoke,
         modifier = modifier,
     )
+}
+
+/**
+ * The one screen-title header: a back chevron + headline title, with optional trailing
+ * [actions]. Replaces the hand-rolled IconButton + Text row that was copy-pasted across
+ * ten screens, so the back hit-target, title style, and alignment stay identical in every
+ * theme — and a long title wraps within the column instead of shoving past the edge.
+ */
+@Composable
+fun ScreenHeader(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    actions: @Composable (RowScope.() -> Unit)? = null,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onBack) {
+            Icon(
+                Icons.AutoMirrored.Rounded.ArrowBack,
+                contentDescription = vocab.backLabel,
+                tint = palette.Ink,
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            color = palette.Ink,
+            // Centralizing the header lets every screen's title announce as a heading to
+            // TalkBack in one place (headlineMedium is purely visual on its own).
+            modifier = Modifier
+                .weight(1f)
+                .semantics { heading() },
+        )
+        actions?.invoke(this)
+    }
 }
 
 /**

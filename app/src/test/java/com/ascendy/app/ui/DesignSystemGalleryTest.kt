@@ -21,6 +21,7 @@ import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.GoalRing
 import com.ascendy.app.ui.components.HairlineDivider
 import com.ascendy.app.ui.components.MiniMascot
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
@@ -96,6 +97,11 @@ private fun Gallery() {
     ) {
         SectionLabel("Design System")
         VSpace(Space.md)
+        // Page header primitive — back chevron + title + optional trailing actions slot.
+        ScreenHeader(title = "Screen title", onBack = {}) {
+            Badge("Edit", color = palette.Lilac)
+        }
+        VSpace(Space.lg)
         SoftCard(Modifier.fillMaxWidth()) {
             Column {
                 Text("Headline", style = MaterialTheme.typography.headlineMedium, color = palette.Ink)

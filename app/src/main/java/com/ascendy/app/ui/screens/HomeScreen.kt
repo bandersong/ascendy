@@ -10,13 +10,12 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -48,10 +47,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.blocking.BlockState
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.GoalRing
+import com.ascendy.app.ui.components.HairlineDivider
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.Elev
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
+import com.ascendy.app.ui.theme.pressScale
 import com.ascendy.app.ui.theme.vocab
 import kotlinx.coroutines.delay
 
@@ -95,7 +102,7 @@ fun HomeScreen(
 
     val setupAllDone = tagCount > 0 && listCount > 0 && permissionsReady
 
-    PageColumn {
+    PageColumn(centerWhenShort = true) {
         // Header — title + icon actions only
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -112,7 +119,7 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         // Hero card — mascot, status badge inline, hero text, timer (when active)
         SoftCard(
@@ -132,26 +139,34 @@ fun HomeScreen(
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Mascot(locked = active, streakDays = streakDays)
+                    // Daily-goal halo around the mascot — shows only when a goal is set.
+                    GoalRing(
+                        progress = if (dailyGoalMinutes > 0)
+                            todayFocusedMinutes.toFloat() / dailyGoalMinutes else 0f,
+                        show = dailyGoalMinutes > 0,
+                        modifier = Modifier.matchParentSize(),
+                    ) {
+                        Mascot(locked = active, streakDays = streakDays)
+                    }
                 }
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Badge(
                         label = if (active) vocab.statusFocusing else vocab.statusReady,
                         color = if (active) palette.Lilac else palette.Sage
                     )
                     if (active && strict) {
-                        Spacer(Modifier.size(6.dp))
+                        HSpace(Space.sm)
                         Badge(label = vocab.strictBadge, color = palette.Petal)
                     }
                     if (streakDays > 0) {
-                        Spacer(Modifier.size(6.dp))
+                        HSpace(Space.sm)
                         Badge(label = vocab.homeStreakBadgeFmt.format(streakDays), color = palette.Mint)
                     }
                 }
                 // Daily goal progress
                 if (dailyGoalMinutes > 0) {
-                    Spacer(Modifier.height(8.dp))
+                    VSpace(Space.sm)
                     val goalHit = todayFocusedMinutes >= dailyGoalMinutes
                     Text(
                         if (goalHit) vocab.goalReached
@@ -160,7 +175,7 @@ fun HomeScreen(
                         color = if (goalHit) palette.Sage else palette.Smoke
                     )
                 }
-                Spacer(Modifier.height(10.dp))
+                VSpace(Space.md)
                 // When active, the live timer is the hero: big + Ink, with the prompt demoted
                 // to a quiet caption below it. When idle, the prompt itself is the focal line.
                 AnimatedContent(
@@ -176,7 +191,7 @@ fun HomeScreen(
                                 color = palette.Ink,
                                 textAlign = TextAlign.Center
                             )
-                            Spacer(Modifier.height(4.dp))
+                            VSpace(Space.xs)
                             Text(
                                 vocab.homeHeroActive,
                                 style = MaterialTheme.typography.bodyMedium,
@@ -184,7 +199,7 @@ fun HomeScreen(
                                 textAlign = TextAlign.Center
                             )
                             if (blockedSet.size + blockedDomains.size > 0) {
-                                Spacer(Modifier.height(6.dp))
+                                VSpace(Space.sm)
                                 Text(
                                     vocab.homeAppsSitesFmt.format(blockedSet.size, blockedDomains.size),
                                     style = MaterialTheme.typography.bodySmall,
@@ -199,7 +214,7 @@ fun HomeScreen(
                                 textAlign = TextAlign.Center
                             )
                             if (!setupAllDone) {
-                                Spacer(Modifier.height(4.dp))
+                                VSpace(Space.xs)
                                 Text(
                                     vocab.toastLongPressHint,
                                     style = MaterialTheme.typography.bodySmall,
@@ -213,7 +228,7 @@ fun HomeScreen(
             }
         }
 
-        Spacer(Modifier.height(20.dp))
+        VSpace(Space.xl)
 
         // Setup section — single grouped card with check marks; collapses when all done.
         // Stays collapsed during an active session too, so starting a session never expands it.
@@ -233,7 +248,7 @@ fun HomeScreen(
                         tint = palette.Sage,
                         modifier = Modifier.size(20.dp)
                     )
-                    Spacer(Modifier.size(8.dp))
+                    HSpace(Space.sm)
                     Text(
                         vocab.setupAllDone,
                         style = MaterialTheme.typography.titleMedium,
@@ -243,12 +258,8 @@ fun HomeScreen(
             }
         } else {
             Column {
-            Text(
-                vocab.sectionSetup,
-                style = MaterialTheme.typography.titleLarge,
-                color = palette.Smoke
-            )
-            Spacer(Modifier.height(8.dp))
+            SectionLabel(vocab.sectionSetup)
+            VSpace(Space.sm)
             SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Surface) {
                 Column {
                     SetupRow(
@@ -258,7 +269,7 @@ fun HomeScreen(
                         badge = if (tagCount > 0) "$tagCount" else vocab.badgeTodo,
                         onClick = onPairTag
                     )
-                    Divider()
+                    HairlineDivider()
                     SetupRow(
                         emoji = vocab.rowFocusListEmoji,
                         title = vocab.rowFocusListLabel,
@@ -268,7 +279,7 @@ fun HomeScreen(
                                 else vocab.badgeTodo,
                         onClick = onOpenLists
                     )
-                    Divider()
+                    HairlineDivider()
                     SetupRow(
                         emoji = vocab.rowPermissionsEmoji,
                         title = vocab.rowPermissionsLabel,
@@ -282,7 +293,7 @@ fun HomeScreen(
         }
         }
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         // Tools row — both tiles always present so the layout never re-justifies when a session
         // starts. Pomodoro is disabled (dimmed) during a session: starting a timer mid-session
@@ -294,7 +305,7 @@ fun HomeScreen(
                 onClick = onOpenStats,
                 modifier = Modifier.weight(1f)
             )
-            Spacer(Modifier.size(8.dp))
+            HSpace(Space.sm)
             HomeTile(
                 title = vocab.pomodoroTitle,
                 subtitle = vocab.pomodoro25,
@@ -311,7 +322,7 @@ fun HomeScreen(
             exit = fadeOut() + shrinkVertically()
         ) {
             Column {
-                Spacer(Modifier.height(16.dp))
+                VSpace(Space.lg)
                 SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
                     Text(
                         vocab.strictModeNote,
@@ -327,17 +338,17 @@ fun HomeScreen(
             exit = fadeOut() + shrinkVertically()
         ) {
             Column {
-                Spacer(Modifier.height(16.dp))
+                VSpace(Space.lg)
                 SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
                     Column {
                         Text(vocab.emergencyTitle, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                        Spacer(Modifier.height(4.dp))
+                        VSpace(Space.xs)
                         Text(
                             vocab.emergencyBody,
                             style = MaterialTheme.typography.bodySmall,
                             color = palette.Smoke
                         )
-                        Spacer(Modifier.height(4.dp))
+                        VSpace(Space.xs)
                         TextButton(onClick = { showFrictionDialog = true }) {
                             Text(vocab.emergencyButton)
                         }
@@ -380,16 +391,18 @@ private fun HomeTile(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         enabled = enabled,
         color = MaterialTheme.colorScheme.surface,
         shape = MaterialTheme.shapes.large,
-        modifier = modifier
+        interactionSource = interaction,
+        modifier = modifier.pressScale(interaction)
     ) {
-        Column(modifier = Modifier.padding(16.dp).alpha(if (enabled) 1f else 0.4f)) {
+        Column(modifier = Modifier.padding(Space.lg).alpha(if (enabled) 1f else Elev.disabledAlpha)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-            Spacer(Modifier.height(4.dp))
+            VSpace(Space.xs)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
         }
     }
@@ -398,22 +411,24 @@ private fun HomeTile(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SetupRow(emoji: String, title: String, done: Boolean, badge: String, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
     Surface(
         onClick = onClick,
         color = androidx.compose.ui.graphics.Color.Transparent,
-        modifier = Modifier.fillMaxWidth()
+        interactionSource = interaction,
+        modifier = Modifier.fillMaxWidth().pressScale(interaction)
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 4.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = Space.xs, vertical = Space.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             if (done) {
                 Icon(Icons.Rounded.Check, contentDescription = null, tint = palette.Sage,
                     modifier = Modifier.size(20.dp))
-                Spacer(Modifier.size(10.dp))
+                HSpace(Space.sm)
             } else if (emoji.isNotEmpty()) {
                 Text(emoji, style = MaterialTheme.typography.titleLarge)
-                Spacer(Modifier.size(10.dp))
+                HSpace(Space.sm)
             }
             Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
             Spacer(Modifier.weight(1f))
@@ -425,17 +440,6 @@ private fun SetupRow(emoji: String, title: String, done: Boolean, badge: String,
     }
 }
 
-@Composable
-private fun Divider() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(1.dp)
-            .padding(horizontal = 4.dp)
-    ) {
-        Surface(color = palette.Mist, modifier = Modifier.fillMaxSize()) {}
-    }
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -455,19 +459,19 @@ private fun FrictionTaxDialog(
                 Text(vocab.frictionPrompt,
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.Smoke)
-                Spacer(Modifier.height(8.dp))
+                VSpace(Space.sm)
                 Surface(
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Text(
                         sentence,
-                        modifier = Modifier.padding(12.dp),
+                        modifier = Modifier.padding(Space.md),
                         style = MaterialTheme.typography.bodyMedium,
                         color = palette.Ink
                     )
                 }
-                Spacer(Modifier.height(12.dp))
+                VSpace(Space.md)
                 OutlinedTextField(
                     value = input,
                     onValueChange = { input = it },
@@ -475,7 +479,7 @@ private fun FrictionTaxDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (matches) {
-                    Spacer(Modifier.height(6.dp))
+                    VSpace(Space.sm)
                     Text(vocab.frictionMatchOk,
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.Sage)

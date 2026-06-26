@@ -3,18 +3,12 @@ package com.ascendy.app.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -34,9 +28,14 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.R
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
+import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SelectableChip
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -89,14 +88,9 @@ fun SettingsScreen(
     }
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.settingsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.settingsTitle, onBack = onBack)
 
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         val currentLabel = when (current) {
             ThemeVariant.Kawaii -> vocab.settingsKawaiiLabel
@@ -108,7 +102,7 @@ fun SettingsScreen(
             style = MaterialTheme.typography.titleLarge,
             color = palette.Smoke
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         ThemeCard(
             variant = ThemeVariant.Kawaii,
@@ -117,7 +111,7 @@ fun SettingsScreen(
             selected = current == ThemeVariant.Kawaii,
             onClick = { onPickTheme(ThemeVariant.Kawaii) }
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         ThemeCard(
             variant = ThemeVariant.Tough,
             label = vocab.settingsToughLabel,
@@ -125,7 +119,7 @@ fun SettingsScreen(
             selected = current == ThemeVariant.Tough,
             onClick = { onPickTheme(ThemeVariant.Tough) }
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         ThemeCard(
             variant = ThemeVariant.Neutral,
             label = vocab.settingsNeutralLabel,
@@ -134,46 +128,42 @@ fun SettingsScreen(
             onClick = { onPickTheme(ThemeVariant.Neutral) }
         )
 
-        Spacer(Modifier.height(20.dp))
+        VSpace(Space.xl)
 
-        Text(
-            vocab.settingsSectionMore,
-            style = MaterialTheme.typography.titleLarge,
-            color = palette.Smoke
-        )
-        Spacer(Modifier.height(8.dp))
+        SectionLabel(vocab.settingsSectionMore)
+        VSpace(Space.sm)
 
         SettingsRow(label = vocab.rowPairTagLabel, onClick = onOpenTags)
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         SettingsRow(label = vocab.rowFocusListLabel, onClick = onOpenLists)
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         SettingsRow(label = vocab.rowPermissionsLabel, onClick = onOpenPermissions)
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         SettingsRow(label = vocab.settingsRowStats, onClick = onOpenStats)
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         SettingsRow(label = vocab.settingsRowSchedules, onClick = onOpenSchedules)
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         SettingsRow(label = vocab.settingsRowPomodoro, onClick = onOpenPomodoro)
         if (com.ascendy.app.BuildConfig.HAS_INAPP_UPDATER) {
-            Spacer(Modifier.height(8.dp))
+            VSpace(Space.sm)
             SettingsRow(label = vocab.settingsRowUpdate, onClick = onOpenUpdates)
         }
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         SettingsRow(label = vocab.settingsRowAbout, onClick = onOpenAbout)
 
-        Spacer(Modifier.height(20.dp))
+        VSpace(Space.xl)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
             Column {
                 Text(vocab.goalTitle,
                     style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                Spacer(Modifier.height(4.dp))
+                VSpace(Space.xs)
                 Text(vocab.goalBody,
                     style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
-                Spacer(Modifier.height(10.dp))
+                VSpace(Space.md)
                 for (rowIdx in 0 until 2) {
                     Row(modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Space.sm)) {
                         for (colIdx in 0 until 3) {
                             val mins = goalChoices[rowIdx * 3 + colIdx]
                             SelectableChip(
@@ -184,24 +174,24 @@ fun SettingsScreen(
                             )
                         }
                     }
-                    if (rowIdx == 0) Spacer(Modifier.height(6.dp))
+                    if (rowIdx == 0) VSpace(Space.sm)
                 }
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
             Column {
                 Text(vocab.safetyTimerTitle,
                     style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                Spacer(Modifier.height(4.dp))
+                VSpace(Space.xs)
                 Text(vocab.safetyTimerBody,
                     style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
-                Spacer(Modifier.height(10.dp))
+                VSpace(Space.md)
                 for (rowIdx in 0 until 2) {
                     Row(modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)) {
+                        horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(Space.sm)) {
                         for (colIdx in 0 until 3) {
                             val mins = safetyChoices[rowIdx * 3 + colIdx]
                             SelectableChip(
@@ -212,12 +202,12 @@ fun SettingsScreen(
                             )
                         }
                     }
-                    if (rowIdx == 0) Spacer(Modifier.height(6.dp))
+                    if (rowIdx == 0) VSpace(Space.sm)
                 }
             }
         }
 
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
             Column {
@@ -225,11 +215,11 @@ fun SettingsScreen(
                     Column(Modifier.weight(1f)) {
                         Text(vocab.lockdownTitle,
                             style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                        Spacer(Modifier.height(4.dp))
+                        VSpace(Space.xs)
                         Text(vocab.lockdownBody,
                             style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
                     }
-                    Spacer(Modifier.size(12.dp))
+                    HSpace(Space.md)
                     Switch(
                         checked = lockdownEnabled,
                         onCheckedChange = { on ->
@@ -239,14 +229,14 @@ fun SettingsScreen(
                     )
                 }
                 if (lockdownLocked) {
-                    Spacer(Modifier.height(8.dp))
+                    VSpace(Space.sm)
                     Text(vocab.lockdownLockedNote,
                         style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
                 }
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        VSpace(Space.xxl)
         SoftCard(modifier = Modifier.fillMaxWidth(), color = palette.Cloud) {
             Text(
                 vocab.settingsFooter,
@@ -268,7 +258,7 @@ private fun SettingsRow(label: String, onClick: () -> Unit) {
     ) {
         Text(
             label,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 18.dp),
+            modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.lg),
             style = MaterialTheme.typography.titleMedium,
             color = palette.Ink
         )
@@ -302,7 +292,7 @@ private fun ThemeCard(
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 18.dp, vertical = 14.dp),
+            modifier = Modifier.padding(horizontal = Space.lg, vertical = Space.lg),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Variant-themed preview tile — the icon artwork carries its own themed background
@@ -314,7 +304,7 @@ private fun ThemeCard(
                     .size(52.dp)
                     .clip(MaterialTheme.shapes.medium)
             )
-            Spacer(Modifier.size(14.dp))
+            HSpace(Space.lg)
             Column(Modifier.weight(1f)) {
                 Text(label, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Text(tagline, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)

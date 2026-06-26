@@ -6,10 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
@@ -35,6 +33,8 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SelectableChip
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 import kotlinx.coroutines.launch
@@ -79,12 +79,12 @@ fun OnboardingScreen(
                         Box(Modifier.size(180.dp), contentAlignment = Alignment.Center) {
                             Mascot(locked = false)
                         }
-                        Spacer(Modifier.height(24.dp))
+                        VSpace(Space.xxl)
                         Text(title,
                             style = MaterialTheme.typography.headlineMedium,
                             color = palette.Ink,
                             textAlign = TextAlign.Center)
-                        Spacer(Modifier.height(12.dp))
+                        VSpace(Space.md)
                         Text(body,
                             style = MaterialTheme.typography.bodyLarge,
                             color = palette.Smoke,
@@ -95,14 +95,14 @@ fun OnboardingScreen(
         }
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(vertical = Space.lg),
             horizontalArrangement = Arrangement.Center
         ) {
             repeat(4) { i ->
                 val active = i == pagerState.currentPage
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 4.dp)
+                        .padding(horizontal = Space.xs)
                         .size(if (active) 10.dp else 8.dp)
                         .clip(CircleShape)
                         .background(if (active) palette.Petal else palette.Mist)
@@ -118,7 +118,7 @@ fun OnboardingScreen(
                     onFinish(safetyMin)
                 }
             },
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+            modifier = Modifier.fillMaxWidth().padding(bottom = Space.sm)
         ) {
             Text(if (pagerState.currentPage < 3) vocab.onboardNext else vocab.onboardStart)
         }
@@ -129,27 +129,27 @@ fun OnboardingScreen(
 @Composable
 private fun SafetyTimerPage(selected: Int, onSelect: (Int) -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(top = 16.dp),
+        modifier = Modifier.fillMaxSize().padding(top = Space.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Box(Modifier.size(160.dp), contentAlignment = Alignment.Center) {
             Mascot(locked = false)
         }
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
         Text(vocab.safetyTimerOnboardTitle,
             style = MaterialTheme.typography.headlineMedium,
             color = palette.Ink,
             textAlign = TextAlign.Center)
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
         Text(vocab.safetyTimerOnboardBody,
             style = MaterialTheme.typography.bodyMedium,
             color = palette.Smoke,
             textAlign = TextAlign.Center)
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
         // Chip grid (2 rows of 3)
         for (rowIdx in 0 until 2) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
                 for (colIdx in 0 until 3) {
                     val mins = safetyChoices[rowIdx * 3 + colIdx]
                     SelectableChip(
@@ -160,7 +160,7 @@ private fun SafetyTimerPage(selected: Int, onSelect: (Int) -> Unit) {
                     )
                 }
             }
-            if (rowIdx == 0) Spacer(Modifier.height(8.dp))
+            if (rowIdx == 0) VSpace(Space.sm)
         }
     }
 }

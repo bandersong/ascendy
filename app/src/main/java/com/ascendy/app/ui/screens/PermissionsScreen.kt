@@ -7,12 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -26,11 +20,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import com.ascendy.app.service.OemBattery
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageColumn
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -85,14 +82,9 @@ fun PermissionsScreen(
     }
 
     PageColumn {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-            }
-            Text(vocab.permsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-        }
+        ScreenHeader(title = vocab.permsTitle, onBack = onBack)
 
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         Text(
             vocab.permsIntro,
@@ -100,7 +92,7 @@ fun PermissionsScreen(
             color = palette.Smoke
         )
 
-        Spacer(Modifier.height(16.dp))
+        VSpace(Space.lg)
 
         PermissionCard(
             emoji = vocab.permsAccessibilityEmoji,
@@ -113,7 +105,7 @@ fun PermissionsScreen(
                 else showA11yDisclosure = true
             }
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         PermissionCard(
             emoji = vocab.permsUsageEmoji,
@@ -128,7 +120,7 @@ fun PermissionsScreen(
                 )
             }
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         PermissionCard(
             emoji = vocab.permsOverlayEmoji,
@@ -145,7 +137,7 @@ fun PermissionsScreen(
                 )
             }
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         PermissionCard(
             emoji = vocab.permsNotificationsEmoji,
@@ -155,7 +147,7 @@ fun PermissionsScreen(
             actionLabel = vocab.permsAllow,
             onClick = onRequestNotifications
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         PermissionCard(
             emoji = vocab.permsBatteryEmoji,
@@ -172,7 +164,7 @@ fun PermissionsScreen(
                 )
             }
         )
-        Spacer(Modifier.height(8.dp))
+        VSpace(Space.sm)
 
         PermissionCard(
             emoji = vocab.permsVpnEmoji,
@@ -186,7 +178,7 @@ fun PermissionsScreen(
         // NH-04: on aggressive OEM skins the battery exemption alone doesn't stop the OS freezing the
         // service — point the user to the vendor auto-start / protected-apps screen. Only shown there.
         if (OemBattery.isAggressiveOem()) {
-            Spacer(Modifier.height(8.dp))
+            VSpace(Space.sm)
             ActionCard(
                 title = vocab.permsOemTitle,
                 body = vocab.permsOemBody,
@@ -195,23 +187,23 @@ fun PermissionsScreen(
             )
         }
 
-        Spacer(Modifier.height(24.dp))
+        VSpace(Space.xxl)
 
         // NH-03: surface Lockdown where hardening-minded users will see it (it lives in Settings).
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Column {
                 Text(vocab.permsLockdownTitle, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                Spacer(Modifier.height(6.dp))
+                VSpace(Space.sm)
                 Text(vocab.permsLockdownBody, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
             }
         }
 
-        Spacer(Modifier.height(12.dp))
+        VSpace(Space.md)
 
         SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surfaceVariant) {
             Column {
                 Text(vocab.permsAapmHeader, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                Spacer(Modifier.height(6.dp))
+                VSpace(Space.sm)
                 Text(
                     vocab.permsAapmBody,
                     style = MaterialTheme.typography.bodyMedium,
@@ -232,9 +224,9 @@ private fun ActionCard(
     SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
         Column {
             Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-            Spacer(Modifier.height(6.dp))
+            VSpace(Space.sm)
             Text(body, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
-            Spacer(Modifier.height(4.dp))
+            VSpace(Space.xs)
             TextButton(onClick = onClick) { Text(actionLabel) }
         }
     }
@@ -254,7 +246,7 @@ private fun PermissionCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (emoji.isNotEmpty()) {
                     Text(emoji, style = MaterialTheme.typography.headlineSmall)
-                    Spacer(Modifier.size(10.dp))
+                    HSpace(Space.md)
                 }
                 Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 Spacer(Modifier.weight(1f))
@@ -263,10 +255,10 @@ private fun PermissionCard(
                     color = if (granted) palette.Sage else palette.Petal
                 )
             }
-            Spacer(Modifier.height(6.dp))
+            VSpace(Space.sm)
             Text(body, style = MaterialTheme.typography.bodyMedium, color = palette.Smoke)
             if (!granted) {
-                Spacer(Modifier.height(4.dp))
+                VSpace(Space.xs)
                 TextButton(onClick = onClick) { Text(actionLabel) }
             }
         }

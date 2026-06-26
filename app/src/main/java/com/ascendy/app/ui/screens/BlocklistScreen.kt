@@ -7,20 +7,17 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -37,8 +34,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.ui.components.Badge
+import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.PageFrame
+import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.theme.Elev
+import com.ascendy.app.ui.theme.HSpace
+import com.ascendy.app.ui.theme.Space
+import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -67,50 +70,32 @@ fun BlocklistScreen(
             }
         }
     ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = vocab.backLabel, tint = palette.Ink)
-                }
-                Text(vocab.listsTitle, style = MaterialTheme.typography.headlineMedium, color = palette.Ink)
-            }
-            Spacer(Modifier.height(8.dp))
+            ScreenHeader(title = vocab.listsTitle, onBack = onBack)
+            VSpace(Space.sm)
 
             if (lists.isEmpty()) {
-                SoftCard(modifier = Modifier.fillMaxWidth()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        com.ascendy.app.ui.components.MiniMascot(
-                            locked = false,
-                            modifier = Modifier.size(40.dp)
-                        )
-                        Spacer(Modifier.size(12.dp))
-                        Text(
-                            vocab.listsEmpty,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = palette.Smoke
-                        )
-                    }
-                }
+                EmptyState(vocab.listsEmpty)
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(bottom = 96.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                    contentPadding = PaddingValues(bottom = Space.mega + Space.xxxl),
+                    verticalArrangement = Arrangement.spacedBy(Space.sm)
                 ) {
                 items(lists, key = { it.id }) { list ->
                     Surface(
                         onClick = { onOpenList(list) },
                         color = MaterialTheme.colorScheme.surface,
                         shape = MaterialTheme.shapes.large,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, palette.Mist),
+                        border = androidx.compose.foundation.BorderStroke(Elev.hairline, palette.Mist),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 14.dp)) {
+                        Column(modifier = Modifier.padding(horizontal = Space.xl, vertical = Space.lg)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(list.name, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                                         if (list.isStrict) {
-                                            Spacer(Modifier.size(8.dp))
+                                            HSpace(Space.sm)
                                             Badge(label = vocab.strictBadge, color = palette.Petal)
                                         }
                                     }
@@ -123,7 +108,7 @@ fun BlocklistScreen(
                                 if (list.isDefault) Badge(label = vocab.listsBadgeDefault, color = palette.Mint)
                                 else TextButton(onClick = { onDeleteList(list) }) { Text(vocab.tagsRemove) }
                             }
-                            Spacer(Modifier.height(4.dp))
+                            VSpace(Space.xs)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(vocab.strictToggleLabel,
                                     style = MaterialTheme.typography.bodySmall,
@@ -132,13 +117,15 @@ fun BlocklistScreen(
                                 Switch(checked = list.isStrict,
                                     onCheckedChange = { onToggleStrict(list, it) })
                             }
-                            // The tradeoff, BEFORE committing — the toast version only appears once
-                            // a strict session is already running, which is too late to inform.
-                            Text(
-                                vocab.strictToggleHint,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = palette.Smoke
-                            )
+                            // Only explain the tradeoff on lists where strict is actually ON,
+                            // so the same paragraph doesn't repeat verbatim under every card.
+                            if (list.isStrict) {
+                                Text(
+                                    vocab.strictToggleHint,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = palette.Smoke
+                                )
+                            }
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(vocab.allowListToggleLabel,
                                     style = MaterialTheme.typography.bodySmall,

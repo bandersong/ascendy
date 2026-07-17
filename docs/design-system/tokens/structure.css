@@ -1,0 +1,29 @@
+/* Spacing (strict 4pt grid), radii (per-theme shape language), motion & elevation —
+   lifted from Tokens.kt + Theme.kt Shapes. */
+:root{
+  /* spacing — Space object in Tokens.kt */
+  --space-xxs:2px; --space-xs:4px; --space-sm:8px; --space-md:12px; --space-lg:16px;
+  --space-xl:20px; --space-xxl:24px; --space-xxxl:32px; --space-huge:40px; --space-xhuge:48px; --space-mega:64px;
+  /* motion — Motion object */
+  --motion-quick:150ms; /* @kind other */
+  --motion-standard:250ms; /* @kind other */
+  --motion-emphasized:400ms; /* @kind other */
+  --motion-mascot-bob:2400ms; /* @kind other */
+  --ease-standard:cubic-bezier(0.2,0,0,1); /* @kind other */
+  --ease-emphasized:cubic-bezier(0.05,0.7,0.1,1); /* @kind other */
+  /* elevation / interaction — Elev object */
+  --pressed-scale:0.97; /* @kind other */
+  --disabled-alpha:0.4; /* @kind other */
+  --shadow-card:0 1px 2px rgba(0,0,0,0.08); /* light mode only; dark mode uses border only */
+  --border-hairline:1px solid var(--mist);
+  /* radii — Kawaii shapes (default): generous curves */
+  --radius-xs:12px; --radius-sm:16px; --radius-md:20px; --radius-lg:28px; --radius-xl:36px;
+  /* layout */
+  --page-max-width:640px; --page-pad-x:20px;
+}
+[data-theme="kawaii"]{ --radius-xs:12px; --radius-sm:16px; --radius-md:20px; --radius-lg:28px; --radius-xl:36px; }
+[data-theme="kawaii-dark"]{ --radius-xs:12px; --radius-sm:16px; --radius-md:20px; --radius-lg:28px; --radius-xl:36px; --shadow-card:none; }
+[data-theme="tough"]{ --radius-xs:4px; --radius-sm:6px; --radius-md:8px; --radius-lg:10px; --radius-xl:12px; }
+[data-theme="tough-dark"]{ --radius-xs:4px; --radius-sm:6px; --radius-md:8px; --radius-lg:10px; --radius-xl:12px; --shadow-card:none; }
+[data-theme="neutral"]{ --radius-xs:6px; --radius-sm:8px; --radius-md:10px; --radius-lg:12px; --radius-xl:16px; }
+[data-theme="neutral-dark"]{ --radius-xs:6px; --radius-sm:8px; --radius-md:10px; --radius-lg:12px; --radius-xl:16px; --shadow-card:none; }

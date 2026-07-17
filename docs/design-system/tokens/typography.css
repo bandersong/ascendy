@@ -1,0 +1,61 @@
+/* Ascendy type — the app uses the Android system font (Roboto); Roboto via Google Fonts stands in on the web.
+   Scales lifted from Theme.kt (sp→px). Kawaii = friendly semibold; Neutral = modest, clean;
+   Tough = Black/ExtraBold + positive tracking, headings conventionally UPPERCASE. */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800;900&display=swap');
+:root{
+  --font-sans:'Roboto', Roboto, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  /* Kawaii scale (default) */
+  --type-display-size:56px; --type-display-weight:600; --type-display-tracking:-1px; --type-display-leading:60px;
+  --type-headline-size:24px; --type-headline-weight:600; --type-headline-tracking:0; --type-headline-leading:30px;
+  --type-title-size:18px; --type-title-weight:500; --type-title-tracking:0; --type-title-leading:24px;
+  --type-title-sm-size:15px; --type-title-sm-weight:500; --type-title-sm-leading:21px;
+  --type-body-size:16px; --type-body-weight:400; --type-body-leading:24px;
+  --type-body-md-size:14px; --type-body-md-leading:20px;
+  --type-body-sm-size:12px; --type-body-sm-leading:18px;
+  --type-label-size:13px; --type-label-weight:500; --type-label-tracking:0; --type-label-leading:18px;
+  --type-heading-transform:none;
+}
+[data-theme="kawaii"]{
+  --type-display-size:56px; --type-display-weight:600; --type-display-tracking:-1px; --type-display-leading:60px;
+  --type-headline-size:24px; --type-headline-weight:600; --type-headline-tracking:0; --type-headline-leading:30px;
+  --type-title-size:18px; --type-title-weight:500; --type-title-tracking:0; --type-title-leading:24px;
+  --type-title-sm-size:15px; --type-title-sm-weight:500; --type-title-sm-leading:21px;
+  --type-body-weight:400; --type-label-weight:500; --type-label-tracking:0; --type-heading-transform:none;
+}
+[data-theme="kawaii-dark"]{
+  --type-display-size:56px; --type-display-weight:600; --type-display-tracking:-1px; --type-display-leading:60px;
+  --type-headline-size:24px; --type-headline-weight:600; --type-headline-tracking:0; --type-headline-leading:30px;
+  --type-title-size:18px; --type-title-weight:500; --type-title-tracking:0; --type-title-leading:24px;
+  --type-title-sm-size:15px; --type-title-sm-weight:500; --type-title-sm-leading:21px;
+  --type-body-weight:400; --type-label-weight:500; --type-label-tracking:0; --type-heading-transform:none;
+}
+[data-theme="tough"]{
+  --type-display-size:56px; --type-display-weight:900; --type-display-tracking:1px; --type-display-leading:60px;
+  --type-headline-size:24px; --type-headline-weight:800; --type-headline-tracking:0.5px; --type-headline-leading:30px;
+  --type-title-size:18px; --type-title-weight:700; --type-title-tracking:0.5px; --type-title-leading:24px;
+  --type-title-sm-size:15px; --type-title-sm-weight:700; --type-title-sm-leading:21px;
+  --type-body-weight:500; --type-label-weight:700; --type-label-tracking:1px; --type-heading-transform:uppercase;
+}
+[data-theme="tough-dark"]{
+  --type-display-size:56px; --type-display-weight:900; --type-display-tracking:1px; --type-display-leading:60px;
+  --type-headline-size:24px; --type-headline-weight:800; --type-headline-tracking:0.5px; --type-headline-leading:30px;
+  --type-title-size:18px; --type-title-weight:700; --type-title-tracking:0.5px; --type-title-leading:24px;
+  --type-title-sm-size:15px; --type-title-sm-weight:700; --type-title-sm-leading:21px;
+  --type-body-weight:500; --type-label-weight:700; --type-label-tracking:1px; --type-heading-transform:uppercase;
+}
+[data-theme="neutral"]{
+  --type-display-size:48px; --type-display-weight:600; --type-display-tracking:-0.5px; --type-display-leading:56px;
+  --type-headline-size:22px; --type-headline-weight:500; --type-headline-tracking:0; --type-headline-leading:28px;
+  --type-title-size:16px; --type-title-weight:600; --type-title-tracking:0; --type-title-leading:22px;
+  --type-title-sm-size:14px; --type-title-sm-weight:600; --type-title-sm-leading:20px;
+  --type-body-size:15px; --type-body-weight:400; --type-body-leading:22px;
+  --type-label-size:12px; --type-label-weight:600; --type-label-tracking:0.3px; --type-heading-transform:none;
+}
+[data-theme="neutral-dark"]{
+  --type-display-size:48px; --type-display-weight:600; --type-display-tracking:-0.5px; --type-display-leading:56px;
+  --type-headline-size:22px; --type-headline-weight:500; --type-headline-tracking:0; --type-headline-leading:28px;
+  --type-title-size:16px; --type-title-weight:600; --type-title-tracking:0; --type-title-leading:22px;
+  --type-title-sm-size:14px; --type-title-sm-weight:600; --type-title-sm-leading:20px;
+  --type-body-size:15px; --type-body-weight:400; --type-body-leading:22px;
+  --type-label-size:12px; --type-label-weight:600; --type-label-tracking:0.3px; --type-heading-transform:none;
+}

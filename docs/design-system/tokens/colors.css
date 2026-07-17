@@ -1,0 +1,43 @@
+/* Ascendy palettes — lifted verbatim from app/src/main/java/com/ascendy/app/ui/theme/Theme.kt.
+   Same 10 role names across every theme so screens are theme-agnostic.
+   Default scope (:root) = Kawaii light. Switch with data-theme="kawaii|tough|neutral" (+ "-dark"). */
+:root{
+  --cream:#FBF7FF; --cloud:#F3E9FC; --petal:#9D40CE; --lilac:#FF9EC4; --mint:#FFC59A;
+  --sage:#8FD0AC; --ink:#3D2453; --smoke:#7C5A82; --mist:#ECDDF7; --surface:#FFFDFF;
+  --on-petal:#FBF7FF;
+  /* semantic aliases */
+  --bg:var(--cream); --surface-soft:var(--cloud); --surface-card:var(--surface);
+  --accent:var(--petal); --accent-2:var(--lilac); --accent-3:var(--mint);
+  --success:var(--sage); --text-body:var(--ink); --text-muted:var(--smoke);
+  --divider:var(--mist); --on-accent:var(--on-petal);
+}
+[data-theme="kawaii"]{
+  --cream:#FBF7FF; --cloud:#F3E9FC; --petal:#9D40CE; --lilac:#FF9EC4; --mint:#FFC59A;
+  --sage:#8FD0AC; --ink:#3D2453; --smoke:#7C5A82; --mist:#ECDDF7; --surface:#FFFDFF;
+  --on-petal:#FBF7FF;
+}
+[data-theme="kawaii-dark"]{
+  --cream:#1E1428; --cloud:#2C1E3A; --petal:#DDA8F5; --lilac:#FFB0CE; --mint:#FFC59A;
+  --sage:#9FD8B6; --ink:#F7EFFB; --smoke:#C4A8D4; --mist:#3D2A4F; --surface:#271934;
+  --on-petal:#1E1428;
+}
+[data-theme="tough"]{
+  --cream:#ECE9E1; --cloud:#DAD5CB; --petal:#15151A; --lilac:#52504B; --mint:#B0B19F;
+  --sage:#7C8A78; --ink:#0C0C0E; --smoke:#565249; --mist:#CFC9BF; --surface:#F4F1EA;
+  --on-petal:#ECE9E1;
+}
+[data-theme="tough-dark"]{
+  --cream:#070708; --cloud:#161618; --petal:#F2EFE4; --lilac:#8B8478; --mint:#7A7F71;
+  --sage:#5D695E; --ink:#F2EFE4; --smoke:#9C958A; --mist:#28282B; --surface:#121214;
+  --on-petal:#070708;
+}
+[data-theme="neutral"]{
+  --cream:#F6F7FA; --cloud:#EAECF2; --petal:#4D5694; --lilac:#646A7C; --mint:#DEE2EE;
+  --sage:#BFE0CA; --ink:#15161E; --smoke:#5C6070; --mist:#E1E4EB; --surface:#FFFFFF;
+  --on-petal:#F6F7FA;
+}
+[data-theme="neutral-dark"]{
+  --cream:#101117; --cloud:#191B23; --petal:#9AA2E0; --lilac:#9AA0B2; --mint:#2C3344;
+  --sage:#2C3D33; --ink:#E8E9F0; --smoke:#9DA1B2; --mist:#262932; --surface:#1A1C24;
+  --on-petal:#101117;
+}

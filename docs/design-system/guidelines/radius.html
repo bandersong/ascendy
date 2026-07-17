@@ -1,0 +1,31 @@
+<!-- @dsCard group="Foundations" viewport="700x240" name="Shape — radius per theme" subtitle="The loudest theme signal: kawaii curves, tough hard edges, neutral middle" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><style>
+body{margin:0}
+.wrap{display:flex;min-height:100vh;font-family:var(--font-sans)}
+.col{flex:1;padding:14px;background:var(--cream);color:var(--ink)}
+.t{font-size:11px;font-weight:600;color:var(--smoke);margin-bottom:8px;text-transform:var(--type-heading-transform)}
+.chips{display:flex;flex-direction:column;gap:6px}
+.c{background:var(--surface);border:1px solid var(--mist);padding:8px 12px;font-size:11px;font-family:monospace;color:var(--smoke)}
+</style></head><body><div class="wrap">
+<div class="col" data-theme="kawaii"><div class="t">kawaii</div><div class="chips">
+<div class="c" style="border-radius:var(--radius-xs)">xs 12</div>
+<div class="c" style="border-radius:var(--radius-sm)">sm 16</div>
+<div class="c" style="border-radius:var(--radius-md)">md 20</div>
+<div class="c" style="border-radius:var(--radius-lg)">lg 28 — cards</div>
+<div class="c" style="border-radius:var(--radius-xl)">xl 36 — pills</div>
+</div></div>
+<div class="col" data-theme="tough"><div class="t">tough</div><div class="chips">
+<div class="c" style="border-radius:var(--radius-xs)">xs 4</div>
+<div class="c" style="border-radius:var(--radius-sm)">sm 6</div>
+<div class="c" style="border-radius:var(--radius-md)">md 8</div>
+<div class="c" style="border-radius:var(--radius-lg)">lg 10 — cards</div>
+<div class="c" style="border-radius:var(--radius-xl)">xl 12 — pills</div>
+</div></div>
+<div class="col" data-theme="neutral"><div class="t">neutral</div><div class="chips">
+<div class="c" style="border-radius:var(--radius-xs)">xs 6</div>
+<div class="c" style="border-radius:var(--radius-sm)">sm 8</div>
+<div class="c" style="border-radius:var(--radius-md)">md 10</div>
+<div class="c" style="border-radius:var(--radius-lg)">lg 12 — cards</div>
+<div class="c" style="border-radius:var(--radius-xl)">xl 16 — pills</div>
+</div></div>
+</div></body></html>

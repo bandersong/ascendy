@@ -1,0 +1,26 @@
+<!-- @dsCard group="Foundations" viewport="700x200" name="Motion & press states" subtitle="Durations, easings, 0.97 press scale, 40% disabled — from Tokens.kt" -->
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../styles.css"><style>
+body{margin:0}
+.wrap{padding:16px 20px;background:var(--cream);font-family:var(--font-sans);min-height:100vh;display:flex;gap:24px}
+.col{flex:1}
+.r{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.nm{width:120px;flex:none;font-size:11px;font-family:monospace;color:var(--ink)}
+.use{font-size:10px;color:var(--smoke)}
+.track{flex:1;height:6px;background:var(--mist);border-radius:3px;position:relative;overflow:hidden}
+.dot{position:absolute;top:0;left:0;width:24px;height:6px;border-radius:3px;background:var(--petal);animation:slide 2s infinite}
+@keyframes slide{0%,100%{left:0}50%{left:calc(100% - 24px)}}
+.demo{display:inline-block;background:var(--petal);color:var(--on-petal);border-radius:999px;padding:10px 24px;font-size:13px;font-weight:500;cursor:pointer;transition:transform var(--motion-quick) var(--ease-standard)}
+.demo:active{transform:scale(var(--pressed-scale))}
+</style></head><body><div class="wrap">
+<div class="col">
+<div class="r"><span class="nm">quick 150ms</span><div class="track"><div class="dot" style="animation-duration:1s"></div></div><span class="use">taps, toggles</span></div>
+<div class="r"><span class="nm">standard 250ms</span><div class="track"><div class="dot" style="animation-duration:1.6s"></div></div><span class="use">content swaps</span></div>
+<div class="r"><span class="nm">emphasized 400ms</span><div class="track"><div class="dot" style="animation-duration:2.4s"></div></div><span class="use">hero states</span></div>
+<div class="r"><span class="nm">bob 2400ms</span><div class="track"><div class="dot" style="animation-duration:4.8s"></div></div><span class="use">mascot idle loop ±8px</span></div>
+</div>
+<div class="col" style="flex:0 0 220px">
+<div style="margin-bottom:10px"><span class="demo">hold me — 0.97</span></div>
+<div><span class="demo" style="opacity:var(--disabled-alpha);cursor:default">disabled — 40%</span></div>
+<div style="font-size:10px;color:var(--smoke);margin-top:10px">standard cubic-bezier(.2,0,0,1)<br>emphasized cubic-bezier(.05,.7,.1,1)<br>no hover color shifts — press scale only</div>
+</div>
+</div></body></html>

@@ -74,6 +74,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var controller: SessionController
     private val pairingMode = MutableStateFlow(false)
     private val pendingPairedTag = MutableStateFlow<String?>(null)
+    private val pairFailure = MutableStateFlow<com.ascendy.app.nfc.NfcFailure?>(null)
     private val pendingRoute = MutableStateFlow<String?>(null)
 
     @Volatile
@@ -220,6 +221,7 @@ class MainActivity : ComponentActivity() {
                         controller = controller,
                         pairingFlow = pairingMode,
                         detectedTagFlow = pendingPairedTag,
+                        pairFailureFlow = pairFailure,
                         pendingRouteFlow = pendingRoute,
                         onRequestNotifications = { requestNotificationPermission() }
                     )
@@ -258,14 +260,31 @@ class MainActivity : ComponentActivity() {
         // Tag I/O (NDEF connect/read/write) blocks — run it off the main thread or a slow tag
         // can ANR the activity.
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            val v = currentVocab
             if (pairingMode.value) {
-                val tagId = NfcManager.pairTag(intent) ?: return@launch
-                pendingPairedTag.value = tagId
+                // A failed write used to look exactly like a successful one. Report the reason and
+                // drop out of waiting so the screen shows it with a retry button.
+                when (val result = NfcManager.pairTag(intent)) {
+                    is com.ascendy.app.nfc.PairResult.Success -> {
+                        pairFailure.value = null
+                        pendingPairedTag.value = result.tagId
+                    }
+                    is com.ascendy.app.nfc.PairResult.Failed -> {
+                        pairFailure.value = result.reason
+                        pairingMode.value = false
+                    }
+                }
                 return@launch
             }
 
-            val tagId = NfcManager.readTagId(intent) ?: return@launch
-            val v = currentVocab
+            val tagId = NfcManager.readTagId(intent)
+            if (tagId == null) {
+                // Tapped something we couldn't read at all — say so instead of going silent.
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                    toast(v.nfcFailNoTag)
+                }
+                return@launch
+            }
             val result = controller.handleTagTap(tagId)
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                 when (result) {
@@ -295,6 +314,7 @@ private fun AppNav(
     controller: SessionController,
     pairingFlow: MutableStateFlow<Boolean>,
     detectedTagFlow: MutableStateFlow<String?>,
+    pairFailureFlow: MutableStateFlow<com.ascendy.app.nfc.NfcFailure?>,
     pendingRouteFlow: MutableStateFlow<String?>,
     onRequestNotifications: () -> Unit,
 ) {
@@ -309,6 +329,7 @@ private fun AppNav(
     val lists by repo.observeLists().collectAsState(initial = emptyList())
     val pairing by pairingFlow.collectAsState()
     val detected by detectedTagFlow.collectAsState()
+    val pairFailure by pairFailureFlow.collectAsState()
     // null until DataStore delivers — building the NavHost before then composes the wrong
     // start destination and flashes the onboarding screen on every cold start.
     val onboardedOrNull by themePrefs.onboarded.collectAsState(initial = null as Boolean?)
@@ -474,6 +495,7 @@ private fun AppNav(
             PairTagScreen(
                 waiting = pairing,
                 detectedTagId = detected,
+                pairFailure = pairFailure,
                 knownTags = tags,
                 lists = lists,
                 nfcSupported = nfcAdapter != null,
@@ -483,10 +505,14 @@ private fun AppNav(
                         Intent(Settings.ACTION_NFC_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     )
                 },
-                onStartPairing = { pairingFlow.value = true },
-                onCancelPairing = {
+                onStartPairing = {
+                    pairFailureFlow.value = null
+                    pairingFlow.value = true
+                },
+                onCancelPairing = { reason ->
                     pairingFlow.value = false
                     detectedTagFlow.value = null
+                    pairFailureFlow.value = reason
                 },
                 onSavePairing = { nickname ->
                     val id = detected ?: return@PairTagScreen
@@ -500,6 +526,7 @@ private fun AppNav(
                         )
                         pairingFlow.value = false
                         detectedTagFlow.value = null
+                        pairFailureFlow.value = null
                     }
                 },
                 onDeleteTag = { tag -> scope.launch { repo.deleteTag(tag) } },

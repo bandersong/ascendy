@@ -14,16 +14,20 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.asImageBitmap
 import com.ascendy.app.data.Blocklist
 import com.ascendy.app.data.BoundTag
+import com.ascendy.app.nfc.NfcFailure
 import com.ascendy.app.ui.components.EmptyState
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
@@ -33,6 +37,7 @@ import com.ascendy.app.ui.components.SoftCard
 import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.VSpace
+import com.ascendy.app.ui.theme.nfcFailureText
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.vocab
 
@@ -40,13 +45,14 @@ import com.ascendy.app.ui.theme.vocab
 fun PairTagScreen(
     waiting: Boolean,
     detectedTagId: String?,
+    pairFailure: NfcFailure?,
     knownTags: List<BoundTag>,
     lists: List<Blocklist>,
     nfcSupported: Boolean,
     nfcEnabled: Boolean,
     onOpenNfcSettings: () -> Unit,
     onStartPairing: () -> Unit,
-    onCancelPairing: () -> Unit,
+    onCancelPairing: (reason: NfcFailure?) -> Unit,
     onSavePairing: (nickname: String) -> Unit,
     onDeleteTag: (BoundTag) -> Unit,
     onAssignList: (BoundTag, Long?) -> Unit,
@@ -60,12 +66,23 @@ fun PairTagScreen(
     var qrNickname by remember { mutableStateOf("") }
 
     // Pairing must not wait forever (e.g. NFC turned off mid-wait, broken antenna) — auto-cancel
-    // after 2 minutes so the screen never becomes a dead end.
+    // after 2 minutes so the screen never becomes a dead end. It says WHY it gave up: a silent
+    // return to idle reads as "I pressed the button and nothing happened".
     androidx.compose.runtime.LaunchedEffect(waiting) {
         if (waiting) {
             kotlinx.coroutines.delay(120_000L)
-            onCancelPairing()
+            onCancelPairing(NfcFailure.TimedOut)
         }
+    }
+
+    // The screen timeout is shorter than the pairing wait on plenty of phones (30s on the Z Flip 7).
+    // When the screen sleeps the activity pauses, which tears down NFC foreground dispatch — so
+    // pairing could not succeed for anyone slower than their own display timeout. Hold the screen
+    // awake only while we're actually waiting for a tag, never for the whole app.
+    val view = LocalView.current
+    DisposableEffect(waiting) {
+        view.keepScreenOn = waiting
+        onDispose { view.keepScreenOn = false }
     }
 
     PageColumn {
@@ -79,16 +96,36 @@ fun PairTagScreen(
                     Mascot(locked = waiting)
                 }
                 VSpace(Space.sm)
+                // Why the last attempt didn't work. Sits above the controls so the retry button is
+                // right under the explanation.
+                if (pairFailure != null && detectedTagId == null) {
+                    Text(
+                        vocab.nfcFailureText(pairFailure),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center
+                    )
+                    VSpace(Space.sm)
+                }
                 when {
                     !waiting && detectedTagId == null -> {
+                        // NFC off looks identical to NFC on here unless we check: the idle screen
+                        // would otherwise invite a tap that the radio cannot possibly receive.
+                        val nfcBlocked = nfcSupported && !nfcEnabled
                         Text(
-                            if (nfcSupported) vocab.tagsIntro else vocab.nfcUnsupportedBody,
+                            when {
+                                !nfcSupported -> vocab.nfcUnsupportedBody
+                                nfcBlocked -> vocab.nfcOffBody
+                                else -> vocab.tagsIntro
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = palette.Smoke
                         )
                         VSpace(Space.md)
                         Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                            if (nfcSupported) {
+                            if (nfcBlocked) {
+                                Button(onClick = onOpenNfcSettings) { Text(vocab.nfcOffAction) }
+                            } else if (nfcSupported) {
                                 Button(onClick = onStartPairing) { Text(vocab.tagsStartPairing) }
                             }
                             TextButton(onClick = {
@@ -114,7 +151,7 @@ fun PairTagScreen(
                             Button(onClick = onOpenNfcSettings) { Text(vocab.nfcOffAction) }
                         }
                         VSpace(Space.sm)
-                        TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
+                        TextButton(onClick = { onCancelPairing(null) }) { Text(vocab.tagsCancel) }
                     }
                     detectedTagId != null -> {
                         Text(vocab.tagsFound, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
@@ -128,9 +165,12 @@ fun PairTagScreen(
                         )
                         VSpace(Space.md)
                         Row(horizontalArrangement = Arrangement.spacedBy(Space.sm)) {
-                            TextButton(onClick = onCancelPairing) { Text(vocab.tagsCancel) }
+                            TextButton(onClick = { onCancelPairing(null) }) { Text(vocab.tagsCancel) }
+                            // enabled is driven by the same condition the click used to check, so a
+                            // button that will do nothing also LOOKS like it will do nothing.
                             Button(
-                                onClick = { if (nickname.isNotBlank()) onSavePairing(nickname.trim()) }
+                                enabled = nickname.isNotBlank(),
+                                onClick = { onSavePairing(nickname.trim()) }
                             ) { Text(vocab.tagsSave) }
                         }
                     }
@@ -248,12 +288,15 @@ fun PairTagScreen(
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    if (qrNickname.isNotBlank()) {
+                // Same fix as the NFC Save button: an accent-filled button that silently does
+                // nothing when Name is empty is worse than one that reads as disabled.
+                Button(
+                    enabled = qrNickname.isNotBlank(),
+                    onClick = {
                         onSaveQrAnchor(qrIdSnapshot, qrNickname.trim())
                         qrAnchorId = null
                     }
-                }) { Text(vocab.qrSaveAnchor) }
+                ) { Text(vocab.qrSaveAnchor) }
             },
             dismissButton = {
                 TextButton(onClick = { qrAnchorId = null }) { Text(vocab.tagsCancel) }

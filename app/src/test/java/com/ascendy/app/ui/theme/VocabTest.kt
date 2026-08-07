@@ -44,6 +44,20 @@ class VocabTest {
         }
     }
 
+    /**
+     * Vocab is one constructor away from the JVM's hard 255-argument-slot limit, and blowing it
+     * fails at CLASS LOAD, not compile — the app builds green and then dies with ClassFormatError
+     * the first time anything reads a string. Catch it here, in words, instead of there.
+     */
+    @Test fun fieldCount_staysUnderJvmArgumentLimit() {
+        val fields = Vocab::class.constructors.first().parameters.size
+        assertTrue(
+            "Vocab has $fields constructor fields; the JVM allows 254 plus the receiver. " +
+                "Group related strings into a nested class instead of adding another flat field.",
+            fields <= 254,
+        )
+    }
+
     @Test fun daysShort_hasSevenEntriesPerTheme() {
         for ((name, v) in themes) {
             assertEquals("$name daysShort size", 7, v.daysShort.size)

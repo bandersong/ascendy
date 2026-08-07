@@ -193,7 +193,7 @@ fun HomeScreen(
                             )
                             VSpace(Space.xs)
                             Text(
-                                vocab.homeHeroActive,
+                                if (tagCount == 0) vocab.homeHeroActiveNoTags else vocab.homeHeroActive,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = palette.Smoke,
                                 textAlign = TextAlign.Center
@@ -207,8 +207,10 @@ fun HomeScreen(
                                 )
                             }
                         } else {
+                            // With no anchors paired, "tap your tag" instructs an action the user
+                            // provably cannot perform — point at pairing instead.
                             Text(
-                                vocab.homeHeroIdle,
+                                if (tagCount == 0) vocab.homeHeroNoTags else vocab.homeHeroIdle,
                                 style = MaterialTheme.typography.titleMedium,
                                 color = palette.Ink,
                                 textAlign = TextAlign.Center

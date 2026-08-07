@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Background tag dispatch, tightened. NfcA used to be listed here, which matches essentially every
+  ISO14443-A card on earth — transit passes, hotel keys, bank cards — so Ascendy popped up whenever
+  the phone brushed one. We only ever read or write NDEF (NfcManager uses Ndef / NdefFormatable),
+  plus MifareUltralight so a factory-blank NTAG21x sticker with no NDEF area yet is still recognised.
+-->
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <tech-list>
         <tech>android.nfc.tech.Ndef</tech>
     </tech-list>
     <tech-list>
         <tech>android.nfc.tech.NdefFormatable</tech>
-    </tech-list>
-    <tech-list>
-        <tech>android.nfc.tech.NfcA</tech>
     </tech-list>
     <tech-list>
         <tech>android.nfc.tech.MifareUltralight</tech>

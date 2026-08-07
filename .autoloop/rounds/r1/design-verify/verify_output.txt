@@ -1,0 +1,34 @@
+selftest: OK (4 reference pairs reproduce)
+
+parsed 6 palette blocks: ['Kawaii Light', 'Kawaii Dark', 'Tough Light', 'Tough Dark', 'Neutral Light', 'Neutral Dark']
+
+RECOMPUTED: 126 role×surface pairs across 6 palettes
+  text pairs: 90   at AAA(>=7:1): 89   AA text failures(<4.5): 0
+  non-text failures(<3:1): 18
+
+DOC-TABLE CROSS-CHECK: 0 mismatches
+
+WORST PAIRS (bottom 12 of all 126):
+    1.11  Neutral Light         line/cloud    [non-text]
+    1.13  Kawaii Light          line/cloud    [non-text]
+    1.14  Tough Light           line/cloud    [non-text]
+    1.15  Neutral Dark          line/cloud    [non-text]
+    1.16  Kawaii Dark           line/cloud    [non-text]
+    1.22  Tough Dark            line/cloud    [non-text]
+    1.24  Neutral Light         line/ground   [non-text]
+    1.28  Kawaii Light          line/ground   [non-text]
+    1.28  Neutral Dark          line/surface  [non-text]
+    1.29  Kawaii Dark           line/surface  [non-text]
+    1.35  Tough Dark            line/surface  [non-text]
+    1.35  Kawaii Light          line/surface  [non-text]
+
+=== TEXT PAIRS BELOW AAA (7:1) ===
+    7.00  Kawaii Light     signal/cloud  (#990F48 on #FBE7E0)
+
+=== `edge` (the 3:1 non-text duty role) MARGIN ===
+  Kawaii Light     worst 3.12 on cloud
+  Kawaii Dark      worst 3.50 on cloud
+  Tough Light      worst 3.00 on cloud  <-- ZERO MARGIN
+  Tough Dark       worst 3.23 on cloud
+  Neutral Light    worst 3.01 on cloud  <-- ZERO MARGIN
+  Neutral Dark     worst 3.19 on cloud

@@ -168,17 +168,24 @@ dependencies {
 
     implementation("androidx.core:core-ktx:1.13.1")
     implementation("androidx.activity:activity-compose:1.9.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.2")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.2")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.2")
-    implementation("androidx.lifecycle:lifecycle-service:2.8.2")
+    // 2.8.7, not 2.8.2: navigation-compose 2.8.9 drags lifecycle up to 2.8.7 transitively anyway,
+    // so declare what actually resolves instead of leaving four misleading version numbers here.
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-service:2.8.7")
 
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+    // 2.8.0 is the first release where NavHost implements the predictive-back gesture (it drives
+    // the pop transition off the back progress instead of only reacting to the commit). The
+    // manifest opts into android:enableOnBackInvokedCallback, so on 2.7.7 the system showed the
+    // back preview while the NavHost stayed frozen — jank/black frames. 2.8.9 is the last of the
+    // 2.8 line; 2.9+ pulls lifecycle 2.9, which needs Kotlin 2.1 and we're on 2.0.21.
+    implementation("androidx.navigation:navigation-compose:2.8.9")
 
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")

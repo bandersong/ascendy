@@ -254,11 +254,15 @@ object Updater {
 
     fun openInstallPermissionSettings(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val intent = Intent(
-                android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
-                Uri.parse("package:" + context.packageName)
-            ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(intent)
+            // Tenth site of the same defect the Permissions screen had: ACTION_MANAGE_UNKNOWN_APP_SOURCES
+            // is absent on Go/AOSP builds, and a bare startActivity throws there.
+            com.ascendy.app.service.SettingsLauncher.open(
+                context,
+                Intent(
+                    android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,
+                    Uri.parse("package:" + context.packageName)
+                ),
+            )
         }
     }
 

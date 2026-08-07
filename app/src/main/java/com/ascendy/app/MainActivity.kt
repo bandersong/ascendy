@@ -5,7 +5,6 @@ import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -479,8 +478,9 @@ private fun AppNav(
                 nfcSupported = nfcAdapter != null,
                 nfcEnabled = nfcEnabled,
                 onOpenNfcSettings = {
-                    context.startActivity(
-                        Intent(Settings.ACTION_NFC_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    // Devices without NFC hardware also lack this screen — never let the tap throw.
+                    com.ascendy.app.service.SettingsLauncher.open(
+                        context, Intent(Settings.ACTION_NFC_SETTINGS)
                     )
                 },
                 onStartPairing = { pairingFlow.value = true },
@@ -866,14 +866,4 @@ private fun hasNotificationPermission(context: Context): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
     return context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) ==
         PackageManager.PERMISSION_GRANTED
-}
-
-@Suppress("unused")
-private fun openOverlaySettings(context: Context) {
-    context.startActivity(
-        Intent(
-            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-            Uri.parse("package:" + context.packageName)
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    )
 }

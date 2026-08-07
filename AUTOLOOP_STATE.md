@@ -40,11 +40,14 @@ Campaign: AAAA quality, sellable ≥$5. Started 2026-08-07.
 | dark-light (theme × mode matrix) | OPEN | 0 | — | — |
 | accessibility (TalkBack, contrast, targets, font-scale) | OPEN | 0 | — | — |
 | correctness (blocking works: app/web/DNS, safety timer, strict) | OPEN | 0 | — | — |
+| bypass-resistance (the CORE PROMISE — red-team) | OPEN | 0 | — | — |
 | resilience (crash, process-death, Room, OEM kill) | OPEN | 0 | — | — |
 | settings-help (discoverability, in-app help) | OPEN | 0 | — | — |
 | widget-tile-notif (widget, QS tile, notification) | OPEN | 0 | — | — |
 
 Budget: 8 rounds/dimension. Rotation: user-facing first.
+
+**bypass-resistance is the make-or-break dimension.** Brick's entire $59 moat is "no overrides or workarounds". If a phone-only relapsing user can defeat Ascendy, no amount of visual polish makes it sellable. Red-team runs on the Linux lane (localhost:5686), 4 adversary lenses × loop-until-dry, every claim verified by 3 independent refuters (majority-refute kills it). Findings ranked phone-only above needs-computer.
 
 ## Risk flags (flagged at planning)
 1. PR #5 = keystone; user should merge when happy or campaign rebases later.

@@ -13,6 +13,8 @@ Campaign: AAAA quality, sellable ≥$5. Started 2026-08-07.
 - adb: `/opt/homebrew/share/android-commandlinetools/platform-tools/adb` → emulator-5554, 1080x2400@420, Android 14
 - Screenshot: `adb -e exec-out screencap -p > file.png`; UI tree: `adb -e shell uiautomator dump`
 - ONE emulator → critics/verifiers serialize. NFC untestable on emulator (QR + manual + unit tests only).
+- SECOND lane: `hbtest` AVD → emulator-5556 (Android 15, 1080x2400@420). Boot with `ANDROID_SDK_ROOT=~/Library/Android/sdk ~/Library/Android/sdk/emulator/emulator -avd hbtest -port 5556 ...` (its android-35 image lives in the OTHER sdk root — ascendy_test uses homebrew root, hbtest uses ~/Library/Android/sdk).
+- User's Linux box (`jesus`, Tailscale 100.111.196.51) available as third lane if needed — not conscripted yet.
 
 ## References
 - Brick (Brick LLC) — Play `com.brickllc.brick`, 4.9★ 3.6K reviews, 100K+ DLs. $59 device + free app.
@@ -51,3 +53,6 @@ Budget: 8 rounds/dimension. Rotation: user-facing first.
 ## Round log
 ### r0 (recon, 2026-08-07)
 Phase 0: harness proven (headless emu + adb), fossDebug builds green, APK installed, Brick ref pack cached, baseline shot + 888ms cold launch. Round 1 = critic-first audit of top-4 user-facing dims (visual-design, core-workflow, states, copy) — produces ranked defect lists; builders start r2.
+
+### r1 scale-up (ultracode, same day)
+User: token-max, full send. Booted second emulator (hbtest→5556, Android 15). Two workflows in flight: r1 = 4 critics on 5554 (core-workflow, visual-design, states, copy); r1b = 8 remaining dims (copy-static, a11y-static, correctness-code→resilience-code static lane; onboarding→dark-light→a11y-dynamic→speed→settings-widget on 5556) + Brick ref harvester (site + iOS shots). ALL 12 dims audited in r1. Builders act r2 on ranked defect lists.

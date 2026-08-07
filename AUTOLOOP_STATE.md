@@ -48,10 +48,10 @@ Measured on the real device (Z Flip 7 SM-F766U1, **Android 16**, 1080x2520@480),
 ## Dimensions
 | dimension | status | rounds | last verdict | PR |
 |---|---|---|---|---|
-| foldable/adaptive layout | BUILDING r2 | 1 | NOT_WOWED — onboarding copy 100% clipped on short viewports incl. the safety-timer chooser; 0 rememberSaveable + 0 configChanges = every fold wipes 29 input fields | fix/adaptive-layout-insets |
-| nfc-reliability (CORE INTERACTION) | BUILDING r2 | 1 | NOT_WOWED — pair screen lets screen sleep mid-wait (dispatch dies); write failures report success | fix/nfc-reliability |
-| android16-compat | BUILDING r2 | 1 | NOT_WOWED — forced edge-to-edge + zero imePadding = keyboard covers search; dead statusBarColor attrs | fix/adaptive-layout-insets + fix/platform-oem |
-| oem-survival | BUILDING r2 | 1 | NOT_WOWED — Samsung absent from OemBattery list; 9 unguarded Settings intents (3 in notification PendingIntents) | fix/platform-oem |
+| foldable/adaptive layout | BUILT r2, awaiting critic | 2 | NOT_WOWED — onboarding copy 100% clipped on short viewports incl. the safety-timer chooser; 0 rememberSaveable + 0 configChanges = every fold wipes 29 input fields | #9 |
+| nfc-reliability (CORE INTERACTION) | BUILT r2, awaiting critic | 2 | NOT_WOWED — pair screen lets screen sleep mid-wait (dispatch dies); write failures report success | #8 |
+| android16-compat | BUILT r2, awaiting critic | 2 | NOT_WOWED — forced edge-to-edge + zero imePadding = keyboard covers search; dead statusBarColor attrs | #9 + #10 |
+| oem-survival | BUILT r2, awaiting critic | 2 | NOT_WOWED — Samsung absent from OemBattery list; 9 unguarded Settings intents (3 in notification PendingIntents) | #10 |
 | visual-design (3 themes × spacing/type/consistency) | OPEN | 0 | — | — |
 | core-workflow (session start/end, pair, click count) | OPEN | 0 | — | — |
 | states (empty/error/edge/permission-denied) | OPEN | 0 | — | — |
@@ -59,7 +59,7 @@ Measured on the real device (Z Flip 7 SM-F766U1, **Android 16**, 1080x2520@480),
 | onboarding (first-run, permission education) | OPEN | 0 | — | — |
 | speed (cold launch, transitions, jank) | OPEN | 0 | — | — |
 | dark-light (theme × mode matrix) | OPEN | 0 | — | — |
-| accessibility (TalkBack, contrast, targets, font-scale) | BUILDING r2 | 1 | NOT_WOWED — font_scale 2.0 stacks pill letters vertically ("T/O/D/O"); Permissions badge loses its text entirely; 7-day chart has empty content-desc | fix/a11y-scale-semantics |
+| accessibility (TalkBack, contrast, targets, font-scale) | BUILT r2, awaiting critic | 2 | NOT_WOWED — font_scale 2.0 stacks pill letters vertically ("T/O/D/O"); Permissions badge loses its text entirely; 7-day chart has empty content-desc | #11 |
 | correctness (blocking works: app/web/DNS, safety timer, strict) | OPEN | 0 | — | — |
 | bypass-resistance (the CORE PROMISE — red-team) | OPEN | 0 | — | — |
 | resilience (crash, process-death, Room, OEM kill) | OPEN | 0 | — | — |
@@ -115,3 +115,30 @@ unit suite and push their branch; they never self-grade. Fresh critics verify ne
 emulators + phone, then PRs.
 Gotcha hit and fixed: the first launch died with `WorktreeIsolationError` because my shell cwd had
 drifted into a transcript directory — worktree isolation needs the cwd to be inside the git repo.
+
+### r2 complete — 4 PRs open, integration verified by me (not by the builders)
+PRs: #8 nfc-reliability · #9 adaptive-layout-insets · #10 platform-oem · #11 a11y-scale-semantics.
+All four rebased onto `origin/autoloop/campaign` and merged into `integration/r2`:
+**164 tests, 0 failures, APK builds, launches clean on the Linux lane (623ms, no crash).**
+Smoke screenshot: `.autoloop/rounds/r2/smoke/01_launch.png`.
+
+Three things integration caught that no individual builder could:
+1. **All four worktrees were cut from `main`, not the campaign branch.** They compiled, tested green
+   and pushed — but had edited the PRE-design-token files, so merging would have silently reverted
+   `ScreenHeader`/`EmptyState` while looking like clean feature merges. Caught with `git merge-base`.
+   Every branch now verified BASE-OK before merge.
+2. **A campaign-only Roborazzi gallery test (`ScreenGalleryTest`) called `PairTagScreen` with the old
+   signature.** Invisible to both the branch and the three-way merge; it would have broken the
+   design-system gate.
+3. **Both NFC and a11y independently hit the `Vocab` 255-argument JVM ceiling and fixed it
+   differently** — one dropped `data` (killing the generated `copy$default`), the other nested strings
+   in a `ChartVocab` holder. Each was green alone; merged, the a11y guard failed because it still
+   computed the size of a `copy$default` that no longer exists. Guard rewritten to assert the real
+   invariant: Vocab must never be a data class.
+
+A force-push warning fired on `fix/adaptive-layout-insets`. Audited: it replaced the wrong-base commit
+`bb331a9` with the correctly-based `f9d1d2e`, on a scratch branch this campaign created the same hour,
+and I had explicitly authorized the rewrite in the agent brief. Old commit still in reflog. Benign.
+
+**r3 = critics verify the r2 claims on device.** Nothing is CONFIRMED yet: no builder re-ran the
+cover-screen captures, the font-scale-2.0 captures, or a real tag tap. Builders never grade themselves.

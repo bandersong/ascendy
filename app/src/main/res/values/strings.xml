@@ -22,4 +22,8 @@
     <string name="alert_vpn_body">the blocking VPN was disconnected — tap to reconnect and keep sites blocked.</string>
     <string name="alert_overlay_title">app blocking can\'t show its block screen</string>
     <string name="alert_overlay_body">accessibility is off and the overlay permission is missing, so blocked apps open uncovered — tap to allow ascendy to appear over other apps.</string>
+
+    <!-- Last-resort message when a device has neither the requested settings screen nor an app
+         details page. Functional, not themed vocab. -->
+    <string name="settings_screen_unavailable">this phone doesn\'t have that settings screen — open Settings and find it there.</string>
 </resources>

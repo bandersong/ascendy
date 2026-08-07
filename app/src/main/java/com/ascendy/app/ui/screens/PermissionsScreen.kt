@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.ascendy.app.service.OemBattery
+import com.ascendy.app.service.SettingsLauncher
 import com.ascendy.app.ui.components.Badge
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.ScreenHeader
@@ -52,11 +53,10 @@ fun PermissionsScreen(
     val context = LocalContext.current
     var showA11yDisclosure by remember { mutableStateOf(false) }
 
+    // Every settings hop goes through SettingsLauncher: these screens are missing on some ROMs and
+    // a bare startActivity would throw ActivityNotFoundException right in the user's face.
     val openA11ySettings = {
-        context.startActivity(
-            Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
+        SettingsLauncher.open(context, Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
     }
 
     // Play prominent-disclosure: the service reads screen content (foreground app + browser URL
@@ -114,10 +114,7 @@ fun PermissionsScreen(
             granted = status.usageStats,
             actionLabel = vocab.permsOpenSettings,
             onClick = {
-                context.startActivity(
-                    Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
+                SettingsLauncher.open(context, Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
             }
         )
         VSpace(Space.sm)
@@ -129,11 +126,12 @@ fun PermissionsScreen(
             granted = status.overlay,
             actionLabel = vocab.permsOpenSettings,
             onClick = {
-                context.startActivity(
+                SettingsLauncher.open(
+                    context,
                     Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + context.packageName)
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    ),
                 )
             }
         )
@@ -156,11 +154,14 @@ fun PermissionsScreen(
             granted = status.batteryExempt,
             actionLabel = vocab.permsBatteryAction,
             onClick = {
-                context.startActivity(
+                SettingsLauncher.open(
+                    context,
                     Intent(
-                        android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                        android.net.Uri.parse("package:" + context.packageName)
-                    ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                        Uri.parse("package:" + context.packageName)
+                    ),
+                    // Some ROMs drop the per-app dialog but keep the global list.
+                    Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS),
                 )
             }
         )

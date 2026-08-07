@@ -189,8 +189,8 @@ class BlockingForegroundService : Service() {
         val a11yOn = EnforcementHealth.isAccessibilityEnabled(this)
         if (!a11yOn) {
             nm.notify(ALERT_A11Y_ID, buildAlert(
+                ALERT_A11Y_ID,
                 getString(R.string.alert_a11y_title), getString(R.string.alert_a11y_body),
-                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS),
             ))
         } else {
             nm.cancel(ALERT_A11Y_ID)
@@ -209,11 +209,8 @@ class BlockingForegroundService : Service() {
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && !Settings.canDrawOverlays(this)
         if (overlayDead) {
             nm.notify(ALERT_OVERLAY_ID, buildAlert(
+                ALERT_OVERLAY_ID,
                 getString(R.string.alert_overlay_title), getString(R.string.alert_overlay_body),
-                Intent(
-                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                    android.net.Uri.parse("package:$packageName"),
-                ),
             ))
         } else {
             nm.cancel(ALERT_OVERLAY_ID)
@@ -223,17 +220,28 @@ class BlockingForegroundService : Service() {
     private fun warnUsageAccessRevoked() {
         val nm = getSystemService(NotificationManager::class.java) ?: return
         nm.notify(ALERT_USAGE_ID, buildAlert(
+            ALERT_USAGE_ID,
             getString(R.string.alert_usage_title), getString(R.string.alert_usage_body),
-            Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS),
         ))
     }
 
-    /** A loud, persistent diagnostic alert that taps through to the relevant system settings screen. */
-    private fun buildAlert(title: String, body: String, settingsIntent: Intent): Notification {
+    /**
+     * A loud, persistent diagnostic alert that taps through to our own Permissions screen.
+     *
+     * These used to hold a PendingIntent straight to a system settings screen. Two problems: on a
+     * ROM without that screen the tap silently did nothing (the launch happens in system_server
+     * long after we can catch anything), and the accessibility one jumped past the in-app
+     * prominent-disclosure gate that PermissionsScreen enforces. MainActivity always exists and the
+     * Permissions screen names the broken grant, shows its status and opens the right screen via
+     * SettingsLauncher — so one tap still gets there, on every device.
+     */
+    private fun buildAlert(alertId: Int, title: String, body: String): Notification {
         ensureAlertChannel()
         val tap = PendingIntent.getActivity(
-            this, settingsIntent.action?.hashCode() ?: 0,
-            settingsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            this, alertId,
+            Intent(this, MainActivity::class.java)
+                .putExtra(MainActivity.EXTRA_ROUTE, "perms")
+                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         return NotificationCompat.Builder(this, ALERT_CHANNEL_ID)

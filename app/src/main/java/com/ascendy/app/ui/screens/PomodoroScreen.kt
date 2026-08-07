@@ -13,7 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,9 +40,9 @@ fun PomodoroScreen(
         50 to vocab.pomodoro50,
         90 to vocab.pomodoro90,
     )
-    var selectedMin by remember { mutableIntStateOf(25) }
+    var selectedMin by rememberSaveable { mutableIntStateOf(25) }
     val defaultList = lists.firstOrNull { it.isDefault } ?: lists.firstOrNull()
-    var selectedListId by remember { mutableStateOf(defaultList?.id ?: 0L) }
+    var selectedListId by rememberSaveable { mutableStateOf(defaultList?.id ?: 0L) }
 
     PageColumn(centerWhenShort = true) {
         ScreenHeader(title = vocab.pomodoroTitle, onBack = onBack)

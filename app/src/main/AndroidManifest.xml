@@ -71,10 +71,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ascendy">
 
+        <!-- adjustResize: the window is edge-to-edge (setDecorFitsSystemWindows(false)), so the
+             keyboard never moves the content by itself — the app pads for WindowInsets.ime. On
+             API < 30 those IME insets are only dispatched when the activity asks to be resized. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize"
             android:theme="@style/Theme.Ascendy">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

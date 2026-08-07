@@ -17,7 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,7 +64,7 @@ fun SettingsScreen(
     onOpenPermissions: () -> Unit,
     onBack: () -> Unit,
 ) {
-    var showLockdownConfirm by remember { mutableStateOf(false) }
+    var showLockdownConfirm by rememberSaveable { mutableStateOf(false) }
 
     // Anti-uninstall is consent-gated: turning Lockdown ON requires reading exactly what it does
     // (device-admin + Settings-bounce) and confirming. Turning it OFF stays one tap.

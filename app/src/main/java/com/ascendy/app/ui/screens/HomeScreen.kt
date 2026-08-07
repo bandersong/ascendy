@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,6 +54,7 @@ import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.components.scaledHeight
 import com.ascendy.app.ui.theme.Elev
 import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
@@ -87,7 +89,7 @@ fun HomeScreen(
     val blockedDomains by BlockState.blockedDomains.collectAsState()
     val emergencyAvailable by BlockState.emergencyAvailable.collectAsState()
     val strict by BlockState.strict.collectAsState()
-    var showFrictionDialog by remember { mutableStateOf(false) }
+    var showFrictionDialog by rememberSaveable { mutableStateOf(false) }
 
     // re-tick every 30s while active to refresh the elapsed-minutes display
     var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -130,9 +132,12 @@ fun HomeScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth().animateContentSize()
             ) {
+                // Proportional, not a fixed 176.dp: at 176 the hero card pushed the teaching
+                // sentence and the minutes line under the gesture bar on the unfolded panel,
+                // and swallowed the whole page on the folded cover screen.
                 Box(
                     modifier = Modifier
-                        .size(176.dp)
+                        .size(scaledHeight(0.20f, min = 112.dp, max = 144.dp))
                         .combinedClickable(
                             onClick = {},
                             onLongClick = onManualToggle
@@ -230,7 +235,9 @@ fun HomeScreen(
             }
         }
 
-        VSpace(Space.xl)
+        // Space.lg (16dp), not xl: one more line of the hero card's copy clears the gesture
+        // bar on a short viewport, and 16 is the on-grid step down.
+        VSpace(Space.lg)
 
         // Setup section — single grouped card with check marks; collapses when all done.
         // Stays collapsed during an active session too, so starting a session never expands it.
@@ -450,7 +457,9 @@ private fun FrictionTaxDialog(
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    var input by remember { mutableStateOf("") }
+    // The friction sentence is a whole paragraph to retype — losing it to a fold would be
+    // punishing, and the dialog is only reachable in the first place when a session is running.
+    var input by rememberSaveable { mutableStateOf("") }
     val matches = input == sentence
 
     AlertDialog(

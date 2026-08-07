@@ -18,6 +18,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,9 +62,11 @@ fun PairTagScreen(
     onShareQr: (anchorId: String) -> Unit,
     onBack: () -> Unit,
 ) {
-    var nickname by remember { mutableStateOf("") }
-    var qrAnchorId by remember { mutableStateOf<String?>(null) }
-    var qrNickname by remember { mutableStateOf("") }
+    // Saveable, not remember: a fold/unfold recreates the Activity, and typing a tag nickname
+    // is exactly when a Flip gets closed. Same for the pending QR anchor.
+    var nickname by rememberSaveable { mutableStateOf("") }
+    var qrAnchorId by rememberSaveable { mutableStateOf<String?>(null) }
+    var qrNickname by rememberSaveable { mutableStateOf("") }
 
     // Pairing must not wait forever (e.g. NFC turned off mid-wait, broken antenna) — auto-cancel
     // after 2 minutes so the screen never becomes a dead end. It says WHY it gave up: a silent

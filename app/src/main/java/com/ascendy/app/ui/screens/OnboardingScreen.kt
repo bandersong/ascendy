@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -22,8 +24,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import com.ascendy.app.ui.components.Mascot
 import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.SelectableChip
+import com.ascendy.app.ui.components.scaledHeight
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.VSpace
 import com.ascendy.app.ui.theme.palette
@@ -49,7 +52,7 @@ fun OnboardingScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { 4 })
     val scope = rememberCoroutineScope()
-    var safetyMin by remember { mutableIntStateOf(initialSafetyMinutes) }
+    var safetyMin by rememberSaveable { mutableIntStateOf(initialSafetyMinutes) }
 
     PageColumn(scroll = false) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -71,12 +74,20 @@ fun OnboardingScreen(
                         1 -> vocab.onboardP2Title to vocab.onboardP2Body
                         else -> vocab.onboardP3Title to vocab.onboardP3Body
                     }
+                    // Scrolls: the pager page is a weighted box, so anything taller than it used
+                    // to be clipped symmetrically and silently — on a folded cover screen that
+                    // ate the title and body of every page, leaving only the mascot.
                     Column(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        Box(Modifier.size(180.dp), contentAlignment = Alignment.Center) {
+                        Box(
+                            Modifier.size(scaledHeight(0.24f, min = 96.dp, max = 180.dp)),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Mascot(locked = false)
                         }
                         VSpace(Space.xxl)
@@ -128,12 +139,21 @@ fun OnboardingScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SafetyTimerPage(selected: Int, onSelect: (Int) -> Unit) {
+    // The safety timer is the guaranteed way out of a strict session, so this page must never
+    // be croppable: it scrolls, and the art is the smallest thing here so the chips and the
+    // chosen value are what survive on a short viewport.
     Column(
-        modifier = Modifier.fillMaxSize().padding(top = Space.lg),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(top = Space.lg),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Box(Modifier.size(160.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.size(scaledHeight(0.18f, min = 72.dp, max = 160.dp)),
+            contentAlignment = Alignment.Center
+        ) {
             Mascot(locked = false)
         }
         VSpace(Space.lg)
@@ -146,7 +166,14 @@ private fun SafetyTimerPage(selected: Int, onSelect: (Int) -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             color = palette.Smoke,
             textAlign = TextAlign.Center)
-        VSpace(Space.lg)
+        VSpace(Space.md)
+        // Echo of the current choice, right above the chips — the CTA is always tappable, so
+        // the value being accepted has to be readable wherever the chips are readable.
+        Text("${vocab.safetyTimerTitle}: ${formatMinutesLabel(selected)}",
+            style = MaterialTheme.typography.titleMedium,
+            color = palette.Ink,
+            textAlign = TextAlign.Center)
+        VSpace(Space.md)
         // Chip grid (2 rows of 3)
         for (rowIdx in 0 until 2) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Space.sm)) {

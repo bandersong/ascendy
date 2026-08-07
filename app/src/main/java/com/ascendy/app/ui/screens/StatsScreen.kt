@@ -3,6 +3,8 @@ package com.ascendy.app.ui.screens
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -12,6 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.ascendy.app.data.SessionLog
@@ -90,12 +95,18 @@ fun StatsScreen(
 
         VSpace(Space.md)
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            StatTile(vocab.statsToday, Stats.formatMinutes(Stats.msToMinutes(todayMs)), Modifier.weight(1f))
+        // IntrinsicSize.Max + fillMaxHeight gives all three tiles the tallest tile's height. At
+        // fontScale 2.0 the middle caption wrapped to an extra line and the row ended up with a
+        // 36dp height mismatch and ragged card bottoms.
+        Row(modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Max)) {
+            StatTile(vocab.statsToday, Stats.formatMinutes(Stats.msToMinutes(todayMs)),
+                Modifier.weight(1f).fillMaxHeight())
             HSpace(Space.sm)
-            StatTile(vocab.statsWeek, Stats.formatMinutes(Stats.msToMinutes(weekMs)), Modifier.weight(1f))
+            StatTile(vocab.statsWeek, Stats.formatMinutes(Stats.msToMinutes(weekMs)),
+                Modifier.weight(1f).fillMaxHeight())
             HSpace(Space.sm)
-            StatTile(vocab.statsAllTime, Stats.formatMinutes(Stats.msToMinutes(allTimeMs)), Modifier.weight(1f))
+            StatTile(vocab.statsAllTime, Stats.formatMinutes(Stats.msToMinutes(allTimeMs)),
+                Modifier.weight(1f).fillMaxHeight())
         }
 
         VSpace(Space.xl)
@@ -140,18 +151,34 @@ fun StatsScreen(
 private fun WeekChart(buckets: LongArray) {
     val maxMs = (buckets.maxOrNull() ?: 0L).coerceAtLeast(1L)
     val bestIdx = buckets.indices.maxByOrNull { buckets[it] } ?: -1
-    val dayLabels = remember {
-        val cal = java.util.Calendar.getInstance()
-        val fmt = java.text.SimpleDateFormat("EE", java.util.Locale.getDefault())
-        val out = Array(7) { "" }
-        for (i in 0 until 7) {
+    // Full short day names ("Mon") for the spoken summary; their initials for the drawn axis.
+    val dayNames = remember {
+        val now = java.util.Calendar.getInstance().timeInMillis
+        val fmt = java.text.SimpleDateFormat("EEE", java.util.Locale.getDefault())
+        List(7) { i ->
             val c = java.util.Calendar.getInstance().apply {
-                timeInMillis = cal.timeInMillis
+                timeInMillis = now
                 add(java.util.Calendar.DAY_OF_YEAR, -(6 - i))
             }
-            out[i] = fmt.format(c.time).first().uppercase()
+            fmt.format(c.time)
         }
-        out
+    }
+    val dayLabels = remember(dayNames) { dayNames.map { it.first().uppercase() } }
+
+    // The chart is a raw Canvas: without this it exposed an empty contentDescription and its only
+    // accessible children were seven single letters, so a screen-reader user learned nothing from
+    // ~40% of the screen. Built from the exact buckets the bars are drawn from.
+    val chartVocab = vocab.chart
+    val chartSummary = remember(buckets, dayNames, chartVocab) {
+        val totalMs = buckets.sum()
+        if (totalMs <= 0L) chartVocab.empty
+        else chartVocab.summaryFmt.format(
+            dayNames.indices.joinToString(", ") {
+                chartVocab.dayFmt.format(dayNames[it], Stats.formatMinutes(Stats.msToMinutes(buckets[it])))
+            },
+            Stats.formatMinutes(Stats.msToMinutes(totalMs)),
+            Stats.formatMinutes(Stats.msToMinutes(totalMs / 7)),
+        )
     }
     val barColor = palette.Petal
     val highlightColor = palette.Lilac
@@ -166,6 +193,7 @@ private fun WeekChart(buckets: LongArray) {
                 .fillMaxWidth()
                 .height(120.dp)
                 .padding(vertical = Space.xs)
+                .semantics { contentDescription = chartSummary }
         ) {
             val w = size.width
             val h = size.height
@@ -187,7 +215,10 @@ private fun WeekChart(buckets: LongArray) {
                 )
             }
         }
-        Row(modifier = Modifier.fillMaxWidth()) {
+        // The seven initials are a visual axis for the bars above; the chart's own description
+        // already names every day in full, so leaving them in the tree just makes a screen reader
+        // read out "S S M T W T F".
+        Row(modifier = Modifier.fillMaxWidth().clearAndSetSemantics { }) {
             for (i in 0..6) {
                 Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     Text(
@@ -209,14 +240,24 @@ private fun WeekChart(buckets: LongArray) {
     }
 }
 
+/**
+ * Three of these share one Row, so each gets ~1/3 of the page. The card's default Space.xl padding
+ * left the caption only 61dp of text width, which is narrower than "WEEK" at fontScale 2.0 — so it
+ * broke mid-word. Space.md buys 16dp back per tile, enough for the longest caption word in all
+ * three themes to fit and wrap on the space instead.
+ * ponytail: a fixed padding step, not a measured fit — if a future theme adds a longer single-word
+ * caption, stack the tiles vertically above ~fontScale 1.5 rather than shaving padding further.
+ */
 @Composable
 private fun StatTile(label: String, value: String, modifier: Modifier = Modifier) {
-    SoftCard(modifier = modifier, color = palette.Surface) {
+    SoftCard(modifier = modifier, color = palette.Surface, padding = Space.md) {
         Column(horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()) {
-            Text(value, style = MaterialTheme.typography.titleLarge, color = palette.Ink)
+            Text(value, style = MaterialTheme.typography.titleLarge, color = palette.Ink,
+                textAlign = TextAlign.Center)
             VSpace(Space.xxs)
-            Text(label, style = MaterialTheme.typography.bodySmall, color = palette.Smoke)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = palette.Smoke,
+                textAlign = TextAlign.Center)
         }
     }
 }

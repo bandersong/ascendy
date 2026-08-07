@@ -11,10 +11,11 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -150,17 +151,21 @@ fun HomeScreen(
                     }
                 }
                 VSpace(Space.sm)
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                // Same reason as SetupRow: three unweighted pills in a plain Row means the last
+                // ones get whatever width the first left behind. Wrap them instead of crushing.
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(Space.sm, Alignment.CenterHorizontally),
+                    verticalArrangement = Arrangement.spacedBy(Space.sm),
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                ) {
                     Badge(
                         label = if (active) vocab.statusFocusing else vocab.statusReady,
                         color = if (active) palette.Lilac else palette.Sage
                     )
                     if (active && strict) {
-                        HSpace(Space.sm)
                         Badge(label = vocab.strictBadge, color = palette.Petal)
                     }
                     if (streakDays > 0) {
-                        HSpace(Space.sm)
                         Badge(label = vocab.homeStreakBadgeFmt.format(streakDays), color = palette.Mint)
                     }
                 }
@@ -408,6 +413,15 @@ private fun HomeTile(
     }
 }
 
+/**
+ * One "Setup" row: marker + title on the left, status pill on the right.
+ *
+ * A [FlowRow], not a Row — at fontScale 2.0 the old plain Row measured the unweighted title first,
+ * so it swallowed the width and the pill was crushed to a 43dp column that rendered "TODO" as
+ * T/O/D/O stacked vertically (and clipped the last letter of the title). Here the pill always keeps
+ * its intrinsic width and simply reflows onto its own line when the title needs the full row.
+ * SpaceBetween keeps the familiar title-left / pill-right look whenever both do fit on one line.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SetupRow(emoji: String, title: String, done: Boolean, badge: String, onClick: () -> Unit) {
@@ -418,20 +432,23 @@ private fun SetupRow(emoji: String, title: String, done: Boolean, badge: String,
         interactionSource = interaction,
         modifier = Modifier.fillMaxWidth().pressScale(interaction)
     ) {
-        Row(
+        FlowRow(
             modifier = Modifier.padding(horizontal = Space.xs, vertical = Space.lg),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalArrangement = Arrangement.spacedBy(Space.sm),
+            itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            if (done) {
-                Icon(Icons.Rounded.Check, contentDescription = null, tint = palette.Sage,
-                    modifier = Modifier.size(20.dp))
-                HSpace(Space.sm)
-            } else if (emoji.isNotEmpty()) {
-                Text(emoji, style = MaterialTheme.typography.titleLarge)
-                HSpace(Space.sm)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (done) {
+                    Icon(Icons.Rounded.Check, contentDescription = null, tint = palette.Sage,
+                        modifier = Modifier.size(20.dp))
+                    HSpace(Space.sm)
+                } else if (emoji.isNotEmpty()) {
+                    Text(emoji, style = MaterialTheme.typography.titleLarge)
+                    HSpace(Space.sm)
+                }
+                Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
             }
-            Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-            Spacer(Modifier.weight(1f))
             Badge(
                 label = badge,
                 color = if (done) palette.Sage else palette.Petal

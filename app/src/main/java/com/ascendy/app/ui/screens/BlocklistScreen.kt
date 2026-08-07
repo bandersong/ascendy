@@ -28,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +58,8 @@ fun BlocklistScreen(
     onToggleAllowList: (Blocklist, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
-    var showCreate by remember { mutableStateOf(false) }
+    // Saveable so a fold mid-dialog doesn't drop the dialog (and the name being typed in it).
+    var showCreate by rememberSaveable { mutableStateOf(false) }
 
     PageFrame(
         floating = {
@@ -166,7 +168,7 @@ private fun randomListName(): String = randomListNames.random()
 
 @Composable
 private fun CreateListDialog(onDismiss: () -> Unit, onConfirm: (String) -> Unit) {
-    var name by remember { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(vocab.listsNewDialogTitle) },

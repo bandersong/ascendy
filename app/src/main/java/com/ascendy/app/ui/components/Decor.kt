@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -129,6 +131,19 @@ fun MiniMascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifi
 val PageMaxWidth = 640.dp
 
 /**
+ * A height expressed as a share of the current window height, clamped to [min]..[max].
+ * Hero art sized in fixed dp is what evicted the copy on the folded cover screen — art
+ * shrinks with the viewport, words never do. Pure so it can be unit tested.
+ */
+internal fun scaledHeightFor(windowHeightDp: Int, fraction: Float, min: Dp, max: Dp): Dp =
+    (windowHeightDp * fraction).dp.coerceIn(min, max)
+
+/** [scaledHeightFor] against the live window height (recomposes on fold/unfold/rotate). */
+@Composable
+fun scaledHeight(fraction: Float, min: Dp, max: Dp): Dp =
+    scaledHeightFor(LocalConfiguration.current.screenHeightDp, fraction, min, max)
+
+/**
  * Standard page scaffold: fills the screen, pads for system bars, scrolls, and constrains
  * content to a readable column ([PageMaxWidth]) centered on wide screens. Phones are
  * unaffected; tablets and landscape stop stretching rows edge-to-edge.
@@ -147,7 +162,14 @@ fun PageColumn(
     // in the optical center when their content is shorter than the screen, while taller
     // content still grows past it and scrolls. A calm screen owns its empty space instead
     // of clinging to the top edge.
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().then(modifier)) {
+    //
+    // imePadding() sits here, outside BoxWithConstraints' measurement, on purpose: it has to
+    // shrink the scroll *viewport* rather than add space inside it, or a focused field still
+    // can't be scrolled out from under the keyboard. Measuring inside it also keeps maxHeight
+    // (and so minContentHeight) honest, so a centerWhenShort screen re-centres in the space
+    // the keyboard actually leaves instead of centring against a screen that isn't there.
+    // Every screen scaffolds through here, so all of them get it.
+    BoxWithConstraints(modifier = Modifier.fillMaxSize().imePadding().then(modifier)) {
         val minContentHeight = (maxHeight - topPad - botPad).coerceAtLeast(0.dp)
         Box(
             modifier = Modifier
@@ -186,6 +208,9 @@ fun PageFrame(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            // Same keyboard handling as PageColumn — this is the scaffold behind every lazy
+            // screen, incl. the app-picker search and the domain field.
+            .imePadding()
             .padding(
                 top = Space.lg + insets.calculateTopPadding(),
                 bottom = insets.calculateBottomPadding(),

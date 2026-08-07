@@ -21,6 +21,7 @@ import com.ascendy.app.ui.components.PageColumn
 import com.ascendy.app.ui.components.ScreenHeader
 import com.ascendy.app.ui.components.SectionLabel
 import com.ascendy.app.ui.components.SoftCard
+import com.ascendy.app.ui.components.scaledHeight
 import com.ascendy.app.ui.theme.HSpace
 import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
@@ -161,10 +162,12 @@ private fun WeekChart(buckets: LongArray) {
     val barRadiusCap = if (palette.variant == ThemeVariant.Tough) 3.dp else 12.dp
 
     Column {
+        // Grows into the room a tall panel actually has (the screen was leaving ~a fifth of it
+        // blank under a 120.dp chart) without ever getting shorter than the old fixed height.
         androidx.compose.foundation.Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
+                .height(scaledHeight(0.16f, min = 120.dp, max = 200.dp))
                 .padding(vertical = Space.xs)
         ) {
             val w = size.width

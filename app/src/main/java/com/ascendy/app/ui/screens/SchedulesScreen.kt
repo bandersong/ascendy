@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,7 +60,7 @@ fun SchedulesScreen(
     onToggle: (Schedule, Boolean) -> Unit,
     onBack: () -> Unit,
 ) {
-    var showAdd by remember { mutableStateOf(false) }
+    var showAdd by rememberSaveable { mutableStateOf(false) }
 
     PageFrame(
         floating = {
@@ -168,12 +169,14 @@ private fun ScheduleDialog(
     onConfirm: (Schedule) -> Unit,
 ) {
     val defaultList = lists.firstOrNull { it.isDefault } ?: lists.firstOrNull()
-    var nickname by remember { mutableStateOf(initial?.nickname ?: "") }
-    var listId by remember { mutableStateOf(initial?.listId ?: defaultList?.id ?: 0L) }
-    var daysOfWeek by remember { mutableIntStateOf(initial?.daysOfWeek ?: 0b0111110) } // Mon-Fri by default
-    var startMin by remember { mutableIntStateOf(initial?.startMinuteOfDay ?: (9 * 60)) }
-    var endMin by remember { mutableIntStateOf(initial?.endMinuteOfDay ?: (12 * 60)) }
-    var enabled by remember { mutableStateOf(initial?.enabled ?: true) }
+    // Every field of a half-filled schedule survives Activity recreation — this dialog is the
+    // longest piece of typing in the app and a fold used to wipe it.
+    var nickname by rememberSaveable { mutableStateOf(initial?.nickname ?: "") }
+    var listId by rememberSaveable { mutableStateOf(initial?.listId ?: defaultList?.id ?: 0L) }
+    var daysOfWeek by rememberSaveable { mutableIntStateOf(initial?.daysOfWeek ?: 0b0111110) } // Mon-Fri by default
+    var startMin by rememberSaveable { mutableIntStateOf(initial?.startMinuteOfDay ?: (9 * 60)) }
+    var endMin by rememberSaveable { mutableIntStateOf(initial?.endMinuteOfDay ?: (12 * 60)) }
+    var enabled by rememberSaveable { mutableStateOf(initial?.enabled ?: true) }
 
     AlertDialog(
         onDismissRequest = onDismiss,

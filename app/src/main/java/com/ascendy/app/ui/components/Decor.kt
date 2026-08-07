@@ -1,11 +1,10 @@
 package com.ascendy.app.ui.components
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.repeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -40,7 +39,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,9 +49,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -67,6 +66,7 @@ import com.ascendy.app.ui.theme.Space
 import com.ascendy.app.ui.theme.ThemeVariant
 import com.ascendy.app.ui.theme.palette
 import com.ascendy.app.ui.theme.pressScale
+import com.ascendy.app.ui.theme.reduceMotion
 import com.ascendy.app.ui.theme.vocab
 
 /** Picks the hand-drawn mascot art for the active theme and locked/unlocked state. */
@@ -80,20 +80,34 @@ private fun mascotRes(variant: ThemeVariant, locked: Boolean): Int = when (varia
  * Themed mascot, gently bobbing. [locked] selects the focusing/locked artwork over the idle one,
  * crossfading between the two so the state change reads as a mood shift, not a hard cut.
  * [streakDays] is retained for call-site compatibility; streak decorations are not drawn over the art.
+ *
+ * The bob is BOUNDED — a few breaths on arrival and on each lock-state change, then it settles —
+ * and is skipped entirely under reduce-motion. It used to be a `rememberInfiniteTransition`, which
+ * meant the Home window never reached accessibility idle (uiautomator dump failed 5/5 on Home while
+ * Stats succeeded first try), locking out every screen reader / automation tool that waits for idle.
  */
 @Composable
 fun Mascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier.fillMaxWidth()) {
     val variant = palette.variant
-    val transition = rememberInfiniteTransition(label = "mascot")
-    val bob by transition.animateFloat(
-        initialValue = -8f,
-        targetValue = 8f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = Motion.mascotBob, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "bob"
-    )
+    val still = reduceMotion()
+    val bob = remember { Animatable(0f) }
+    LaunchedEffect(still, locked) {
+        if (still) {
+            bob.snapTo(0f)
+            return@LaunchedEffect
+        }
+        bob.snapTo(-MascotBobPx)
+        bob.animateTo(
+            targetValue = MascotBobPx,
+            animationSpec = repeatable(
+                iterations = Motion.mascotBobCycles,
+                animation = tween(durationMillis = Motion.mascotBob, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse,
+            ),
+        )
+        // Come to rest centered, wherever the last half-breath left it.
+        bob.animateTo(0f, tween(durationMillis = Motion.mascotBob / 2, easing = LinearEasing))
+    }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Crossfade(
@@ -108,11 +122,14 @@ fun Mascot(locked: Boolean, streakDays: Int = 0, modifier: Modifier = Modifier.f
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(Space.sm)
-                    .graphicsLayer { translationY = bob }
+                    .graphicsLayer { translationY = bob.value }
             )
         }
     }
 }
+
+/** Bob amplitude, in px, either side of rest. */
+private const val MascotBobPx = 8f
 
 /** A tiny static mascot for inline use (no animation). */
 @Composable
@@ -218,6 +235,9 @@ fun PageFrame(
 fun SoftCard(
     modifier: Modifier = Modifier,
     color: Color = MaterialTheme.colorScheme.primaryContainer,
+    // Narrow cards (three stat tiles across a phone) need to buy text width back from their own
+    // padding, or a caption has nowhere to wrap but mid-word at large font scales.
+    padding: Dp = Space.xl,
     content: @Composable () -> Unit
 ) {
     // A whisper of shadow in light mode (so surface-on-cream cards don't melt into the bg)
@@ -233,29 +253,48 @@ fun SoftCard(
     ) {
         // fillMaxWidth so content lays out against the card's real width — a wrap-content box
         // here left every centered hero/column hugging the left edge on tablets.
-        Box(Modifier.fillMaxWidth().padding(Space.xl)) { content() }
+        Box(Modifier.fillMaxWidth().padding(padding)) { content() }
     }
 }
 
-/** Text/icon color that stays readable on an arbitrary [chip] background, inside the palette. */
+/**
+ * Text/icon color that stays readable on an arbitrary [chip] background, inside the palette.
+ *
+ * Delegates to [Palette.on], which picks Ink or Cream by MEASURED contrast. The old
+ * `luminance > 0.45` threshold guessed instead, and guessed wrong on six palette/fill pairs —
+ * worst was Tough-light Sage at 3.00:1 against WCAG AA's 4.5:1 floor (real-device measurement,
+ * .autoloop/rounds/r1/realdevice). Every badge fill in every palette now clears 4.8:1.
+ */
 @Composable
-fun onChip(chip: Color): Color {
-    val darkText = if (palette.isDark) palette.Cream else palette.Ink
-    val lightText = if (palette.isDark) palette.Ink else palette.Cream
-    return if (chip.luminance() > 0.45f) darkText else lightText
-}
+fun onChip(chip: Color): Color = palette.on(chip)
 
+/**
+ * Status pill. The label IS the status — colour alone tells a screen-reader user and a colourblind
+ * user nothing — so it is pinned to a single line and published as one accessibility node carrying
+ * the label. At fontScale 2.0 a squeezed pill used to render its label one letter per line, or drop
+ * it out of the accessibility tree entirely, leaving a bare coloured sliver.
+ *
+ * Callers must give this its intrinsic width: put it in a [FlowRow] (or hand the *title* the
+ * `weight`), never leave it as the unweighted tail of a plain Row.
+ */
 @Composable
-fun Badge(label: String, color: Color = MaterialTheme.colorScheme.tertiary) {
+fun Badge(
+    label: String,
+    color: Color = MaterialTheme.colorScheme.tertiary,
+    modifier: Modifier = Modifier,
+) {
     Surface(
         color = color,
         shape = MaterialTheme.shapes.extraLarge,
+        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = label },
     ) {
         Text(
             text = label,
             modifier = Modifier.padding(horizontal = Space.md, vertical = Space.sm),
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = onChip(color)
+            color = onChip(color),
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

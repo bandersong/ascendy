@@ -1,12 +1,15 @@
 package com.ascendy.app.ui.theme
 
+import android.provider.Settings
 import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.Easing
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -48,12 +51,36 @@ object Motion {
     const val quick: Int = 150        // taps, toggles, micro-feedback
     const val standard: Int = 250     // content swaps, enter/exit
     const val emphasized: Int = 400   // hero / state changes
-    const val mascotBob: Int = 2400   // ambient idle loop
+    const val mascotBob: Int = 2400   // one half-breath of the mascot bob
+    /**
+     * How many half-breaths the mascot takes before settling. Ambient motion is BOUNDED on
+     * purpose: an endless animation keeps the window off the accessibility "idle" list forever
+     * (uiautomator could not dump Home, 5 attempts out of 5) and there is no way for a user who
+     * needs less motion to stop it.
+     *
+     * Two, not more: 2 x mascotBob + a half-length settle is ~6s, comfortably inside the ~10s
+     * idle timeout a screen reader or automation tool will wait. A longer arrival animation would
+     * technically terminate and still miss the window.
+     */
+    const val mascotBobCycles: Int = 2
 
     /** Material "standard" decelerate — most enter/exit. */
     val standardEasing: Easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
     /** Material "emphasized" — hero/state changes that deserve a beat. */
     val emphasizedEasing: Easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
+}
+
+/**
+ * True when the system's animator duration scale is 0 — i.e. the user turned animations off in
+ * Developer options / "Remove animations" accessibility settings. This is the platform's
+ * reduce-motion signal on Android; decorative and ambient motion must honour it.
+ */
+@Composable
+fun reduceMotion(): Boolean {
+    val resolver = LocalContext.current.contentResolver
+    return remember(resolver) {
+        Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    }
 }
 
 /**

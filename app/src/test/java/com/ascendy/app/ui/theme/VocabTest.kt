@@ -74,6 +74,51 @@ class VocabTest {
      * CI here instead of shipping a blank label. The only documented exception is the `*Emoji` fields,
      * which the minimalist Neutral theme intentionally leaves empty.
      */
+    /**
+     * The nested [ChartVocab] holder exists to buy argument slots back (see its KDoc), which means
+     * its strings are invisible to the sweeps above. Same lockstep rules, applied by hand.
+     */
+    @Test fun chartVocab_isCompleteAndLockstepAcrossThemes() {
+        val reference = specifier.findAll(NeutralVocab.chart.summaryFmt).map { it.value }.toList().sorted()
+        assertEquals("summaryFmt should take 3 args", listOf("%s", "%s", "%s"), reference)
+        for ((name, v) in themes) {
+            assertTrue("$name chart.summaryFmt blank", v.chart.summaryFmt.isNotBlank())
+            assertTrue("$name chart.dayFmt blank", v.chart.dayFmt.isNotBlank())
+            assertTrue("$name chart.empty blank", v.chart.empty.isNotBlank())
+            assertEquals(
+                "$name chart.summaryFmt specifiers differ from Neutral",
+                reference,
+                specifier.findAll(v.chart.summaryFmt).map { it.value }.toList().sorted(),
+            )
+            assertEquals(
+                "$name chart.dayFmt should take 2 args",
+                listOf("%s", "%s"),
+                specifier.findAll(v.chart.dayFmt).map { it.value }.toList().sorted(),
+            )
+            // The real hazard is a positional mismatch that only crashes at runtime.
+            v.chart.summaryFmt.format(v.chart.dayFmt.format("Mon", "45m"), "5h 0m", "42m")
+        }
+    }
+
+    /**
+     * Vocab's constructor is a few fields from the JVM's hard 255-argument-slot ceiling. Past it,
+     * everything compiles and then dies at class load with `ClassFormatError: Too many arguments
+     * in method signature` — twice now, in this campaign. `data class` also emits `copy$default`,
+     * whose signature is (instance + every field + one int bitmask per 32 fields + a marker), so
+     * that synthetic method hits the wall well before the constructor does. Fail here, in words,
+     * instead of on-device in hieroglyphics: group new strings into a nested holder like
+     * [ChartVocab] rather than adding top-level fields.
+     */
+    @Test fun constructorArguments_stayUnderJvmLimit() {
+        val n = Vocab::class.java.constructors.first().parameterCount
+        val copyDefaultSlots = 1 + n + ((n + 31) / 32) + 1
+        assertTrue(
+            "Vocab.copy\$default would need $copyDefaultSlots argument slots (JVM max 255) with " +
+                "$n constructor fields — nest new strings in a holder instead",
+            copyDefaultSlots <= 255,
+        )
+    }
+
     @Test fun everyStringField_isNonBlankInEveryTheme_exceptEmoji() {
         val emojiAllowlist: (String) -> Boolean = { it.endsWith("Emoji") }
         for (prop in stringProps()) {

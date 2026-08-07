@@ -5,6 +5,23 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
+ * Spoken description of the 7-day chart, per theme. A NESTED holder, not six more top-level
+ * [Vocab] fields: Vocab's constructor sits two fields from the JVM's 255-argument ceiling, and
+ * the `copy$default` a data class generates (instance + every field + a bitmask per 32 fields +
+ * a marker) blows past it — code that compiles clean and then dies at class load with
+ * `ClassFormatError: Too many arguments in method signature`. A nested holder costs ONE argument
+ * slot no matter how many strings it carries. Guarded by VocabTest.
+ */
+data class ChartVocab(
+    /** Three %s, in order: per-day list, week total, daily average. */
+    val summaryFmt: String,
+    /** Two %s, in order: day name, duration. One entry of the per-day list. */
+    val dayFmt: String,
+    /** Spoken instead of the summary when the whole week is empty. */
+    val empty: String,
+)
+
+/**
  * Per-theme copy registry. Every user-facing string in the app routes through here so the
  * voice/tone matches the active theme. Add new strings by adding a field and providing it
  * in every Vocab instance below.
@@ -14,8 +31,12 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * synthetic method blew past the JVM's 255-argument limit and every class that touched Vocab died
  * at load time with ClassFormatError, while still compiling clean. Nothing here needs
  * copy/equals/destructuring (the three themes are singletons compared by identity), so dropping
- * `data` buys back the headroom. The remaining ceiling is the constructor itself — see
- * VocabTest.fieldCount_staysUnderJvmArgumentLimit.
+ * `data` buys back the headroom.
+ *
+ * The remaining ceiling is the constructor itself. Group related new strings into a nested holder
+ * (see [ChartVocab]) rather than adding more top-level parameters, and keep both
+ * VocabTest.fieldCount_staysUnderJvmArgumentLimit and
+ * VocabTest.constructorArguments_stayUnderJvmLimit green.
  */
 class Vocab(
     // top-level
@@ -270,6 +291,8 @@ class Vocab(
     // stats — chart labels
     val statsChartLabel: String,
     val statsBestDay: String,
+    /** What the 7-day chart says out loud. See [ChartVocab] for why this is nested. */
+    val chart: ChartVocab,
 
     // about
     val settingsRowAbout: String,
@@ -592,6 +615,11 @@ val KawaiiVocab = Vocab(
 
     statsChartLabel = "last 7 days",
     statsBestDay = "best day this week",
+    chart = ChartVocab(
+        summaryFmt = "your last 7 days of focus: %s. that's %s all together, about %s a day ♡",
+        dayFmt = "%s %s",
+        empty = "no focus time in the last 7 days yet — your chart is waiting for you ♡",
+    ),
 
     settingsRowAbout = "about ♡",
     aboutTitle = "about",
@@ -887,6 +915,11 @@ val ToughVocab = Vocab(
 
     statsChartLabel = "LAST 7 DAYS",
     statsBestDay = "BEST DAY",
+    chart = ChartVocab(
+        summaryFmt = "SEVEN-DAY LOG. %s. TOTAL %s, %s A DAY ON AVERAGE.",
+        dayFmt = "%s %s",
+        empty = "SEVEN-DAY LOG EMPTY. NO FOCUS TIME RECORDED.",
+    ),
 
     settingsRowAbout = "ABOUT",
     aboutTitle = "ABOUT",
@@ -1182,6 +1215,11 @@ val NeutralVocab = Vocab(
 
     statsChartLabel = "Last 7 days",
     statsBestDay = "Best day this week",
+    chart = ChartVocab(
+        summaryFmt = "Focus by day, last 7 days. %s. Total %s, average %s per day.",
+        dayFmt = "%s %s",
+        empty = "No focus time recorded in the last 7 days.",
+    ),
 
     settingsRowAbout = "About",
     aboutTitle = "About Ascendy",

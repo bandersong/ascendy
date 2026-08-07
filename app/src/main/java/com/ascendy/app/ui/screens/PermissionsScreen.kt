@@ -3,9 +3,10 @@ package com.ascendy.app.ui.screens
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.AlertDialog
@@ -233,6 +234,13 @@ private fun ActionCard(
     }
 }
 
+/**
+ * Granted/Missing is the whole point of this card, so the badge must never lose its label.
+ * In a plain Row the unweighted title was measured first and took 85% of the width; at fontScale
+ * 2.0 the badge collapsed to a bare coloured sliver with ZERO text nodes in the accessibility
+ * tree, leaving the permission's state conveyed by colour alone. A [FlowRow] lets the pill keep
+ * its intrinsic width and drop to its own line instead of being crushed.
+ */
 @Composable
 private fun PermissionCard(
     emoji: String,
@@ -244,13 +252,19 @@ private fun PermissionCard(
 ) {
     SoftCard(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.surface) {
         Column {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (emoji.isNotEmpty()) {
-                    Text(emoji, style = MaterialTheme.typography.headlineSmall)
-                    HSpace(Space.md)
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalArrangement = Arrangement.spacedBy(Space.sm),
+                itemVerticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (emoji.isNotEmpty()) {
+                        Text(emoji, style = MaterialTheme.typography.headlineSmall)
+                        HSpace(Space.md)
+                    }
+                    Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
                 }
-                Text(title, style = MaterialTheme.typography.titleMedium, color = palette.Ink)
-                Spacer(Modifier.weight(1f))
                 Badge(
                     label = if (granted) vocab.permsBadgeOk else vocab.permsBadgeMissing,
                     color = if (granted) palette.Sage else palette.Petal

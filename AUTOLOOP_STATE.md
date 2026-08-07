@@ -48,6 +48,10 @@ Measured on the real device (Z Flip 7 SM-F766U1, **Android 16**, 1080x2520@480),
 ## Dimensions
 | dimension | status | rounds | last verdict | PR |
 |---|---|---|---|---|
+| foldable/adaptive layout | BUILDING r2 | 1 | NOT_WOWED — onboarding copy 100% clipped on short viewports incl. the safety-timer chooser; 0 rememberSaveable + 0 configChanges = every fold wipes 29 input fields | fix/adaptive-layout-insets |
+| nfc-reliability (CORE INTERACTION) | BUILDING r2 | 1 | NOT_WOWED — pair screen lets screen sleep mid-wait (dispatch dies); write failures report success | fix/nfc-reliability |
+| android16-compat | BUILDING r2 | 1 | NOT_WOWED — forced edge-to-edge + zero imePadding = keyboard covers search; dead statusBarColor attrs | fix/adaptive-layout-insets + fix/platform-oem |
+| oem-survival | BUILDING r2 | 1 | NOT_WOWED — Samsung absent from OemBattery list; 9 unguarded Settings intents (3 in notification PendingIntents) | fix/platform-oem |
 | visual-design (3 themes × spacing/type/consistency) | OPEN | 0 | — | — |
 | core-workflow (session start/end, pair, click count) | OPEN | 0 | — | — |
 | states (empty/error/edge/permission-denied) | OPEN | 0 | — | — |
@@ -55,7 +59,7 @@ Measured on the real device (Z Flip 7 SM-F766U1, **Android 16**, 1080x2520@480),
 | onboarding (first-run, permission education) | OPEN | 0 | — | — |
 | speed (cold launch, transitions, jank) | OPEN | 0 | — | — |
 | dark-light (theme × mode matrix) | OPEN | 0 | — | — |
-| accessibility (TalkBack, contrast, targets, font-scale) | OPEN | 0 | — | — |
+| accessibility (TalkBack, contrast, targets, font-scale) | BUILDING r2 | 1 | NOT_WOWED — font_scale 2.0 stacks pill letters vertically ("T/O/D/O"); Permissions badge loses its text entirely; 7-day chart has empty content-desc | fix/a11y-scale-semantics |
 | correctness (blocking works: app/web/DNS, safety timer, strict) | OPEN | 0 | — | — |
 | bypass-resistance (the CORE PROMISE — red-team) | OPEN | 0 | — | — |
 | resilience (crash, process-death, Room, OEM kill) | OPEN | 0 | — | — |
@@ -78,3 +82,36 @@ Phase 0: harness proven (headless emu + adb), fossDebug builds green, APK instal
 
 ### r1 scale-up (ultracode, same day)
 User: token-max, full send. Booted second emulator (hbtest→5556, Android 15). Two workflows in flight: r1 = 4 critics on 5554 (core-workflow, visual-design, states, copy); r1b = 8 remaining dims (copy-static, a11y-static, correctness-code→resilience-code static lane; onboarding→dark-light→a11y-dynamic→speed→settings-widget on 5556) + Brick ref harvester (site + iOS shots). ALL 12 dims audited in r1. Builders act r2 on ranked defect lists.
+
+### r1 real-device audit (Z Flip 7, Android 16) — the round that justified the whole campaign
+Four critics on the user's own phone returned NOT_WOWED with ~30 defects, many critical and proven
+at runtime rather than inferred. I independently re-verified every structural claim at source before
+acting: `rememberSaveable` = 0 hits, `configChanges` = 0, `androidx.window` = 0,
+`PageColumn(scroll = false)` at OnboardingScreen.kt:54, mascot `.size(176.dp)` at HomeScreen.kt:135,
+no responsive resource qualifiers. All CONFIRMED.
+
+The three that matter most, none of which any emulator surfaced:
+1. **NFC pairing cannot succeed on real hardware if the user is slow.** Device screen_off_timeout is
+   30s; the pair screen waits 120s and never holds the screen awake. Measured: screen off at 52s,
+   `WindowStopped=true` 45ms later → `onPause` → `disableForegroundDispatch`. The core interaction of
+   the product, dead, silently.
+2. **NFC write failures are reported as success.** `NfcManager.pairTag()` catches a failed
+   `writeNdefMessage` and still returns the uid hash, so the UI says "Tag found" for a tag that was
+   never written.
+3. **On a FLIP phone, folding wipes user input.** No `configChanges` + zero `rememberSaveable` = every
+   fold destroys the Activity and 29 plain-`remember` input fields with it. Closing the phone is the
+   defining gesture of the hardware.
+
+Plus: Android 16 forces edge-to-edge (`DISABLE_OPT_OUT_EDGE_TO_EDGE` confirmed ENABLED via
+`dumpsys platform_compat`) while the app has zero `imePadding`, so the keyboard covers the app-picker
+search; Samsung is missing from `OemBattery`'s aggressive-OEM list on the biggest Android OEM alive;
+and at font_scale 2.0 the Home setup pills stack their letters vertically.
+
+### r2 (building)
+Four builders in isolated worktrees, one coherent branch each: `fix/nfc-reliability`,
+`fix/adaptive-layout-insets`, `fix/platform-oem` (wave 1, disjoint files), then
+`fix/a11y-scale-semantics` (wave 2, shares HomeScreen/Decor with adaptive). Builders compile + run the
+unit suite and push their branch; they never self-grade. Fresh critics verify next round on the
+emulators + phone, then PRs.
+Gotcha hit and fixed: the first launch died with `WorktreeIsolationError` because my shell cwd had
+drifted into a transcript directory — worktree isolation needs the cwd to be inside the git repo.

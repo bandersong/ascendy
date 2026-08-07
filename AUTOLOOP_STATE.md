@@ -14,6 +14,10 @@ Campaign: AAAA quality, sellable ≥$5. Started 2026-08-07.
 - Screenshot: `adb -e exec-out screencap -p > file.png`; UI tree: `adb -e shell uiautomator dump`
 - ONE emulator → critics/verifiers serialize. NFC untestable on emulator (QR + manual + unit tests only).
 - SECOND lane: `hbtest` AVD → emulator-5556 (Android 15, 1080x2400@420). Boot with `ANDROID_SDK_ROOT=~/Library/Android/sdk ~/Library/Android/sdk/emulator/emulator -avd hbtest -port 5556 ...` (its android-35 image lives in the OTHER sdk root — ascendy_test uses homebrew root, hbtest uses ~/Library/Android/sdk).
+- FOURTH lane (REAL HW): **Z Flip 7 `R5CY917W6BK`**, Android 16, 1080x2520@480, foldable + real NFC. Plugged in by the user 2026-08-07 "for debug".
+  - **His two REAL installs live here and are off-limits: `com.ascendy.app` v69 and `io.github.bandersong.ascendy` v66** — CI-release-signed, with his real paired tags/streaks/settings. A debug build can never update them in place (signature mismatch), so the only route would be uninstall = **data wipe**. NEVER uninstall either.
+  - Test builds install side-by-side as **`com.ascendy.app.autoloop`** via the new `-PidSuffix=.autoloop` debug property (added to app/build.gradle.kts this round). Launch: `am start -n com.ascendy.app.autoloop/com.ascendy.app.MainActivity`.
+  - 🚨 **NO ENFORCEMENT ON THE REAL PHONE.** No focus sessions, no strict mode, no enabling the accessibility service there. The service bounces apps device-wide, and a strict session has no override — an agent could lock the user out of his own daily driver for up to the 8h safety timer. Bypass/enforcement testing happens on emulators ONLY, where nothing is at stake. The real phone is for layout, foldable/cover-screen, launch perf, NFC read, a11y semantics, and Android 16 compat.
 - THIRD lane (FASTEST, real GPU): `jesus` Linux box, AVD `ascendy_x86` (Android 14, x86_64, 1080x2400@420) → Mac adb serial **`localhost:5686`** via ssh forward. Full runbook: `.autoloop/linux-lane/README.md`. Verified from Mac: cold launch **626ms** vs 888ms Mac-swiftshader.
   - SELinux Enforcing on Bazzite kills ALL software rasterizers (`avc denied { execheap }` → SIGSEGV mid-boot). Lane runs `-gpu host` on the RX 6800 XT borrowing the KDE X cookie — needs jesus's desktop session up. Sudo-fix if ever needed: `setsebool -P selinuxuser_execheap on`.
   - Forward ports 5685/5686 chosen ABOVE adb's 5554-5585 auto-scan so the Mac server never probes the busy lanes. Never `adb kill-server` on the Mac — it would drop 5554/5556.
@@ -27,6 +31,19 @@ Campaign: AAAA quality, sellable ≥$5. Started 2026-08-07.
 ## Baseline (r0, campaign build, emulator)
 - Cold launch TotalTime: 888ms (am start -W, swiftshader emu — relative measure only)
 - First-run screenshot: `.autoloop/baseline/r0_first_run.png` (kawaii onboarding)
+
+## ⚠️ SPEED GROUND TRUTH — read before trusting ANY emulator speed number
+Measured on the real device (Z Flip 7 SM-F766U1, **Android 16**, 1080x2520@480), `am start -W` TotalTime:
+
+| build | device | cold launch |
+|---|---|---|
+| **release v69 (shipping)** | **real phone** | **323 / 335 / 447 ms — median 335** |
+| debug (campaign) | real phone | 736 / 770 / 775 ms |
+| debug (campaign) | Linux x86 emu, real GPU | 626 ms |
+| debug (campaign) | Mac ARM swiftshader | 888 ms |
+
+**A debug build is ~2.2x slower than release on identical hardware** (no R8, `debuggable=true` disables ART optimizations). Every emulator measurement in this campaign is a DEBUG build on emulated hardware — so it is pessimistic *twice over*. Shipping cold launch is **~335ms**, which is already good.
+**Consequence: do NOT let a critic open a "slow launch" defect from emulator numbers, and do NOT let a builder "optimize" startup against them.** Judge startup only against the release-on-real-hardware column. Relative deltas between emulator runs are still valid for detecting regressions.
 
 ## Dimensions
 | dimension | status | rounds | last verdict | PR |

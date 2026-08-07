@@ -80,6 +80,14 @@ android {
     buildTypes {
         debug {
             signingConfig = signingConfigs.getByName("debug")
+            // Side-by-side installs: `-PidSuffix=.test` gives the debug build its own
+            // applicationId so it can sit next to a release install on the same device
+            // (release builds are CI-signed, so they can never be updated in place by a
+            // debug build — without this the only route is uninstall, which wipes data).
+            (findProperty("idSuffix") as String?)?.let {
+                applicationIdSuffix = it
+                versionNameSuffix = it
+            }
         }
         release {
             isMinifyEnabled = true

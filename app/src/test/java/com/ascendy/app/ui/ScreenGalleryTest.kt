@@ -133,7 +133,7 @@ class ScreenGalleryTest {
 
     @Test fun pairtag() = snap("pairtag") {
         PairTagScreen(
-            waiting = false, detectedTagId = null, knownTags = tags, lists = lists,
+            waiting = false, detectedTagId = null, pairFailure = null, knownTags = tags, lists = lists,
             nfcSupported = true, nfcEnabled = true,
             onOpenNfcSettings = {}, onStartPairing = {}, onCancelPairing = {}, onSavePairing = {},
             onDeleteTag = {}, onAssignList = { _, _ -> }, onSaveQrAnchor = { _, _ -> },

@@ -87,17 +87,17 @@
                 <data android:mimeType="application/vnd.ascendy.tag" />
             </intent-filter>
 
+            <!-- Tech dispatch is scoped by @xml/nfc_tech_filter to NDEF-capable tags only. The bare
+                 TAG_DISCOVERED filter that used to sit below is deliberately gone: it is the
+                 lowest-priority catch-all, so Ascendy launched for every card the phone ever saw
+                 (transit, hotel keys, bank cards). Pairing is unaffected — MainActivity still
+                 registers TAG_DISCOVERED via foreground dispatch while it is on screen. -->
             <intent-filter>
                 <action android:name="android.nfc.action.TECH_DISCOVERED" />
             </intent-filter>
             <meta-data
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
-
-            <intent-filter>
-                <action android:name="android.nfc.action.TAG_DISCOVERED" />
-                <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>
         </activity>
 
         <activity

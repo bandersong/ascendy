@@ -8,8 +8,16 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * Per-theme copy registry. Every user-facing string in the app routes through here so the
  * voice/tone matches the active theme. Add new strings by adding a field and providing it
  * in every Vocab instance below.
+ *
+ * NOT a `data class`, deliberately. A data class also emits `copy$default`, whose signature is
+ * (instance + every field + one int bitmask per 32 fields + a marker) — with this many fields that
+ * synthetic method blew past the JVM's 255-argument limit and every class that touched Vocab died
+ * at load time with ClassFormatError, while still compiling clean. Nothing here needs
+ * copy/equals/destructuring (the three themes are singletons compared by identity), so dropping
+ * `data` buys back the headroom. The remaining ceiling is the constructor itself — see
+ * VocabTest.fieldCount_staysUnderJvmArgumentLimit.
  */
-data class Vocab(
+class Vocab(
     // top-level
     val appTitle: String,
     val backLabel: String,
@@ -332,7 +340,32 @@ data class Vocab(
     val nfcOffBody: String,
     val nfcOffAction: String,
     val nfcUnsupportedBody: String,
+
+    // Why a pairing attempt failed. Every one of these used to be silent — the screen just went
+    // back to idle with no explanation. Mapped from NfcFailure by [nfcFailureText].
+    val nfcFailTimedOut: String,
+    val nfcFailNoTag: String,
+    val nfcFailTagMoved: String,
+    val nfcFailTagFull: String,
+    val nfcFailReadOnly: String,
+    val nfcFailWriteFailed: String,
+
+    // Home hero when the user has no anchors at all — telling them to tap a tag they don't own
+    // is the app's loudest sentence instructing an impossible action. Both states need it: a
+    // session started by long-press or timer can be running with zero anchors paired.
+    val homeHeroNoTags: String,
+    val homeHeroActiveNoTags: String,
 )
+
+/** Plain-language reason for a failed tag interaction, in the active theme's voice. */
+fun Vocab.nfcFailureText(reason: com.ascendy.app.nfc.NfcFailure): String = when (reason) {
+    com.ascendy.app.nfc.NfcFailure.TimedOut -> nfcFailTimedOut
+    com.ascendy.app.nfc.NfcFailure.NoTag -> nfcFailNoTag
+    com.ascendy.app.nfc.NfcFailure.TagMoved -> nfcFailTagMoved
+    com.ascendy.app.nfc.NfcFailure.TagFull -> nfcFailTagFull
+    com.ascendy.app.nfc.NfcFailure.ReadOnly -> nfcFailReadOnly
+    com.ascendy.app.nfc.NfcFailure.WriteFailed -> nfcFailWriteFailed
+}
 
 // ───── Kawaii voice — soft, hearts and sparkles, lowercase ─────
 val KawaiiVocab = Vocab(
@@ -617,6 +650,16 @@ val KawaiiVocab = Vocab(
     nfcOffBody = "nfc is turned off — flip it on to pair ♡",
     nfcOffAction = "open nfc settings",
     nfcUnsupportedBody = "this phone doesn't have nfc — use a printed qr anchor instead, it works just as well ♡",
+
+    nfcFailTimedOut = "no tag showed up — tap start pairing whenever you're ready ♡",
+    nfcFailNoTag = "couldn't read that one — hold the back of your phone flat against the tag ✨",
+    nfcFailTagMoved = "it moved too soon — hold it still for a second longer ♡",
+    nfcFailTagFull = "that tag is too small for ascendy — a blank ntag213 or bigger works 🌸",
+    nfcFailReadOnly = "that tag is locked and can't be written — try a fresh blank one ♡",
+    nfcFailWriteFailed = "the write didn't stick — try again with the tag held flat ♡",
+
+    homeHeroNoTags = "no anchor yet — pair a tag or print a qr code to begin ✨",
+    homeHeroActiveNoTags = "you're focusing — hold the little guy to come back ♡",
 )
 
 // ───── Tough voice — terse, capitalised, iron/anchor metaphors ─────
@@ -902,6 +945,16 @@ val ToughVocab = Vocab(
     nfcOffBody = "nfc is off. turn it on to pair.",
     nfcOffAction = "NFC SETTINGS",
     nfcUnsupportedBody = "no nfc on this phone. print a qr anchor — same discipline, no chip.",
+
+    nfcFailTimedOut = "no tag turned up. hit PAIR when you've got one.",
+    nfcFailNoTag = "couldn't read that. put the back of the phone flat on the tag.",
+    nfcFailTagMoved = "you pulled away too early. hold it there.",
+    nfcFailTagFull = "that tag is too small. get a blank ntag213 or bigger.",
+    nfcFailReadOnly = "that tag is locked. it can't be written. use a blank one.",
+    nfcFailWriteFailed = "the write failed. hold the tag flat and go again.",
+
+    homeHeroNoTags = "NO ANCHOR YET. PAIR A TAG OR PRINT A QR.",
+    homeHeroActiveNoTags = "LOCKED IN. HOLD THE GUY TO BREAK.",
 )
 
 // ───── Neutral voice — formal, sentence-case, no decoration ─────
@@ -1187,6 +1240,16 @@ val NeutralVocab = Vocab(
     nfcOffBody = "NFC is turned off. Enable it to pair a tag.",
     nfcOffAction = "Open NFC settings",
     nfcUnsupportedBody = "This device does not support NFC. Use a printed QR anchor instead.",
+
+    nfcFailTimedOut = "No tag was detected. Tap Begin pairing to try again.",
+    nfcFailNoTag = "Could not read that tag. Hold the back of the phone flat against it.",
+    nfcFailTagMoved = "The tag moved too soon. Hold it still a moment longer.",
+    nfcFailTagFull = "That tag is too small to store an Ascendy anchor. Use a blank NTAG213 or larger.",
+    nfcFailReadOnly = "That tag is locked and cannot be written. Use a blank tag instead.",
+    nfcFailWriteFailed = "The write did not complete. Hold the tag flat and try again.",
+
+    homeHeroNoTags = "No anchor yet. Pair a tag or print a QR code to begin.",
+    homeHeroActiveNoTags = "Focus session active. Long-press the icon to end it.",
 )
 
 fun vocabFor(variant: ThemeVariant): Vocab = when (variant) {

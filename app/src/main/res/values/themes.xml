@@ -2,9 +2,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <style name="Theme.Ascendy" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowBackground">@color/cream</item>
+        <!-- Bar COLORS are ignored outright for targetSdk 35+ (Android 15/16 force edge-to-edge).
+             They are kept, and only ever transparent, so API 26-34 gets the same edge-to-edge
+             result instead of the platform default (grey status bar, black nav bar) — a solid
+             @color/cream nav bar here was the old pre-edge-to-edge fake. Bar ICON contrast is
+             set at runtime from the live palette in AscendyTheme (WindowInsetsControllerCompat);
+             the windowLight* hints below only cover the first frame, before Compose composes. -->
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">true</item>
-        <item name="android:navigationBarColor">@color/cream</item>
         <!-- Silently ignored on API 26; honored on 27+. -->
         <item name="android:windowLightNavigationBar" tools:targetApi="27">true</item>
     </style>

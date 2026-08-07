@@ -1,5 +1,6 @@
 package com.ascendy.app.ui.theme
 
+import android.app.Activity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -10,13 +11,16 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowInsetsControllerCompat
 
 enum class ThemeVariant { Kawaii, Tough, Neutral }
 
@@ -304,6 +308,24 @@ private fun shapesFor(variant: ThemeVariant): Shapes = when (variant) {
 fun AscendyTheme(variant: ThemeVariant = ThemeVariant.Neutral, content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     val p = paletteFor(variant, dark)
+
+    // System-bar *icon* contrast, the only part still under an app's control: statusBarColor and
+    // navigationBarColor are ignored outright for targetSdk 35+, and the bars are transparent, so
+    // the icons have to be told which way to flip. Driven off the live palette rather than a
+    // static XML theme so it stays right whatever the app is actually painting behind them.
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as? Activity)?.window
+            if (window != null) {
+                WindowInsetsControllerCompat(window, view).run {
+                    isAppearanceLightStatusBars = !p.isDark
+                    isAppearanceLightNavigationBars = !p.isDark
+                }
+            }
+        }
+    }
+
     CompositionLocalProvider(
         LocalPalette provides p,
         LocalVocab provides vocabFor(variant),

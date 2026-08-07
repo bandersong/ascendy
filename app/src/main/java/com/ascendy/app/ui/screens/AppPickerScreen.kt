@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,12 +71,14 @@ fun AppPickerScreen(
 ) {
     val context = LocalContext.current
 
-    var tab by remember { mutableStateOf(0) }     // 0=apps, 1=sites
+    // User input survives Activity recreation (fold/unfold, rotate, process death); the app
+    // list and icon cache stay plain remember — they're reloaded by the effect below.
+    var tab by rememberSaveable { mutableStateOf(0) }     // 0=apps, 1=sites
     var apps by remember { mutableStateOf<List<AppInfo>>(emptyList()) }
     var loadingApps by remember { mutableStateOf(true) }
     val iconCache = remember { mutableStateMapOf<String, Painter>() }
-    var query by remember { mutableStateOf("") }
-    var newDomain by remember { mutableStateOf("") }
+    var query by rememberSaveable { mutableStateOf("") }
+    var newDomain by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         // Phase 1: labels only, off the main thread. Fast — single IPC to system_server.

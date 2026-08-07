@@ -109,13 +109,21 @@ class VocabTest {
      * instead of on-device in hieroglyphics: group new strings into a nested holder like
      * [ChartVocab] rather than adding top-level fields.
      */
-    @Test fun constructorArguments_stayUnderJvmLimit() {
+    /**
+     * Vocab must stay a plain class. As a `data class` Kotlin also emits `copy$default`, whose
+     * signature is (instance + every field + one bitmask per 32 fields + a marker) — at this field
+     * count that synthetic method needs more than the JVM's 255 argument slots, and every class
+     * touching Vocab then dies at LOAD time with ClassFormatError while still compiling clean.
+     * Dropping `data` removes `copy$default` entirely, which is why the field count below is
+     * allowed to sit above what a data class could carry.
+     */
+    @Test fun vocab_isNotADataClass_soCopyDefaultIsNeverGenerated() {
         val n = Vocab::class.java.constructors.first().parameterCount
-        val copyDefaultSlots = 1 + n + ((n + 31) / 32) + 1
+        val wouldNeed = 1 + n + ((n + 31) / 32) + 1
         assertTrue(
-            "Vocab.copy\$default would need $copyDefaultSlots argument slots (JVM max 255) with " +
-                "$n constructor fields — nest new strings in a holder instead",
-            copyDefaultSlots <= 255,
+            "Vocab has $n fields, so a generated copy\$default would need $wouldNeed argument " +
+                "slots (JVM max 255). Vocab must not be a data class — and no copy() may exist.",
+            wouldNeed <= 255 || Vocab::class.java.methods.none { it.name == "copy\$default" },
         )
     }
 

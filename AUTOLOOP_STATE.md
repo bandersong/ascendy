@@ -14,7 +14,9 @@ Campaign: AAAA quality, sellable ≥$5. Started 2026-08-07.
 - Screenshot: `adb -e exec-out screencap -p > file.png`; UI tree: `adb -e shell uiautomator dump`
 - ONE emulator → critics/verifiers serialize. NFC untestable on emulator (QR + manual + unit tests only).
 - SECOND lane: `hbtest` AVD → emulator-5556 (Android 15, 1080x2400@420). Boot with `ANDROID_SDK_ROOT=~/Library/Android/sdk ~/Library/Android/sdk/emulator/emulator -avd hbtest -port 5556 ...` (its android-35 image lives in the OTHER sdk root — ascendy_test uses homebrew root, hbtest uses ~/Library/Android/sdk).
-- User's Linux box (`jesus`, Tailscale 100.111.196.51) available as third lane if needed — not conscripted yet.
+- THIRD lane (FASTEST, real GPU): `jesus` Linux box, AVD `ascendy_x86` (Android 14, x86_64, 1080x2400@420) → Mac adb serial **`localhost:5686`** via ssh forward. Full runbook: `.autoloop/linux-lane/README.md`. Verified from Mac: cold launch **626ms** vs 888ms Mac-swiftshader.
+  - SELinux Enforcing on Bazzite kills ALL software rasterizers (`avc denied { execheap }` → SIGSEGV mid-boot). Lane runs `-gpu host` on the RX 6800 XT borrowing the KDE X cookie — needs jesus's desktop session up. Sudo-fix if ever needed: `setsebool -P selinuxuser_execheap on`.
+  - Forward ports 5685/5686 chosen ABOVE adb's 5554-5585 auto-scan so the Mac server never probes the busy lanes. Never `adb kill-server` on the Mac — it would drop 5554/5556.
 
 ## References
 - Brick (Brick LLC) — Play `com.brickllc.brick`, 4.9★ 3.6K reviews, 100K+ DLs. $59 device + free app.

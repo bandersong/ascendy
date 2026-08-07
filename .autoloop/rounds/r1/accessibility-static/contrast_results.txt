@@ -1,0 +1,157 @@
+
+=== KawaiiLight ===
+  PASS  Ink on Cream               Ink(#3D2453) on Cream(#FBF7FF)  12.60:1  (need 4.5)  — page text everywhere
+  PASS  Ink on Surface             Ink(#3D2453) on Surface(#FFFDFF)  13.17:1  (need 4.5)  — card titles
+  PASS  Ink on Cloud               Ink(#3D2453) on Cloud(#F3E9FC)  11.34:1  (need 4.5)  — hero card timer/title
+  PASS  Ink on Mist                Ink(#3D2453) on Mist(#ECDDF7)  10.31:1  (need 4.5)  — friction dialog sentence
+  PASS  Smoke on Cream             Smoke(#7C5A82) on Cream(#FBF7FF)   5.45:1  (need 4.5)  — muted page text, SectionLabel
+  PASS  Smoke on Surface           Smoke(#7C5A82) on Surface(#FFFDFF)   5.70:1  (need 4.5)  — card subtitles 12-13sp
+  PASS  Smoke on Cloud             Smoke(#7C5A82) on Cloud(#F3E9FC)   4.91:1  (need 4.5)  — strict note, footer, emergency body
+  FAIL  Smoke on Mist              Smoke(#7C5A82) on Mist(#ECDDF7)   4.46:1  (need 4.5)  — day-toggle OFF 12sp, letter avatar
+  PASS  onPetal on Petal           Cream(#FBF7FF) on Petal(#9D40CE)   4.89:1  (need 4.5)  — buttons, FAB, selected chips, day-toggle ON 12sp
+  PASS  Petal on Surface           Petal(#9D40CE) on Surface(#FFFDFF)   5.11:1  (need 4.5)  — TextButton labels 12-13sp
+  FAIL  Petal on Cloud             Petal(#9D40CE) on Cloud(#F3E9FC)   4.40:1  (need 4.5)  — TextButton on Cloud card (emergency)
+  PASS  Badge Petal                Cream(#FBF7FF) on Petal(#9D40CE)   4.89:1  (need 4.5)  — TO DO / MISSING / STRICT badges ~12sp
+  PASS  Badge Sage                 Ink(#3D2453) on Sage(#8FD0AC)   7.48:1  (need 4.5)  — READY / OK / ACTIVE badges ~12sp
+  PASS  Badge Lilac                Ink(#3D2453) on Lilac(#FF9EC4)   6.94:1  (need 4.5)  — FOCUSING status badge ~12sp
+  PASS  Badge Mint                 Ink(#3D2453) on Mint(#FFC59A)   8.70:1  (need 4.5)  — streak / DEFAULT / SELECT badges ~12sp
+  PASS  GoalRing arc vs Cloud      Petal(#9D40CE) on Cloud(#F3E9FC)   4.40:1  (need 3.0)  — goal progress arc on hero card [nontext]
+  PASS  Chart bar vs Surface       Petal(#9D40CE) on Surface(#FFFDFF)   5.11:1  (need 3.0)  — stats week bars [nontext]
+  FAIL  Chart best-bar Lilac       Lilac(#FF9EC4) on Surface(#FFFDFF)   1.90:1  (need 3.0)  — stats highlighted bar [nontext]
+  PASS  Day ON vs OFF              Petal(#9D40CE) on Mist(#ECDDF7)   4.00:1  (need 3.0)  — enabled-day dot vs disabled dot [nontext state]
+  FAIL  Mist hairline vs Surface   Mist(#ECDDF7) on Surface(#FFFDFF)   1.28:1  (need 3.0)  — card border / divider [nontext, informational?]
+
+=== KawaiiDark ===
+  PASS  Ink on Cream               Ink(#F7EFFB) on Cream(#1E1428)  15.76:1  (need 4.5)  — page text everywhere
+  PASS  Ink on Surface             Ink(#F7EFFB) on Surface(#271934)  14.66:1  (need 4.5)  — card titles
+  PASS  Ink on Cloud               Ink(#F7EFFB) on Cloud(#2C1E3A)  13.81:1  (need 4.5)  — hero card timer/title
+  PASS  Ink on Mist                Ink(#F7EFFB) on Mist(#3D2A4F)  11.38:1  (need 4.5)  — friction dialog sentence
+  PASS  Smoke on Cream             Smoke(#C4A8D4) on Cream(#1E1428)   8.35:1  (need 4.5)  — muted page text, SectionLabel
+  PASS  Smoke on Surface           Smoke(#C4A8D4) on Surface(#271934)   7.76:1  (need 4.5)  — card subtitles 12-13sp
+  PASS  Smoke on Cloud             Smoke(#C4A8D4) on Cloud(#2C1E3A)   7.31:1  (need 4.5)  — strict note, footer, emergency body
+  PASS  Smoke on Mist              Smoke(#C4A8D4) on Mist(#3D2A4F)   6.03:1  (need 4.5)  — day-toggle OFF 12sp, letter avatar
+  PASS  onPetal on Petal           Cream(#1E1428) on Petal(#DDA8F5)   9.27:1  (need 4.5)  — buttons, FAB, selected chips, day-toggle ON 12sp
+  PASS  Petal on Surface           Petal(#DDA8F5) on Surface(#271934)   8.62:1  (need 4.5)  — TextButton labels 12-13sp
+  PASS  Petal on Cloud             Petal(#DDA8F5) on Cloud(#2C1E3A)   8.12:1  (need 4.5)  — TextButton on Cloud card (emergency)
+  PASS  Badge Petal                Cream(#1E1428) on Petal(#DDA8F5)   9.27:1  (need 4.5)  — TO DO / MISSING / STRICT badges ~12sp
+  PASS  Badge Sage                 Cream(#1E1428) on Sage(#9FD8B6)  10.94:1  (need 4.5)  — READY / OK / ACTIVE badges ~12sp
+  PASS  Badge Lilac                Cream(#1E1428) on Lilac(#FFB0CE)  10.42:1  (need 4.5)  — FOCUSING status badge ~12sp
+  PASS  Badge Mint                 Cream(#1E1428) on Mint(#FFC59A)  11.56:1  (need 4.5)  — streak / DEFAULT / SELECT badges ~12sp
+  PASS  GoalRing arc vs Cloud      Petal(#DDA8F5) on Cloud(#2C1E3A)   8.12:1  (need 3.0)  — goal progress arc on hero card [nontext]
+  PASS  Chart bar vs Surface       Petal(#DDA8F5) on Surface(#271934)   8.62:1  (need 3.0)  — stats week bars [nontext]
+  PASS  Chart best-bar Lilac       Lilac(#FFB0CE) on Surface(#271934)   9.69:1  (need 3.0)  — stats highlighted bar [nontext]
+  PASS  Day ON vs OFF              Petal(#DDA8F5) on Mist(#3D2A4F)   6.69:1  (need 3.0)  — enabled-day dot vs disabled dot [nontext state]
+  FAIL  Mist hairline vs Surface   Mist(#3D2A4F) on Surface(#271934)   1.29:1  (need 3.0)  — card border / divider [nontext, informational?]
+
+=== ToughLight ===
+  PASS  Ink on Cream               Ink(#0C0C0E) on Cream(#ECE9E1)  16.11:1  (need 4.5)  — page text everywhere
+  PASS  Ink on Surface             Ink(#0C0C0E) on Surface(#F4F1EA)  17.33:1  (need 4.5)  — card titles
+  PASS  Ink on Cloud               Ink(#0C0C0E) on Cloud(#DAD5CB)  13.36:1  (need 4.5)  — hero card timer/title
+  PASS  Ink on Mist                Ink(#0C0C0E) on Mist(#CFC9BF)  11.87:1  (need 4.5)  — friction dialog sentence
+  PASS  Smoke on Cream             Smoke(#565249) on Cream(#ECE9E1)   6.41:1  (need 4.5)  — muted page text, SectionLabel
+  PASS  Smoke on Surface           Smoke(#565249) on Surface(#F4F1EA)   6.90:1  (need 4.5)  — card subtitles 12-13sp
+  PASS  Smoke on Cloud             Smoke(#565249) on Cloud(#DAD5CB)   5.32:1  (need 4.5)  — strict note, footer, emergency body
+  PASS  Smoke on Mist              Smoke(#565249) on Mist(#CFC9BF)   4.73:1  (need 4.5)  — day-toggle OFF 12sp, letter avatar
+  PASS  onPetal on Petal           Cream(#ECE9E1) on Petal(#15151A)  15.00:1  (need 4.5)  — buttons, FAB, selected chips, day-toggle ON 12sp
+  PASS  Petal on Surface           Petal(#15151A) on Surface(#F4F1EA)  16.13:1  (need 4.5)  — TextButton labels 12-13sp
+  PASS  Petal on Cloud             Petal(#15151A) on Cloud(#DAD5CB)  12.44:1  (need 4.5)  — TextButton on Cloud card (emergency)
+  PASS  Badge Petal                Cream(#ECE9E1) on Petal(#15151A)  15.00:1  (need 4.5)  — TO DO / MISSING / STRICT badges ~12sp
+  FAIL  Badge Sage                 Cream(#ECE9E1) on Sage(#7C8A78)   3.00:1  (need 4.5)  — READY / OK / ACTIVE badges ~12sp
+  PASS  Badge Lilac                Cream(#ECE9E1) on Lilac(#52504B)   6.64:1  (need 4.5)  — FOCUSING status badge ~12sp
+  FAIL  Badge Mint                 Cream(#ECE9E1) on Mint(#B0B19F)   1.80:1  (need 4.5)  — streak / DEFAULT / SELECT badges ~12sp
+  PASS  GoalRing arc vs Cloud      Petal(#15151A) on Cloud(#DAD5CB)  12.44:1  (need 3.0)  — goal progress arc on hero card [nontext]
+  PASS  Chart bar vs Surface       Petal(#15151A) on Surface(#F4F1EA)  16.13:1  (need 3.0)  — stats week bars [nontext]
+  PASS  Chart best-bar Lilac       Lilac(#52504B) on Surface(#F4F1EA)   7.14:1  (need 3.0)  — stats highlighted bar [nontext]
+  PASS  Day ON vs OFF              Petal(#15151A) on Mist(#CFC9BF)  11.06:1  (need 3.0)  — enabled-day dot vs disabled dot [nontext state]
+  FAIL  Mist hairline vs Surface   Mist(#CFC9BF) on Surface(#F4F1EA)   1.46:1  (need 3.0)  — card border / divider [nontext, informational?]
+
+=== ToughDark ===
+  PASS  Ink on Cream               Ink(#F2EFE4) on Cream(#070708)  17.49:1  (need 4.5)  — page text everywhere
+  PASS  Ink on Surface             Ink(#F2EFE4) on Surface(#121214)  16.25:1  (need 4.5)  — card titles
+  PASS  Ink on Cloud               Ink(#F2EFE4) on Cloud(#161618)  15.70:1  (need 4.5)  — hero card timer/title
+  PASS  Ink on Mist                Ink(#F2EFE4) on Mist(#28282B)  12.77:1  (need 4.5)  — friction dialog sentence
+  PASS  Smoke on Cream             Smoke(#9C958A) on Cream(#070708)   6.79:1  (need 4.5)  — muted page text, SectionLabel
+  PASS  Smoke on Surface           Smoke(#9C958A) on Surface(#121214)   6.31:1  (need 4.5)  — card subtitles 12-13sp
+  PASS  Smoke on Cloud             Smoke(#9C958A) on Cloud(#161618)   6.09:1  (need 4.5)  — strict note, footer, emergency body
+  PASS  Smoke on Mist              Smoke(#9C958A) on Mist(#28282B)   4.96:1  (need 4.5)  — day-toggle OFF 12sp, letter avatar
+  PASS  onPetal on Petal           Cream(#070708) on Petal(#F2EFE4)  17.49:1  (need 4.5)  — buttons, FAB, selected chips, day-toggle ON 12sp
+  PASS  Petal on Surface           Petal(#F2EFE4) on Surface(#121214)  16.25:1  (need 4.5)  — TextButton labels 12-13sp
+  PASS  Petal on Cloud             Petal(#F2EFE4) on Cloud(#161618)  15.70:1  (need 4.5)  — TextButton on Cloud card (emergency)
+  PASS  Badge Petal                Cream(#070708) on Petal(#F2EFE4)  17.49:1  (need 4.5)  — TO DO / MISSING / STRICT badges ~12sp
+  PASS  Badge Sage                 Ink(#F2EFE4) on Sage(#5D695E)   5.00:1  (need 4.5)  — READY / OK / ACTIVE badges ~12sp
+  FAIL  Badge Lilac                Ink(#F2EFE4) on Lilac(#8B8478)   3.22:1  (need 4.5)  — FOCUSING status badge ~12sp
+  FAIL  Badge Mint                 Ink(#F2EFE4) on Mint(#7A7F71)   3.58:1  (need 4.5)  — streak / DEFAULT / SELECT badges ~12sp
+  PASS  GoalRing arc vs Cloud      Petal(#F2EFE4) on Cloud(#161618)  15.70:1  (need 3.0)  — goal progress arc on hero card [nontext]
+  PASS  Chart bar vs Surface       Petal(#F2EFE4) on Surface(#121214)  16.25:1  (need 3.0)  — stats week bars [nontext]
+  PASS  Chart best-bar Lilac       Lilac(#8B8478) on Surface(#121214)   5.05:1  (need 3.0)  — stats highlighted bar [nontext]
+  PASS  Day ON vs OFF              Petal(#F2EFE4) on Mist(#28282B)  12.77:1  (need 3.0)  — enabled-day dot vs disabled dot [nontext state]
+  FAIL  Mist hairline vs Surface   Mist(#28282B) on Surface(#121214)   1.27:1  (need 3.0)  — card border / divider [nontext, informational?]
+
+=== NeutralLight ===
+  PASS  Ink on Cream               Ink(#15161E) on Cream(#F6F7FA)  16.82:1  (need 4.5)  — page text everywhere
+  PASS  Ink on Surface             Ink(#15161E) on Surface(#FFFFFF)  18.02:1  (need 4.5)  — card titles
+  PASS  Ink on Cloud               Ink(#15161E) on Cloud(#EAECF2)  15.26:1  (need 4.5)  — hero card timer/title
+  PASS  Ink on Mist                Ink(#15161E) on Mist(#E1E4EB)  14.16:1  (need 4.5)  — friction dialog sentence
+  PASS  Smoke on Cream             Smoke(#5C6070) on Cream(#F6F7FA)   5.83:1  (need 4.5)  — muted page text, SectionLabel
+  PASS  Smoke on Surface           Smoke(#5C6070) on Surface(#FFFFFF)   6.25:1  (need 4.5)  — card subtitles 12-13sp
+  PASS  Smoke on Cloud             Smoke(#5C6070) on Cloud(#EAECF2)   5.29:1  (need 4.5)  — strict note, footer, emergency body
+  PASS  Smoke on Mist              Smoke(#5C6070) on Mist(#E1E4EB)   4.91:1  (need 4.5)  — day-toggle OFF 12sp, letter avatar
+  PASS  onPetal on Petal           Cream(#F6F7FA) on Petal(#4D5694)   6.38:1  (need 4.5)  — buttons, FAB, selected chips, day-toggle ON 12sp
+  PASS  Petal on Surface           Petal(#4D5694) on Surface(#FFFFFF)   6.83:1  (need 4.5)  — TextButton labels 12-13sp
+  PASS  Petal on Cloud             Petal(#4D5694) on Cloud(#EAECF2)   5.78:1  (need 4.5)  — TextButton on Cloud card (emergency)
+  PASS  Badge Petal                Cream(#F6F7FA) on Petal(#4D5694)   6.38:1  (need 4.5)  — TO DO / MISSING / STRICT badges ~12sp
+  PASS  Badge Sage                 Ink(#15161E) on Sage(#BFE0CA)  12.64:1  (need 4.5)  — READY / OK / ACTIVE badges ~12sp
+  PASS  Badge Lilac                Cream(#F6F7FA) on Lilac(#646A7C)   5.03:1  (need 4.5)  — FOCUSING status badge ~12sp
+  PASS  Badge Mint                 Ink(#15161E) on Mint(#DEE2EE)  13.92:1  (need 4.5)  — streak / DEFAULT / SELECT badges ~12sp
+  PASS  GoalRing arc vs Cloud      Petal(#4D5694) on Cloud(#EAECF2)   5.78:1  (need 3.0)  — goal progress arc on hero card [nontext]
+  PASS  Chart bar vs Surface       Petal(#4D5694) on Surface(#FFFFFF)   6.83:1  (need 3.0)  — stats week bars [nontext]
+  PASS  Chart best-bar Lilac       Lilac(#646A7C) on Surface(#FFFFFF)   5.39:1  (need 3.0)  — stats highlighted bar [nontext]
+  PASS  Day ON vs OFF              Petal(#4D5694) on Mist(#E1E4EB)   5.37:1  (need 3.0)  — enabled-day dot vs disabled dot [nontext state]
+  FAIL  Mist hairline vs Surface   Mist(#E1E4EB) on Surface(#FFFFFF)   1.27:1  (need 3.0)  — card border / divider [nontext, informational?]
+
+=== NeutralDark ===
+  PASS  Ink on Cream               Ink(#E8E9F0) on Cream(#101117)  15.56:1  (need 4.5)  — page text everywhere
+  PASS  Ink on Surface             Ink(#E8E9F0) on Surface(#1A1C24)  14.04:1  (need 4.5)  — card titles
+  PASS  Ink on Cloud               Ink(#E8E9F0) on Cloud(#191B23)  14.19:1  (need 4.5)  — hero card timer/title
+  PASS  Ink on Mist                Ink(#E8E9F0) on Mist(#262932)  12.00:1  (need 4.5)  — friction dialog sentence
+  PASS  Smoke on Cream             Smoke(#9DA1B2) on Cream(#101117)   7.33:1  (need 4.5)  — muted page text, SectionLabel
+  PASS  Smoke on Surface           Smoke(#9DA1B2) on Surface(#1A1C24)   6.62:1  (need 4.5)  — card subtitles 12-13sp
+  PASS  Smoke on Cloud             Smoke(#9DA1B2) on Cloud(#191B23)   6.69:1  (need 4.5)  — strict note, footer, emergency body
+  PASS  Smoke on Mist              Smoke(#9DA1B2) on Mist(#262932)   5.65:1  (need 4.5)  — day-toggle OFF 12sp, letter avatar
+  PASS  onPetal on Petal           Cream(#101117) on Petal(#9AA2E0)   7.73:1  (need 4.5)  — buttons, FAB, selected chips, day-toggle ON 12sp
+  PASS  Petal on Surface           Petal(#9AA2E0) on Surface(#1A1C24)   6.98:1  (need 4.5)  — TextButton labels 12-13sp
+  PASS  Petal on Cloud             Petal(#9AA2E0) on Cloud(#191B23)   7.05:1  (need 4.5)  — TextButton on Cloud card (emergency)
+  FAIL  Badge Petal                Ink(#E8E9F0) on Petal(#9AA2E0)   2.01:1  (need 4.5)  — TO DO / MISSING / STRICT badges ~12sp
+  PASS  Badge Sage                 Ink(#E8E9F0) on Sage(#2C3D33)   9.52:1  (need 4.5)  — READY / OK / ACTIVE badges ~12sp
+  FAIL  Badge Lilac                Ink(#E8E9F0) on Lilac(#9AA0B2)   2.16:1  (need 4.5)  — FOCUSING status badge ~12sp
+  PASS  Badge Mint                 Ink(#E8E9F0) on Mint(#2C3344)  10.42:1  (need 4.5)  — streak / DEFAULT / SELECT badges ~12sp
+  PASS  GoalRing arc vs Cloud      Petal(#9AA2E0) on Cloud(#191B23)   7.05:1  (need 3.0)  — goal progress arc on hero card [nontext]
+  PASS  Chart bar vs Surface       Petal(#9AA2E0) on Surface(#1A1C24)   6.98:1  (need 3.0)  — stats week bars [nontext]
+  PASS  Chart best-bar Lilac       Lilac(#9AA0B2) on Surface(#1A1C24)   6.51:1  (need 3.0)  — stats highlighted bar [nontext]
+  PASS  Day ON vs OFF              Petal(#9AA2E0) on Mist(#262932)   5.96:1  (need 3.0)  — enabled-day dot vs disabled dot [nontext state]
+  FAIL  Mist hairline vs Surface   Mist(#262932) on Surface(#1A1C24)   1.17:1  (need 3.0)  — card border / divider [nontext, informational?]
+
+================ 15 FAILURES ================
+  KawaiiLight   Smoke on Mist              #7C5A82 on #ECDDF7  4.46:1 < 4.5  — day-toggle OFF 12sp, letter avatar
+  KawaiiLight   Petal on Cloud             #9D40CE on #F3E9FC  4.40:1 < 4.5  — TextButton on Cloud card (emergency)
+  KawaiiLight   Chart best-bar Lilac       #FF9EC4 on #FFFDFF  1.90:1 < 3.0  — stats highlighted bar [nontext]
+  KawaiiLight   Mist hairline vs Surface   #ECDDF7 on #FFFDFF  1.28:1 < 3.0  — card border / divider [nontext, informational?]
+  KawaiiDark    Mist hairline vs Surface   #3D2A4F on #271934  1.29:1 < 3.0  — card border / divider [nontext, informational?]
+  ToughLight    Badge Sage                 #ECE9E1 on #7C8A78  3.00:1 < 4.5  — READY / OK / ACTIVE badges ~12sp
+  ToughLight    Badge Mint                 #ECE9E1 on #B0B19F  1.80:1 < 4.5  — streak / DEFAULT / SELECT badges ~12sp
+  ToughLight    Mist hairline vs Surface   #CFC9BF on #F4F1EA  1.46:1 < 3.0  — card border / divider [nontext, informational?]
+  ToughDark     Badge Lilac                #F2EFE4 on #8B8478  3.22:1 < 4.5  — FOCUSING status badge ~12sp
+  ToughDark     Badge Mint                 #F2EFE4 on #7A7F71  3.58:1 < 4.5  — streak / DEFAULT / SELECT badges ~12sp
+  ToughDark     Mist hairline vs Surface   #28282B on #121214  1.27:1 < 3.0  — card border / divider [nontext, informational?]
+  NeutralLight  Mist hairline vs Surface   #E1E4EB on #FFFFFF  1.27:1 < 3.0  — card border / divider [nontext, informational?]
+  NeutralDark   Badge Petal                #E8E9F0 on #9AA2E0  2.01:1 < 4.5  — TO DO / MISSING / STRICT badges ~12sp
+  NeutralDark   Badge Lilac                #E8E9F0 on #9AA0B2  2.16:1 < 4.5  — FOCUSING status badge ~12sp
+  NeutralDark   Mist hairline vs Surface   #262932 on #1A1C24  1.17:1 < 3.0  — card border / divider [nontext, informational?]
+
+=== onChip vs Palette.on divergence (accent backgrounds) ===
+  ToughLight: onChip picks Cream (1.80:1) but best is Ink (8.97:1) on Mint #B0B19F
+  ToughLight: onChip picks Cream (3.00:1) but best is Ink (5.36:1) on Sage #7C8A78
+  ToughDark: onChip picks Ink (3.22:1) but best is Cream (5.44:1) on Lilac #8B8478
+  ToughDark: onChip picks Ink (3.58:1) but best is Cream (4.89:1) on Mint #7A7F71
+  NeutralDark: onChip picks Ink (2.01:1) but best is Cream (7.73:1) on Petal #9AA2E0
+  NeutralDark: onChip picks Ink (2.16:1) but best is Cream (7.22:1) on Lilac #9AA0B2
